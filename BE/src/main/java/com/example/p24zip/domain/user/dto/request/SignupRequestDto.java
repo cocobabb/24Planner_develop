@@ -15,11 +15,11 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class SignupRequestDto {
 
-    @NotBlank(message = "필수값이 누락되었습니다.")
+    @NotBlank
     private String email; //이메일이 아이디가 될 것임
-    @NotBlank(message = "필수값이 누락되었습니다.")
+    @NotBlank
     private String password;
-    @NotBlank(message = "필수값이 누락되었습니다.")
+    @NotBlank
     private String nickname;
 
     public User toEntity() {
