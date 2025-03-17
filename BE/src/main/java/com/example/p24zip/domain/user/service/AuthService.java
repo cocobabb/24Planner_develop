@@ -21,7 +21,7 @@ public class AuthService {
 
     @Transactional
     public void signup(@Valid SignupRequestDto requestDto) {
-        boolean checkUsername = checkExistsUsername(requestDto.getEmail());
+        boolean checkUsername = checkExistsUsername(requestDto.getUsername());
 
         if (checkUsername) {
             throw new CustomException("EXIST_EMAIL", "이미 사용중인 이메일입니다.");

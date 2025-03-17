@@ -27,6 +27,13 @@ public class GlobalExceptionHandler {
             .body(ApiResponse.error(ex.getCode(), ex.getMessage()));
     }
 
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiResponse<Void>> MethodArgumentNotValid(MethodArgumentNotValidException ex) {
+        return ResponseEntity
+            .status(HttpStatus.BAD_REQUEST)
+            .body(ApiResponse.error("BAD_REQUEST", "필수값이 누락되거나 형식이 올바르지 않습니다."));
+    }
+
 
 }
 
