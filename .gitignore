@@ -360,3 +360,6 @@ target/
 .settings
 .springBeans
 .sts4-cache
+
+# local 저장 파일
+dump.rdb
