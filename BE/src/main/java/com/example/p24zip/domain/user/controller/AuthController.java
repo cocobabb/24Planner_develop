@@ -82,8 +82,8 @@ public class AuthController {
     }
 
     @DeleteMapping("/logout")
-    public ResponseEntity<ApiResponse<Object>> logout(HttpServletResponse response) {
-        authService.logout(response);
+    public ResponseEntity<ApiResponse<Object>> logout(HttpServletRequest request, HttpServletResponse response) {
+        authService.logout(request, response);
 
         return ResponseEntity.ok(ApiResponse.ok(
                 "OK",

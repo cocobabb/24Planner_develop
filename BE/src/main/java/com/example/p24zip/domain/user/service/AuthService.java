@@ -130,7 +130,7 @@ public class AuthService {
         response.addCookie(cookie);
 
         // refreshToken redis 넣기
-        redisTemplate.opsForValue().set("refreshToken", refreshjwt, 2, TimeUnit.DAYS);
+        redisTemplate.opsForValue().set(refreshjwt, refreshjwt, 2, TimeUnit.DAYS);
 
         return new LoginResponseDto(accessjwt, refreshjwt);
     }
@@ -148,11 +148,8 @@ public class AuthService {
 
 
         String refreshusername = jwtTokenProvider.getUsername(refresh);
-        if(refreshusername == null) {
-            throw new TokenException();
-        }
 
-        String redistoken = (String) redisTemplate.opsForValue().get("refreshToken");
+        String redistoken = (String) redisTemplate.opsForValue().get(refresh);
 
         User user = userRepository.findByUsername(refreshusername)
                 .orElseThrow(() -> new ResourceNotFoundException());
@@ -169,10 +166,16 @@ public class AuthService {
     }
 
     // 로그아웃
-    public void logout(HttpServletResponse response) {
+    public void logout(HttpServletRequest request, HttpServletResponse response) {
+
+
+        Cookie[] cookies = request.getCookies();
+
+        // cookie에서 refresh 추출
+        String refresh = findByRefreshToken(cookies);
 
         // redis에서 RefreshToken 삭제
-        redisTemplate.delete("refreshToken");
+        redisTemplate.delete(refresh);
 
         // 쿠키에서 RefreshToken 삭제
         Cookie cookie = new Cookie("refreshToken", null);
