@@ -53,7 +53,6 @@ public class AuthController {
         );
     }
 
-
     @GetMapping("/verify-nickname")
     public ResponseEntity<ApiResponse<Void>> checkNickname(@RequestParam String nickname) {
         authService.checkExistNickname(nickname);

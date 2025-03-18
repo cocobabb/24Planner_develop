@@ -50,7 +50,7 @@ public class AuthService {
 
  
 
-   /**
+    /**
      * @param requestDto
      *    username(email), password, nickname
      * **/
@@ -68,6 +68,42 @@ public class AuthService {
         userRepository.save(user);
     }
 
+
+    /**
+     * @param username 입력한 email
+     * @param subject 보내질 이메일 제목
+     * @param text 보내질 이메일 본문 내용
+     * @param code 보내질 인증 코드 랜덤한 4자리 수
+     * @return 만료일 가진 responseDto
+     *
+     * **/
+    public VerifyEmailDataResponseDto sendEmail(@NotNull @Email String username, String subject, String text, int code) {
+        boolean checkUsername = checkExistsUsername(username);
+        if (checkUsername) {
+            throw new CustomException("EXIST_EMAIL", "이미 사용중인 이메일입니다.");
+        }
+
+        // 정의된 SMTP 메일 객체로 메일 전송
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(username);
+        message.setSubject(subject);
+        message.setText(text);
+        mailSender.send(message);
+
+        // redis인증 코드 저장
+        LocalDateTime expiredAt = saveCodeToRedis(username, String.valueOf(code));
+
+        return VerifyEmailDataResponseDto.from(expiredAt);
+
+    }
+
+    public void checkExistNickname(String nickname) {
+        boolean checkExistNickname = userRepository.existsByNickname(nickname);
+
+        if(checkExistNickname) {
+            throw new CustomException("EXIST_NICKNAME","이미 사용중인 닉네임입니다.");
+        }
+    }
 
     // 로그인
     public LoginResponseDto login(LoginRequestDto requestDto, HttpServletResponse response){
@@ -146,6 +182,11 @@ public class AuthService {
         response.addCookie(cookie);
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////
+    // 보조 메서드
+    ///////////////////////////////////////////////////////////////////////////////
+
     public String findByRefreshToken(Cookie[] cookies) {
         String refresh = null;
 
@@ -160,6 +201,7 @@ public class AuthService {
         return refresh;
     }
 
+
     /**
      * @param userName 입력한 email
      * @return Boolean 이메일 존재 유무
@@ -171,34 +213,6 @@ public class AuthService {
 
     /**
      * @param username 입력한 email
-     * @param subject 보내질 이메일 제목
-     * @param text 보내질 이메일 본문 내용
-     * @param code 보내질 인증 코드 랜덤한 4자리 수
-     * @return 만료일 가진 responseDto
-     * 
-     * **/
-    public VerifyEmailDataResponseDto sendEmail(@NotNull @Email String username, String subject, String text, int code) {
-        boolean checkUsername = checkExistsUsername(username);
-        if (checkUsername) {
-            throw new CustomException("EXIST_EMAIL", "이미 사용중인 이메일입니다.");
-        }
-
-        // 정의된 SMTP 메일 객체로 메일 전송
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(username);
-        message.setSubject(subject);
-        message.setText(text);
-        mailSender.send(message);
-        
-        // redis인증 코드 저장
-        LocalDateTime expiredAt = saveCodeToRedis(username, String.valueOf(code));
-
-        return VerifyEmailDataResponseDto.from(expiredAt);
-
-
-    }
-    /**
-     * @param username 입력한 email
      * @param code 4자리의 랜덤 수
      * @return LocalDateTime expiredAt
      * **/
@@ -208,13 +222,6 @@ public class AuthService {
         return LocalDateTime.now().plusMinutes(3);
     }
 
-    public void checkExistNickname(String nickname) {
-        boolean checkExistNickname = userRepository.existsByNickname(nickname);
-
-        if(checkExistNickname) {
-           throw new CustomException("EXIST_NICKNAME","이미 사용중인 닉네임입니다.");
-        }
-    }
 
 
 }
