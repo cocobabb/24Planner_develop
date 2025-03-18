@@ -146,4 +146,14 @@ public class AuthService {
     public boolean checkExistsUsername(String userName) {
         return userRepository.existsByUsername(userName);
     }
+
+    public void checkExistNickname(String nickname) {
+        boolean checkExistNickname = userRepository.existsByNickname(nickname);
+
+        if(checkExistNickname) {
+           throw new CustomException("EXIST_NICKNAME","이미 사용중인 닉네임입니다.");
+        }
+    }
+
+
 }
