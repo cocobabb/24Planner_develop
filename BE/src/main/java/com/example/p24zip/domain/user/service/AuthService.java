@@ -214,7 +214,7 @@ public class AuthService {
 
         // cookie에서 refresh 추출
         String refresh = findByRefreshToken(cookies);
-        if(refresh == null || !jwtTokenProvider.validateToken(refresh)) {
+        if(refresh == null) {
             throw new TokenException();
         }
 

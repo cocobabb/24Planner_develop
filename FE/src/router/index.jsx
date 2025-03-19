@@ -1,4 +1,5 @@
 import { createBrowserRouter } from 'react-router-dom';
+import ProtectedLayout from '../layout/ProtectedLayout';
 import RootLayout from '../layout/RootLayout';
 import Home from '../pages/Home';
 import Login from '../pages/Login';
@@ -14,30 +15,41 @@ const router = createBrowserRouter([
   {
     path: '/',
     element: <RootLayout />,
-    errorElement: <NotFound />,
+    // errorElement: <NotFound />,
     children: [
       {
         index: true,
         element: <Home />,
       },
+    ],
+  },
+  {
+    path: '/plans',
+    element: (
+      <ProtectedLayout>
+        <RootLayout />
+      </ProtectedLayout>
+    ),
+    // errorElement: <NotFound />,
+    children: [
       {
-        path: '/plans',
+        index: true,
         element: <PlanList />,
       },
       {
-        path: '/plans/:movingPlanId',
+        path: ':movingPlanId',
         element: <TaskGroups />,
       },
       {
-        path: '/plans/:movingPlanId/task/:taskGroupId',
+        path: ':movingPlanId/task/:taskGroupId',
         element: <TaskList />,
       },
       {
-        path: '/plans/:movingPlanId/house',
+        path: ':movingPlanId/house',
         element: <Houses />,
       },
       {
-        path: '/plans/:movingPlanId/calendar',
+        path: ':movingPlanId/calendar',
         element: <Calendar />,
       },
     ],
@@ -45,12 +57,12 @@ const router = createBrowserRouter([
   {
     path: '/login',
     element: <Login />,
-    errorElement: <NotFound />,
+    // errorElement: <NotFound />,
   },
   {
     path: '/signup',
     element: <Signup />,
-    errorElement: <NotFound />,
+    // errorElement: <NotFound />,
   },
 ]);
 

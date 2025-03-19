@@ -21,10 +21,10 @@ public class JwtTokenProvider {
     private String secretKey;
 
 //    private final long accessTokenValidityInMilliseconds = 1000L * 60 * 30; // 30분
-//    private final long refrshTokenValidityInMilliseconds = 1000L * 60 * 60 * 48; // 48시간
+//    private final long refreshTokenValidityInMilliseconds = 1000L * 60 * 60 * 48; // 48시간
 
-    private final long accessTokenValidityInMilliseconds = 1000L * 30;
-    private final long refrshTokenValidityInMilliseconds = 1000L * 60;
+    private final long accessTokenValidityInMilliseconds = 1000L * 10;
+    private final long refreshTokenValidityInMilliseconds = 1000L * 30;
 
     @PostConstruct
     protected void init() {
@@ -55,7 +55,7 @@ public class JwtTokenProvider {
 
         Date now = new Date();
 
-        Date validity = new Date(now.getTime() + refrshTokenValidityInMilliseconds);
+        Date validity = new Date(now.getTime() + refreshTokenValidityInMilliseconds);
 
         return Jwts.builder()
                 .setClaims(claims)

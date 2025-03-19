@@ -58,6 +58,8 @@ api.interceptors.response.use(
 
       } catch (error) {
 
+        alert("토큰 만료로 로그아웃됩니다.");
+        
         // 서버에 로그아웃 요청
         await authApi.logout();
 
