@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import logo from '../../public/logo.png';
+import logo from '../logo.png';
 import { useState } from 'react';
 import authApi from '../api/authApi';
 import { useDispatch } from 'react-redux';
@@ -45,7 +45,7 @@ export default function Login() {
       dispatch(login({ accessToken }));
 
       navigate('/plans');
-    } catch (error) {     
+    } catch (error) {
       // 로그인 실패 시 메세지
       if (error.response.data.code == 'INVALID_CREDENTIALS') {
         setErrorMessage(error.response.data.message);

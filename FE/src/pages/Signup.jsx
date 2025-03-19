@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import logo from '../../public/logo.png';
+import logo from '../logo.png';
 import { useNavigate } from 'react-router-dom';
 import authApi from '../api/authApi';
 

@@ -7,8 +7,6 @@ export default function HomeWithAnimation() {
   const [textClass4, setTextClass4] = useState('invisible');
   const [textClass5, setTextClass5] = useState('invisible');
 
-  const flexStyle = 'flex justify-center item-center';
-
   useEffect(() => {
     const timers = [];
     timers.push(
@@ -48,9 +46,13 @@ export default function HomeWithAnimation() {
     };
   }, []);
 
+  const flexStyle = 'flex justify-center item-center';
+  const largeTextStyle = flexStyle + ' text-6xl font-extrabold p-8';
+  const semiLargeTextStyle = flexStyle + ' text-4xl p-8';
+
   return (
     <>
-      <div className={`${flexStyle} text-6xl font-extrabold p-8`}>
+      <div className={largeTextStyle}>
         <span className="relative animate-main-char1">흩</span>
         <span className="relative animate-main-char2">어</span>
         <span className="relative animate-main-char3">져</span>
@@ -64,7 +66,7 @@ export default function HomeWithAnimation() {
         <span>&nbsp;</span>
         <span className={textClass4}>모든 것</span>
       </div>
-      <div className={`${flexStyle} text-4xl p-8`}>
+      <div className={semiLargeTextStyle}>
         <span className={`${textClass5} animate-main-string`}>
           막막한 이사, 이사모음.zip과 깐깐하게 함께 해요!
         </span>
