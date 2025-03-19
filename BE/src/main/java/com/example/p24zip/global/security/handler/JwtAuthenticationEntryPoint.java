@@ -24,7 +24,7 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 
 
-        ApiResponse<Void> errorResponse = ApiResponse.error( "토큰이 유효하지 않습니다.","INVALID_TOKEN");
+        ApiResponse<Void> errorResponse = ApiResponse.error("INVALID_TOKEN","토큰이 유효하지 않습니다.");
         response.getWriter().write(objectMapper.writeValueAsString(errorResponse));
     }
 }

@@ -33,9 +33,6 @@ public class GlobalExceptionHandler {
 //                .body(ApiResponse.error("서버 내부 오류가 발생했습니다.", "INTERNAL_SERVER_ERROR"));
 //    }
 
-    /**
-     * 이미 사용되고 있는 이메일 아이디가 있을 때
-     **/
     @ExceptionHandler(CustomException.class)
     public ResponseEntity<ApiResponse<Void>> handleCustomExistEmail(CustomException ex) {
         return ResponseEntity
