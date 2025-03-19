@@ -214,9 +214,13 @@ public class AuthService {
 
         // cookie에서 refresh 추출
         String refresh = findByRefreshToken(cookies);
+        if(refresh == null || !jwtTokenProvider.validateToken(refresh)) {
+            throw new TokenException();
+        }
 
         // redis에서 RefreshToken 삭제
         redisTemplate.delete(refresh);
+
 
         // 쿠키에서 RefreshToken 삭제
         Cookie cookie = new Cookie("refreshToken", null);
