@@ -1,0 +1,14 @@
+server {
+    listen 80;
+    server_name ${DOMAIN};
+
+    root   /usr/share/nginx/html;
+    index  index.html;
+
+    location / {
+        # 301 상태 코드는
+        # 브라우저가 redirect 로 해석한다.
+        return 301 https://$host$request_uri;
+    }
+}
+

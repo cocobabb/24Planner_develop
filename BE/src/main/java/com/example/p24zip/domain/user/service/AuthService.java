@@ -166,7 +166,7 @@ public class AuthService {
         // 쿠키 생성 및 refreshToken 쿠키에 넣기
         Cookie cookie = new Cookie("refreshToken",refreshjwt);
         cookie.setHttpOnly(true);
-//        cookie.setSecure(true);
+        cookie.setSecure(true);
         cookie.setPath("/");
         response.addCookie(cookie);
 
