@@ -1,0 +1,103 @@
+# 문법 버전(선택)
+
+# services 블록
+services:
+  # 개별 컨테이너(서비스) 블록
+  # # db
+  # # # 컨테이너명, 베이스 이미지, 볼륨, 네트워크, 헬스체크, 환경변수파일, 포트(선택)
+  db:
+    container_name: db-24zip-container
+    image: mysql:8.0
+    volumes:
+      # /var/lib/mysql - mysql 데이터 경로
+      - db-volume:/var/lib/mysql
+    networks:
+      - db-network
+    env_file:
+      - .env
+    # docker run --env-file .env mysql:8.0
+
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+
+  # redis
+  redis:
+    container_name: db-24zip-redis-container
+    image: redis:latest
+    volumes:
+      - redis-volumes:/data
+    networks:
+      - db-network
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD", "redis-cli", "--row", "incr", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    
+
+  # # backend(api)
+  # # # 컨테이너명, Dockerfile 경로, 이미지명, 포트(선택), 네트워크, 환경변수파일, 의존관계
+  api:
+    container_name: api-container
+    build:
+      # Dockerfile 경로
+      context: ./BE
+      dockerfile: Dockerfile
+      cache_from:
+        - type=local,src=/tmp/docker-cache/api
+      cache_to:
+        - type=local,dest=/tmp/docker-cache/api,mode=max
+    image: ${DOCKER_USERNAME}/24zip-api-image:latest
+    networks:
+      - db-network
+      - api-network
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+  # # frontned(client)
+  # # # 컨테이너명, Dockerfile 경로, 이미지명, 포트, 네트워크, 환경변수파일, 의존관계
+  client:
+    container_name: client-container
+    build:
+      context: ./FE
+      dockerfile: Dockerfile
+      cache_from:
+        - type=local,src=/tmp/docker-cache/client
+      cache_to:
+        - type=local,dest=/tmp/docker-cache/client,mode=max
+    image: ${DOCKER_USERNAME}/24zip-client-image:latest
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - api-network
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - api
+
+# volumes와 networks 블록
+volumes:
+  db-volume:
+  redis-volumes:
+
+networks:
+  db-network:
+  api-network:
+# docker compose의 역할
+# 컨테이너를 생성 실행 관리
+# 컨터이너를 실행할 때 환경 변수가 필요한 경우가 있다.
+# MYSQL 컨테이너 실행할때
+# -e MYSQL_ROOT_PASSWORD=1q2w3e4r!
+# -e MYSQLDATABASE=api
