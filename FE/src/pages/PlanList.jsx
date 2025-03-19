@@ -1,3 +1,10 @@
+import authApi from '../api/authApi';
+
 export default function PlanList() {
-  return <div>PlanList</div>;
+  // 테스트
+  const onClick = async () => {
+    await authApi.test();
+  };
+
+  return <button onClick={onClick}>test</button>;
 }
