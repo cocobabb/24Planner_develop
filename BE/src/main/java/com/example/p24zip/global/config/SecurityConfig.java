@@ -33,7 +33,7 @@ public class SecurityConfig {
     private final CustomAccessDeniedHandler accessDeniedHandler;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
-    @Value("${ORIGIN}")
+    @Value("${origin}")
     private String origin;
 
     @Bean
