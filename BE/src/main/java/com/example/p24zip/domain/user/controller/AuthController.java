@@ -45,7 +45,7 @@ public class AuthController {
     public ResponseEntity<ApiResponse<VerifyEmailDataResponseDto>> verifyEmail(@RequestBody @Valid VerifyEmailRequestDto requestDto){
 
         return ResponseEntity.ok(
-            ApiResponse.ok("OK", "인증 번호를 전송했습니다.", authService.sendEmail(requestDto.getUsername()))
+            ApiResponse.ok("OK", "인증 번호를 전송했습니다.", authService.sendEmail(requestDto))
         );
     }
 
