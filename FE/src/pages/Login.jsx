@@ -77,7 +77,7 @@ export default function Login() {
   // CSS
   const displayStyle = 'h-screen flex flex-col justify-center items-center';
   const logoStyle = 'w-64 text-center cursor-pointer';
-  const loginWrapperStyle = 'w-full h-1/2 flex flex-col justify-center items-center';
+  const loginWrapperStyle = 'w-full flex flex-col justify-center items-center';
   const loginFormStyle =
     'w-140 h-3/4 flex flex-col justify-between items-center box-border pt-15 pb-3';
   const inputWrapperStyle = 'w-full';
@@ -87,7 +87,7 @@ export default function Login() {
   const loginErrorMessageStyle = 'text-red-400 mb-5';
   const buttonStyle =
     'px-12 py-3 text-2xl text-primary cursor-pointer border-3 border-solid rounded-3xl border-primary hover:bg-primary hover:text-white';
-  const signupRequestStyle = 'w-1/3 flex justify-center gap-1 mt-3 pt-2';
+  const signupRequestStyle = 'w-1/3 min-w-100 flex justify-center gap-1 mt-10 pt-2';
   const signupButtonStyle =
     'border-b border-primary cursor-pointer hover:text-primary hover:font-bold ';
 
