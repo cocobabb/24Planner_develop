@@ -2,6 +2,7 @@ package com.example.p24zip.domain.user.dto.response;
 
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.HashMap;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,9 +13,9 @@ import lombok.NoArgsConstructor;
 @Builder
 public class VerifyEmailDataResponseDto {
     @NotNull
-    private LocalDateTime expiredAt;
+    private ZonedDateTime expiredAt;
 
-    public static VerifyEmailDataResponseDto from (LocalDateTime expiredAt){
+    public static VerifyEmailDataResponseDto from (ZonedDateTime expiredAt){
         return VerifyEmailDataResponseDto.builder()
             .expiredAt(expiredAt)
             .build();

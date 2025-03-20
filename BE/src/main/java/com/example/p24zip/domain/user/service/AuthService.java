@@ -21,6 +21,8 @@ import jakarta.validation.Valid;
 
 import java.time.LocalDateTime;
 
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
@@ -108,7 +110,7 @@ public class AuthService {
         mailSender.send(message);
 
         // redis인증 코드 저장
-        LocalDateTime expiredAt = saveCodeToRedis(username, codeNum);
+        ZonedDateTime expiredAt = saveCodeToRedis(username, codeNum);
 
         return VerifyEmailDataResponseDto.from(expiredAt);
 
@@ -270,15 +272,16 @@ public class AuthService {
         return userRepository.existsByUsername(userName);
     }
 
-
+  
     /**
      * 4자리의 랜덤 수를 redis에 저장
      *
      * @param username 입력한 email
+
      * @param codeNum     4자리의 랜덤 수
-     * @return LocalDateTime expiredAt
+     * @return ZonedDateTime expiredAt
      **/
-    public LocalDateTime saveCodeToRedis(String username, int codeNum) {
+    public ZonedDateTime saveCodeToRedis(String username, int codeNum) {
 
         String key = username;
         String code = String.valueOf(codeNum);
@@ -286,9 +289,6 @@ public class AuthService {
 
         redisTemplate.opsForValue().set(key, code, 3, TimeUnit.MINUTES);
         redisTemplate.opsForValue().set(createdAt, String.valueOf(LocalDateTime.now()), 3, TimeUnit.MINUTES); // 생성시간
-        return LocalDateTime.now().plusMinutes(3);
+        return ZonedDateTime.now(ZoneId.of("Asia/Seoul")).plusMinutes(3);
     }
-
-
-
 }
