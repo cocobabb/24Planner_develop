@@ -99,7 +99,7 @@ export default function Map() {
     <>
       {showModal &&
         createPortal(
-          <MapModal modalClose={() => setShowModal(false)} setAddressData={setAddressData} />,
+          <MapModal modalClose={() => setShowModal(false)} setAddressData={setAddressData} setSelectedButton={setSelectedButton}/>,
           document.body,
         )}
       <section className={mapStyle}>

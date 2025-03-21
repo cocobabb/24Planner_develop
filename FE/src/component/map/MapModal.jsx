@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import mapApi from '../../api/mapApi';
 
-export default function MapModal({ modalClose, setAddressData }) {
+export default function MapModal({ modalClose, setAddressData, setSelectedButton }) {
   const { movingPlanId } = useParams();
 
   const [address, setAddress] = useState('');
@@ -87,8 +87,7 @@ export default function MapModal({ modalClose, setAddressData }) {
     }).open();
   };
 
-  const test = async () => {
-    
+  const createhouse = async () => {
     const errors = {};
     if (!formData.nickname) errors.nickname = '별명을 지어주세요.';
     if (!formData.address1) errors.address1 = '주소를 넣어주세요.';
@@ -97,21 +96,22 @@ export default function MapModal({ modalClose, setAddressData }) {
       setInputRequestMessage(errors);
       return;
     }
-    
 
     try {
       let response = await mapApi.mapCreate(movingPlanId, formData);
-      response = response.data.data
+      response = response.data.data;
 
       const { latitude, longitude } = response;
 
       setAddressData((prev) => ({
         ...prev,
-        "centerlatitude": latitude,
-        "centerlongitude": longitude
+        centerlatitude: latitude,
+        centerlongitude: longitude,
       }));
-  
-     modalClose();
+
+      setSelectedButton(`${latitude},${longitude}`);
+
+      modalClose();
     } catch (error) {
       console.log(error);
     }
@@ -173,7 +173,7 @@ export default function MapModal({ modalClose, setAddressData }) {
               />
               <hr className={lineStyle} />
             </div>
-            <button className={buttonStyle} onClick={test}>
+            <button className={buttonStyle} onClick={createhouse}>
               새 집 추가
             </button>
           </form>
