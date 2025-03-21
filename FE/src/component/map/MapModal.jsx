@@ -2,10 +2,9 @@ import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import mapApi from '../../api/mapApi';
 
-export default function MapModal({ modalClose }) {
-  
+export default function MapModal({ modalClose, setAddressData }) {
   const { movingPlanId } = useParams();
-  
+
   const [address, setAddress] = useState('');
 
   const [formData, setFormData] = useState({
@@ -19,6 +18,8 @@ export default function MapModal({ modalClose }) {
     address1: '',
     address2: '',
   });
+
+  const [isOpen, setIsOpen] = useState(false);
 
   const loadPostcodeScript = () => {
     return new Promise((resolve, reject) => {
@@ -43,14 +44,14 @@ export default function MapModal({ modalClose }) {
   const modalBodyStyle =
     'flex flex-col justify-center items-center mx-auto my-auto w-200 h-3/4 bg-white rounded-3xl border-2 border-primary';
 
-  const inputWrapperStyle = 'w-110 mt-4';
+  const inputWrapperStyle = 'w-130 mt-4';
   const adressWrapperStyle = 'flex h-11';
-  const inputStyle = 'w-full text-2xl pl-3 focus:outline-none focus:placeholder-transparent mt-5';
+  const inputStyle = 'w-full text-xl pl-3 focus:outline-none focus:placeholder-transparent mt-5';
   const lineStyle = 'mt-2';
   const buttonStyle =
     'block mt-10 mx-auto border-2 rounded-2xl px-9 py-2 text-2xl text-primary hover:bg-primary hover:text-white';
   const adressButtonStyle =
-    'w-25 border-2 rounded-full px-2 py-1 text-primary hover:bg-primary hover:text-white';
+    'w-30 border-2 rounded-full px-2 py-1 text-primary hover:bg-primary hover:text-white';
   const inputRequestMessageStyle = 'text-red-400 mt-1';
 
   const handleSubmit = (e) => {
@@ -69,6 +70,9 @@ export default function MapModal({ modalClose }) {
   const toggleHandler = async () => {
     await loadPostcodeScript();
 
+    if (isOpen) return;
+    setIsOpen(true);
+
     new window.daum.Postcode({
       oncomplete: (data) => {
         setAddress(data.address);
@@ -77,34 +81,40 @@ export default function MapModal({ modalClose }) {
           address1: data.address,
         }));
       },
+      onclose: () => {
+        setIsOpen(false); // 사용자가 닫으면 상태 변경
+      },
     }).open();
   };
 
   const test = async () => {
-    console.log(formData);
-
-    console.log(movingPlanId);
     
-
     const errors = {};
     if (!formData.nickname) errors.nickname = '별명을 지어주세요.';
     if (!formData.address1) errors.address1 = '주소를 넣어주세요.';
-    if (!formData.address2) errors.address2 = '상세주소를 넣어주세요.';
 
     if (Object.keys(errors).length) {
       setInputRequestMessage(errors);
       return;
     }
+    
 
     try {
-      await mapApi.mapCreate(movingPlanId, formData);
-      modalClose();
+      let response = await mapApi.mapCreate(movingPlanId, formData);
+      response = response.data.data
 
+      const { latitude, longitude } = response;
+
+      setAddressData((prev) => ({
+        ...prev,
+        "centerlatitude": latitude,
+        "centerlongitude": longitude
+      }));
+  
+     modalClose();
     } catch (error) {
       console.log(error);
-      
     }
-
   };
 
   return (
@@ -123,6 +133,7 @@ export default function MapModal({ modalClose }) {
                 name="nickname"
                 id="nickname"
                 placeholder="새 집 별칭"
+                maxLength="5"
                 onChange={handleChange}
                 className={inputStyle}
               />
@@ -143,9 +154,7 @@ export default function MapModal({ modalClose }) {
                   disabled
                   className={inputStyle}
                 />
-                <button className={adressButtonStyle}>
-                  주소 검색
-                </button>
+                <button className={adressButtonStyle}>주소 검색</button>
               </div>
               <hr className={lineStyle} />
               <div className={inputRequestMessageStyle}>
@@ -163,7 +172,6 @@ export default function MapModal({ modalClose }) {
                 className={inputStyle}
               />
               <hr className={lineStyle} />
-        
             </div>
             <button className={buttonStyle} onClick={test}>
               새 집 추가
