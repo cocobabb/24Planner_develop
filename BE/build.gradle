@@ -47,6 +47,9 @@ dependencies {
 
 	// SMTP
 	implementation 'org.springframework.boot:spring-boot-starter-mail'
+
+	// WebFlux 포함 (WebClient 사용 가능)
+	implementation 'org.springframework.boot:spring-boot-starter-webflux'
 }
 
 tasks.named('test') {

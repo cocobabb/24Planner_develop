@@ -22,9 +22,10 @@ public class JwtTokenProvider {
 
     private final long accessTokenValidityInMilliseconds = 1000L * 60 * 30; // 30분
     private final long refreshTokenValidityInMilliseconds = 1000L * 60 * 60 * 48; // 48시간
-
+  
 //    private final long accessTokenValidityInMilliseconds = 1000L * 30;
 //    private final long refreshTokenValidityInMilliseconds = 1000L * 60;
+
 
     @PostConstruct
     protected void init() {
