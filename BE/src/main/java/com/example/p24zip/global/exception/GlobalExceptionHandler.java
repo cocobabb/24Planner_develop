@@ -77,8 +77,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> GeocoderConnectHandler(WebClientResponseException ex) {
         return ResponseEntity
             .status(HttpStatus.INTERNAL_SERVER_ERROR)
-            .body(ApiResponse.error("GEOCODER_API_CONNECT_ERROR","좌표 변경 API에서 연결 오류가 발생했습니다."));
-
+            .body(ApiResponse.error("GEOCODER_API_CONNECT_ERROR", "좌표 변경 API에서 연결 오류가 발생했습니다."));
+    }
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ApiResponse<Void>> HttpMessageNotReadable(HttpMessageNotReadableException ex){
         return ResponseEntity
