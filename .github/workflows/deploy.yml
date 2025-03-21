@@ -39,6 +39,7 @@ jobs:
           echo "DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}" >> .env
           echo "DOMAIN=${{ secrets.DOMAIN }}" >> .env
           echo "ORIGIN=${{ secrets.ORIGIN }}" >> .env
+          echo "VITE_KAKAO_JAVASCRIPT_KEY=${{ secrets.VITE_KAKAO_JAVASCRIPT_KEY }}" >> .env
 
       - name: Add Remote Server Fingerprint to Known Hosts
         run: ssh-keyscan -H -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts || true

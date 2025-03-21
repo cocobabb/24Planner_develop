@@ -5,6 +5,9 @@
 FROM node AS build
 WORKDIR /app
 
+ARG VITE_KAKAO_JAVASCRIPT_KEY
+ENV VITE_KAKAO_JAVASCRIPT_KEY=${VITE_KAKAO_JAVASCRIPT_KEY}
+
 # 패키지 설치를 위한 패키지 목록 파일 복사
 COPY package.json package-lock.json ./
 

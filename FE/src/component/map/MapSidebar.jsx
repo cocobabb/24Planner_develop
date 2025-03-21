@@ -1,9 +1,9 @@
 export default function MapSidebar() {
-  const calendarSidebar = 'h-180 flex flex-col flex-1 m-4';
+  const calendarSidebar = 'w-full h-full flex flex-col flex-1 m-4';
   const houseDelete = 'text-gray-500 text-opacity-70 underline cursor-pointer hover:text-primary';
   const adressStyle =
     'ml-4 text-gray-500 text-opacity-70 underline cursor-pointer hover:text-primary';
-  const textareaStyle = "w-100 h-full border-2 rounded-2xl border-black p-8";
+  const textareaStyle = "w-full h-full border-2 rounded-2xl border-black p-8";
 
   return (
     <section className={calendarSidebar}>
