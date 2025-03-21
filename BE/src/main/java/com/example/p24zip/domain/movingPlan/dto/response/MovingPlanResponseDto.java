@@ -7,6 +7,7 @@ import lombok.Getter;
 @Getter
 @Builder
 public class MovingPlanResponseDto {
+
     private Long id;
     private String title;
 

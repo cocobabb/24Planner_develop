@@ -33,7 +33,7 @@ public class MovingPlanService {
     @Transactional
     public MovingPlanResponseDto updateMovingPlan(Long id, MovingPlanRequestDto requestDto) {
         MovingPlan movingPlan = movingPlanRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException());
+                .orElseThrow(ResourceNotFoundException::new);
         movingPlan.update(requestDto);
 
         return MovingPlanResponseDto.from(movingPlan);
@@ -42,7 +42,7 @@ public class MovingPlanService {
     @Transactional
     public void deleteMovingPlan(Long id) {
         MovingPlan movingPlan = movingPlanRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException());
+                .orElseThrow(ResourceNotFoundException::new);
 
         movingPlanRepository.delete(movingPlan);
     }

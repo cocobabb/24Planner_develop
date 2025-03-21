@@ -2,7 +2,6 @@ package com.example.p24zip.domain.movingPlan.controller;
 
 import com.example.p24zip.domain.movingPlan.dto.request.MovingPlanRequestDto;
 import com.example.p24zip.domain.movingPlan.dto.response.MovingPlanResponseDto;
-import com.example.p24zip.domain.movingPlan.repository.MovingPlanRepository;
 import com.example.p24zip.domain.movingPlan.service.MovingPlanService;
 import com.example.p24zip.domain.user.entity.User;
 import com.example.p24zip.global.response.ApiResponse;
@@ -21,7 +20,6 @@ import java.util.Map;
 @RequestMapping("/plans")
 public class MovingPlanController {
 
-    private final MovingPlanRepository movingPlanRepository;
     private final MovingPlanService movingPlanService;
 
     @PostMapping
@@ -54,12 +52,12 @@ public class MovingPlanController {
     @PutMapping("/{movingPlanId}")
     public ResponseEntity<ApiResponse<MovingPlanResponseDto>> updateMovingPlan(
             @PathVariable Long movingPlanId,
-            @RequestBody MovingPlanRequestDto requestDto,
+            @Valid @RequestBody MovingPlanRequestDto requestDto,
             @AuthenticationPrincipal User user) {
 
         return ResponseEntity.ok(ApiResponse.ok(
                 "UPDATED",
-                "플랜 제목을 수정했습니다.",
+                "플랜 제목 수정에 성공했습니다.",
                 movingPlanService.updateMovingPlan(movingPlanId, requestDto)
         ));
     }
@@ -73,7 +71,7 @@ public class MovingPlanController {
 
         return ResponseEntity.ok(ApiResponse.ok(
                 "DELETED",
-                "플랜을 삭제했습니다.",
+                "플랜 삭제에 성공했습니다.",
                 null
         ));
     }

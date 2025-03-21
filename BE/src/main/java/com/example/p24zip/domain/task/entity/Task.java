@@ -1,10 +1,13 @@
 package com.example.p24zip.domain.task.entity;
 
 import com.example.p24zip.domain.movingPlan.entity.MovingPlan;
+import com.example.p24zip.domain.task.dto.request.TaskCompleteRequestDto;
+import com.example.p24zip.domain.task.dto.request.TaskRequestDto;
 import com.example.p24zip.domain.taskGroup.entity.TaskGroup;
 import com.example.p24zip.global.entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -29,4 +32,23 @@ public class Task extends BaseTimeEntity {
     @ManyToOne
     @JoinColumn(name="moving_plan_id")
     private MovingPlan movingPlan;
+
+    @Builder
+    public Task(String content, TaskGroup taskGroup, MovingPlan movingPlan) {
+        this.content = content;
+        this.taskGroup = taskGroup;
+        this.movingPlan = movingPlan;
+    }
+
+    public Task update(TaskRequestDto requestDto) {
+        this.content = requestDto.getContent();
+
+        return this;
+    }
+
+    public Task updateIsCompleted(TaskCompleteRequestDto requestDto) {
+        this.isCompleted = requestDto.getIsCompleted();
+
+        return this;
+    }
 }

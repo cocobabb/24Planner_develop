@@ -26,7 +26,6 @@ public class JwtTokenProvider {
 //    private final long accessTokenValidityInMilliseconds = 1000L * 30;
 //    private final long refreshTokenValidityInMilliseconds = 1000L * 60;
 
-
     @PostConstruct
     protected void init() {
         secretKey = Base64.getEncoder().encodeToString(secretKey.getBytes());
