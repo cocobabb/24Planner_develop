@@ -4,16 +4,21 @@ import MapModal from './MapModal';
 import mapApi from '../../api/mapApi';
 import { useParams } from 'react-router-dom';
 
-export default function Map({ setHouseId, maplists, setMapLists, addressData, setAddressData, nickname }) {
+export default function Map({
+  setHouseId,
+  maplists,
+  setMapLists,
+  addressData,
+  setAddressData,
+  nickname,
+}) {
   const { movingPlanId } = useParams();
 
   const [showModal, setShowModal] = useState(false);
 
   const [selectedButton, setSelectedButton] = useState(null);
 
-  
-
-  const mapStyle = 'flex flex-col flex-2 h-full w-full border-r-1 border-gray-300 m-4';
+  const mapStyle = 'flex flex-col flex-2 h-full w-full border-r-1 border-gray-300 px-4';
   const mapPlusStyle =
     'w-22 h-12 border-2 rounded-xl px-2 py-1 bg-primary text-2xl text-white me-2';
   const mapButtonStyle =
@@ -53,9 +58,8 @@ export default function Map({ setHouseId, maplists, setMapLists, addressData, se
     };
     const map = new kakao.maps.Map(container.current, options);
 
-
     // 지도 중심지 설정
-    if (centerlatitude == null || centerlongitude == null ) {
+    if (centerlatitude == null || centerlongitude == null) {
       position = new kakao.maps.LatLng(33.450701, 126.570667);
       map.setCenter(position);
     } else {
@@ -108,12 +112,12 @@ export default function Map({ setHouseId, maplists, setMapLists, addressData, se
         )}
 
       <section className={mapStyle}>
-        <h1 className="text-2xl font-semibold mb-4">살 곳 정하기</h1>
-        <div className="flex">
+        <h1 className="text-xl font-semibold mb-4">살 곳 정하기</h1>
+        <div className="flex mb-4">
           <button className={mapPlusStyle} onClick={handleCalendarModal}>
             +
           </button>
-          <div className="mb-4 w-155 h-21 overflow-x-auto whitespace-nowrap">
+          <div className="w-170 overflow-x-auto whitespace-nowrap">
             {maplists.map((maplist) => {
               const { latitude, longitude, nickname, id } = maplist;
 
@@ -134,7 +138,7 @@ export default function Map({ setHouseId, maplists, setMapLists, addressData, se
             })}
           </div>
         </div>
-        <div style={{ width: '730px', height: '620px' }} ref={container}></div>
+        <div style={{ width: 'auto', height: '620px' }} ref={container}></div>
       </section>
     </>
   );

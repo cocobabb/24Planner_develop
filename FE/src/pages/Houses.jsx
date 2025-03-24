@@ -3,7 +3,7 @@ import Map from '../component/map/Map';
 import MapSidebar from '../component/map/MapSidebar';
 
 export default function Houses() {
-  const mapMainStyle = 'flex justify-center h-full p-6';
+  const mapMainStyle = 'flex justify-between h-full p-6';
 
   const [houseId, setHouseId] = useState('');
 
@@ -14,12 +14,25 @@ export default function Houses() {
     centerlongitude: null,
   });
 
-  const [nickname, setNickName] = useState("");
+  const [nickname, setNickName] = useState('');
 
   return (
     <main className={mapMainStyle}>
-      <Map setHouseId={setHouseId} maplists={maplists} setMapLists={setMapLists} addressData={addressData} setAddressData={setAddressData} nickname={nickname} />
-      <MapSidebar houseId={houseId} maplists={maplists} setMapLists={setMapLists} setAddressData={setAddressData} setNickName={setNickName}/>
+      <Map
+        setHouseId={setHouseId}
+        maplists={maplists}
+        setMapLists={setMapLists}
+        addressData={addressData}
+        setAddressData={setAddressData}
+        nickname={nickname}
+      />
+      <MapSidebar
+        houseId={houseId}
+        maplists={maplists}
+        setMapLists={setMapLists}
+        setAddressData={setAddressData}
+        setNickName={setNickName}
+      />
     </main>
   );
 }

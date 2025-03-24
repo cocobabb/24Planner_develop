@@ -36,13 +36,23 @@ const mapApi = {
     return response;
   },
 
-   // 집 별칭 수정
+  // 집 별칭 수정
   nicknameupdate: async (movingPlanId, houseId, nicknamecontent) => {
-
     const response = await api.patch(
       `${ENDPOINT}/${movingPlanId}/houses/${houseId}/nickname`,
       nicknamecontent,
     );
+    return response;
+  },
+
+  // 집 상세 주소 수정
+
+  addressupdate: async (movingPlanId, houseId, addresscontent) => {
+    const response = await api.patch(
+      `${ENDPOINT}/${movingPlanId}/houses/${houseId}/detail-address`,
+      addresscontent,
+    );
+
     return response;
   },
 };

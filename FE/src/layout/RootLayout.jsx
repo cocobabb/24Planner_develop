@@ -9,7 +9,7 @@ export default function RootLayout() {
         <div className="h-1/10 min-w-320">
           <Header />
         </div>
-        <div className="h-4/5 min-w-320">
+        <div className="min-w-320">
           <Outlet />
         </div>
         <div className="h-1/10 min-w-320">
