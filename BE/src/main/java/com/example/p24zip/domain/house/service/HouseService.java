@@ -1,7 +1,12 @@
 package com.example.p24zip.domain.house.service;
 
 import com.example.p24zip.domain.house.dto.request.AddHouseRequestDto;
+import com.example.p24zip.domain.house.dto.request.ChangeHouseContentRequestDto;
+import com.example.p24zip.domain.house.dto.request.ChangeHouseNicknameRequestDto;
 import com.example.p24zip.domain.house.dto.response.AddHouseResponseDto;
+import com.example.p24zip.domain.house.dto.response.ChangeHouseContentResponseDto;
+import com.example.p24zip.domain.house.dto.response.ChangeHouseNicknameResponseDto;
+import com.example.p24zip.domain.house.dto.response.GetHouseDetailsResponseDto;
 import com.example.p24zip.domain.house.dto.response.HouseListResponseDto;
 import com.example.p24zip.domain.house.dto.response.KaKaoGeocodeResponse;
 import com.example.p24zip.domain.house.dto.response.KaKaoGeocodeResponse.Document;
@@ -53,6 +58,7 @@ public class HouseService {
 
     }
 
+
     /**
      * @param movingPlanId : 집 관련 테이블과 연관관계를 가진 테이블의 id
      * @return 집 정보를 가진 리스트
@@ -62,6 +68,49 @@ public class HouseService {
 
         List<House> houseList = houseRepository.findAllByMovingPlan(movingPlan);
         return HouseListResponseDto.from(houseList);
+    }
+
+    /**
+     * @param houseId : 집 테이블의 id
+     * @return responseDto (id, nickname, address1, address2, content)
+     * **/
+    public GetHouseDetailsResponseDto getHouseDetails(Long houseId) {
+        return GetHouseDetailsResponseDto.from(houseRepository.findById(houseId).orElseThrow());
+    }
+
+    /**
+     * @param houseId : 집 테이블의 id
+     * @param requestDto : nickname
+     * @return responseDto (id, nickname)
+     * **/
+    @Transactional
+    public ChangeHouseNicknameResponseDto updateHouseNickname(Long houseId, ChangeHouseNicknameRequestDto requestDto) {
+        House house = houseRepository.findById(houseId).orElseThrow();
+        house.updateNickname(requestDto);
+
+        return ChangeHouseNicknameResponseDto.from(house);
+    }
+
+    /**
+     * @param houseId : 집 테이블의 id
+     * @param requestDto : content
+     * @return responseDto (id, nickname)
+     * **/
+    @Transactional
+    public ChangeHouseContentResponseDto updateHouseContent(Long houseId, ChangeHouseContentRequestDto requestDto) {
+        House house = houseRepository.findById(houseId).orElseThrow();
+        house.updateContent(requestDto);
+
+        return ChangeHouseContentResponseDto.from(house);
+    }
+
+    /**
+     * @param houseId : 집 테이블의 id
+     * @return null
+     * **/
+    @Transactional
+    public void deleteHouse(Long houseId) {
+        houseRepository.deleteById(houseId);
     }
 
     ///////////////////////////////////////////////////////////////////////////////
@@ -90,7 +139,5 @@ public class HouseService {
             throw new GeocoderExceptionHandler("GEOCODER_API_CONVERT_ERROR","좌표 변경 API에서 변환 오류가 발생했습니다.");
         }
     }
-
-
 
 }

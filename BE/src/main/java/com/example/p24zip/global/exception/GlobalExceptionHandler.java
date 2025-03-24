@@ -1,6 +1,7 @@
 package com.example.p24zip.global.exception;
 
 import com.example.p24zip.global.response.ApiResponse;
+import java.util.NoSuchElementException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -98,7 +99,13 @@ public class GlobalExceptionHandler {
         return ResponseEntity
             .status(HttpStatus.BAD_REQUEST)
             .body(ApiResponse.error("BAD_REQUEST", "필수값이 누락되었습니다."));
+    }
 
+    @ExceptionHandler(NoSuchElementException.class)
+    public ResponseEntity<ApiResponse<Void>> NoExistId_handler (NoSuchElementException ex) {
+        return ResponseEntity
+            .status(HttpStatus.NOT_FOUND)
+            .body(ApiResponse.error("NOT_FOUND", "존재하지 않는 id입니다."));
     }
 }
 
