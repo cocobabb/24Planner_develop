@@ -21,6 +21,7 @@ public class AddHouseRequestDto {
     private String nickname;
     @NotBlank
     private String address1;
+    @Length(max = 35)
     private String address2;
 
     public House toEntity(MovingPlan movingPlan) {

@@ -2,9 +2,11 @@ package com.example.p24zip.domain.house.controller;
 
 import com.example.p24zip.domain.house.dto.request.AddHouseRequestDto;
 import com.example.p24zip.domain.house.dto.request.ChangeHouseContentRequestDto;
+import com.example.p24zip.domain.house.dto.request.ChangeHouseDetailAddressRequestDto;
 import com.example.p24zip.domain.house.dto.request.ChangeHouseNicknameRequestDto;
 import com.example.p24zip.domain.house.dto.response.AddHouseResponseDto;
 import com.example.p24zip.domain.house.dto.response.ChangeHouseContentResponseDto;
+import com.example.p24zip.domain.house.dto.response.ChangeHouseDetailAddressResponseDto;
 import com.example.p24zip.domain.house.dto.response.ChangeHouseNicknameResponseDto;
 import com.example.p24zip.domain.house.dto.response.GetHouseDetailsResponseDto;
 import com.example.p24zip.domain.house.dto.response.HouseListResponseDto;
@@ -46,7 +48,7 @@ public class HouseController {
         movingPlanValidator.validateMovingPlanAccess(movingPlanId, user);
 
         return ResponseEntity.ok(
-          ApiResponse.ok("OK", "집 목록을 조회에 성공했습니다.", houseService.getHouses(movingPlanId))
+          ApiResponse.ok("OK", "집 목록 조회에 성공했습니다.", houseService.getHouses(movingPlanId))
         );
     }
 
@@ -76,6 +78,16 @@ public class HouseController {
             ApiResponse.ok("UPDATED", "집 상세 내용 수정에 성공했습니다.", houseService.updateHouseContent(movingPlanId, houseId, requestDto))
         );
     }
+
+    @PatchMapping("/{houseId}/detail-address")
+    public ResponseEntity<ApiResponse<ChangeHouseDetailAddressResponseDto>> updateHouseDetailAddress(@PathVariable Long movingPlanId, @PathVariable Long houseId, @RequestBody @Valid ChangeHouseDetailAddressRequestDto requestDto, @AuthenticationPrincipal User user){
+        movingPlanValidator.validateMovingPlanAccess(movingPlanId, user);
+
+        return ResponseEntity.ok(
+            ApiResponse.ok("UPDATED", "집 상세주소 수정에 성공했습니다.", houseService.updateHouseDetailAddress(movingPlanId, houseId, requestDto))
+        );
+    }
+
     @DeleteMapping("/{houseId}")
     public ResponseEntity<ApiResponse<Void>> deleteHouse(@PathVariable Long movingPlanId, @PathVariable Long houseId, @AuthenticationPrincipal User user){
         movingPlanValidator.validateMovingPlanAccess(movingPlanId, user);

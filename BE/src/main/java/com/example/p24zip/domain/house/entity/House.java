@@ -1,6 +1,7 @@
 package com.example.p24zip.domain.house.entity;
 
 import com.example.p24zip.domain.house.dto.request.ChangeHouseContentRequestDto;
+import com.example.p24zip.domain.house.dto.request.ChangeHouseDetailAddressRequestDto;
 import com.example.p24zip.domain.house.dto.request.ChangeHouseNicknameRequestDto;
 import com.example.p24zip.domain.movingPlan.entity.MovingPlan;
 import com.example.p24zip.global.entity.BaseTimeEntity;
@@ -40,6 +41,7 @@ public class House extends BaseTimeEntity {
     private String nickname;
     @NotBlank
     private String address1;
+    @Length(max = 35)
     private String address2; // 상세 주소
     @NotNull
     private double longitude; // 경도
@@ -67,6 +69,11 @@ public class House extends BaseTimeEntity {
 
     public House updateContent(ChangeHouseContentRequestDto requestDto) {
         this.content = requestDto.getContent();
+        return this;
+    }
+
+    public House updateDetailAddress(ChangeHouseDetailAddressRequestDto requestDto) {
+        this.address2 = requestDto.getAddress2();
         return this;
     }
 }
