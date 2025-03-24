@@ -189,7 +189,7 @@ public class HouseService {
      * @return null
      * **/
     private void isMovingPlanIdMatched(Long movingPlanId, House house) {
-        if( house.getMovingPlan().getId().equals(movingPlanId)) {
+        if(!house.getMovingPlan().getId().equals(movingPlanId)) {
             throw new ResourceNotFoundException();
         }
     }
