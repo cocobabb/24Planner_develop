@@ -15,6 +15,7 @@ import com.example.p24zip.domain.house.repository.HouseRepository;
 import com.example.p24zip.domain.movingPlan.entity.MovingPlan;
 import com.example.p24zip.domain.movingPlan.repository.MovingPlanRepository;
 import com.example.p24zip.global.exception.GeocoderExceptionHandler;
+import com.example.p24zip.global.exception.ResourceNotFoundException;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 
@@ -41,8 +42,7 @@ public class HouseService {
      * **/
     @Transactional
     public AddHouseResponseDto postHouse(Long movingPlanId, AddHouseRequestDto requestDto) {
-        MovingPlan movingPlan = movingPlanRepository.findById(movingPlanId)
-            .orElseThrow();
+        MovingPlan movingPlan = movingPlanRepository.findById(movingPlanId).orElseThrow(ResourceNotFoundException::new);
         House house = requestDto.toEntity(movingPlan);
 
         String address1 = requestDto.getAddress1();
@@ -64,32 +64,37 @@ public class HouseService {
      * @return 집 정보를 가진 리스트
      * **/
     public HouseListResponseDto getHouses(Long movingPlanId) {
-       MovingPlan movingPlan = movingPlanRepository.findById(movingPlanId).orElseThrow();
+       MovingPlan movingPlan = movingPlanRepository.findById(movingPlanId).orElseThrow(ResourceNotFoundException::new);
 
         List<House> houseList = houseRepository.findAllByMovingPlan(movingPlan);
         return HouseListResponseDto.from(houseList);
     }
 
+    
     /**
      * @param houseId : 집 테이블의 id
      * @return responseDto (id, nickname, address1, address2, content)
      * **/
-    public GetHouseDetailsResponseDto getHouseDetails(Long houseId) {
-        return GetHouseDetailsResponseDto.from(houseRepository.findById(houseId).orElseThrow());
+    public GetHouseDetailsResponseDto getHouseDetails(Long movingPlanId, Long houseId) {
+        isMovingPlanIdMatched(movingPlanId, houseId);
+        return GetHouseDetailsResponseDto.from(houseRepository.findById(houseId).orElseThrow(ResourceNotFoundException::new));
     }
 
+    
     /**
      * @param houseId : 집 테이블의 id
      * @param requestDto : nickname
      * @return responseDto (id, nickname)
      * **/
     @Transactional
-    public ChangeHouseNicknameResponseDto updateHouseNickname(Long houseId, ChangeHouseNicknameRequestDto requestDto) {
-        House house = houseRepository.findById(houseId).orElseThrow();
+    public ChangeHouseNicknameResponseDto updateHouseNickname(Long movingPlanId, Long houseId, ChangeHouseNicknameRequestDto requestDto) {
+        isMovingPlanIdMatched(movingPlanId, houseId);
+        House house = houseRepository.findById(houseId).orElseThrow(ResourceNotFoundException::new);
         house.updateNickname(requestDto);
 
         return ChangeHouseNicknameResponseDto.from(house);
     }
+    
 
     /**
      * @param houseId : 집 테이블의 id
@@ -97,19 +102,22 @@ public class HouseService {
      * @return responseDto (id, nickname)
      * **/
     @Transactional
-    public ChangeHouseContentResponseDto updateHouseContent(Long houseId, ChangeHouseContentRequestDto requestDto) {
-        House house = houseRepository.findById(houseId).orElseThrow();
+    public ChangeHouseContentResponseDto updateHouseContent(Long movingPlanId, Long houseId, ChangeHouseContentRequestDto requestDto) {
+        isMovingPlanIdMatched(movingPlanId, houseId);
+        House house = houseRepository.findById(houseId).orElseThrow(ResourceNotFoundException::new);
         house.updateContent(requestDto);
 
         return ChangeHouseContentResponseDto.from(house);
     }
 
+    
     /**
      * @param houseId : 집 테이블의 id
      * @return null
      * **/
     @Transactional
-    public void deleteHouse(Long houseId) {
+    public void deleteHouse(Long movingPlanId, Long houseId) {
+        isMovingPlanIdMatched(movingPlanId, houseId);
         houseRepository.deleteById(houseId);
     }
 
@@ -139,5 +147,20 @@ public class HouseService {
             throw new GeocoderExceptionHandler("GEOCODER_API_CONVERT_ERROR","좌표 변경 API에서 변환 오류가 발생했습니다.");
         }
     }
+    
+    
+    /**
+     * 해당 이사계획에 속한 집이 아닐 경우 예외 처리
+     * @param movingPlanId : 이사계획 테이블 id
+     * @param houseId : 집 테이블 id (이사계획 테이블의 id FK로 연관 관계 가지고 있음)
+     * @return null
+     * **/
+    private void isMovingPlanIdMatched(Long movingPlanId, Long houseId) {
+        MovingPlan movingPlan = movingPlanRepository.findById(movingPlanId).orElseThrow(ResourceNotFoundException::new);
+        if(houseRepository.findById(houseId).orElseThrow(ResourceNotFoundException::new).getMovingPlan() != movingPlan) {
+            throw new ResourceNotFoundException();
+        }
+    }
+
 
 }

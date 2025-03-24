@@ -43,28 +43,28 @@ public class HouseController {
     }
 
     @GetMapping("/{houseId}")
-    public ResponseEntity<ApiResponse<GetHouseDetailsResponseDto>> getHouseDetails(@PathVariable Long houseId) {
+    public ResponseEntity<ApiResponse<GetHouseDetailsResponseDto>> getHouseDetails(@PathVariable Long movingPlanId, @PathVariable Long houseId) {
         return ResponseEntity.ok(
-            ApiResponse.ok("OK", "집 조회에 성공했습니다.",  houseService.getHouseDetails(houseId))
+            ApiResponse.ok("OK", "집 조회에 성공했습니다.",  houseService.getHouseDetails(movingPlanId, houseId))
         );
     }
 
     @PatchMapping("/{houseId}/nickname")
-    public ResponseEntity<ApiResponse<ChangeHouseNicknameResponseDto>> updateHouseNickname(@PathVariable Long houseId, @RequestBody @Valid ChangeHouseNicknameRequestDto requestDto) {
+    public ResponseEntity<ApiResponse<ChangeHouseNicknameResponseDto>> updateHouseNickname(@PathVariable Long movingPlanId, @PathVariable Long houseId, @RequestBody @Valid ChangeHouseNicknameRequestDto requestDto) {
         return ResponseEntity.ok(
-            ApiResponse.ok("UPDATED", "집 별칭 수정에 성공했습니다.", houseService.updateHouseNickname(houseId, requestDto))
+            ApiResponse.ok("UPDATED", "집 별칭 수정에 성공했습니다.", houseService.updateHouseNickname(movingPlanId, houseId, requestDto))
         );
     }
 
     @PatchMapping("/{houseId}/content")
-    public ResponseEntity<ApiResponse<ChangeHouseContentResponseDto>> updateHouseContent(@PathVariable Long houseId, @RequestBody @Valid ChangeHouseContentRequestDto requestDto) {
+    public ResponseEntity<ApiResponse<ChangeHouseContentResponseDto>> updateHouseContent(@PathVariable Long movingPlanId, @PathVariable Long houseId, @RequestBody @Valid ChangeHouseContentRequestDto requestDto) {
         return ResponseEntity.ok(
-            ApiResponse.ok("UPDATED", "집 상세 내용 수정에 성공했습니다.", houseService.updateHouseContent(houseId, requestDto))
+            ApiResponse.ok("UPDATED", "집 상세 내용 수정에 성공했습니다.", houseService.updateHouseContent(movingPlanId, houseId, requestDto))
         );
     }
     @DeleteMapping("/{houseId}")
-    public ResponseEntity<ApiResponse<Void>> deleteHouse(@PathVariable Long houseId){
-        houseService.deleteHouse(houseId);
+    public ResponseEntity<ApiResponse<Void>> deleteHouse(@PathVariable Long movingPlanId, @PathVariable Long houseId){
+        houseService.deleteHouse(movingPlanId, houseId);
 
         return ResponseEntity.ok(
             ApiResponse.ok("DELETED", "집 삭제에 성공했습니다.", null)
