@@ -7,6 +7,7 @@ import com.example.p24zip.domain.schedule.dto.response.ScheduleResponseDto;
 import com.example.p24zip.domain.schedule.service.ScheduleService;
 import com.example.p24zip.domain.user.entity.User;
 import com.example.p24zip.global.response.ApiResponse;
+import com.example.p24zip.global.validator.MovingPlanValidator;
 import jakarta.validation.Valid;
 import java.time.LocalDate;
 import java.time.YearMonth;
@@ -29,6 +30,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class ScheduleController {
 
     private final ScheduleService scheduleService;
+    final MovingPlanValidator movingPlanValidator;
 
     // 할 일 생성
     @PostMapping
@@ -37,6 +39,8 @@ public class ScheduleController {
         @PathVariable Long movingPlanId,
         @AuthenticationPrincipal User user
     ){
+        movingPlanValidator.validateMovingPlanAccess(movingPlanId, user);
+
         return ResponseEntity.ok(ApiResponse.ok(
             "CREATED",
             "할 일 생성에 성공했습니다.",
@@ -51,6 +55,8 @@ public class ScheduleController {
         @RequestParam YearMonth month,
         @AuthenticationPrincipal User user
     ){
+        movingPlanValidator.validateMovingPlanAccess(movingPlanId, user);
+
         return ResponseEntity.ok(ApiResponse.ok(
             "OK",
             "할 일 월별 목록 조회에 성공했습니다.",
@@ -65,6 +71,8 @@ public class ScheduleController {
         @RequestParam LocalDate date,
         @AuthenticationPrincipal User user
     ){
+        movingPlanValidator.validateMovingPlanAccess(movingPlanId, user);
+
         return ResponseEntity.ok(ApiResponse.ok(
             "OK",
             "할 일 날짜별 목록 조회에 성공했습니다.",
@@ -80,6 +88,8 @@ public class ScheduleController {
         @PathVariable Long movingPlanId,
         @AuthenticationPrincipal User user
         ){
+        movingPlanValidator.validateMovingPlanAccess(movingPlanId, user);
+
         return ResponseEntity.ok(ApiResponse.ok(
             "UPDATED",
             "할 일 수정에 성공했습니다.",
@@ -94,6 +104,8 @@ public class ScheduleController {
         @PathVariable Long movingPlanId,
         @AuthenticationPrincipal User user
     ){
+        movingPlanValidator.validateMovingPlanAccess(movingPlanId, user);
+
         scheduleService.deleteSchedule(scheduleId, movingPlanId);
         return ResponseEntity.ok(ApiResponse.ok(
             "DELETED",

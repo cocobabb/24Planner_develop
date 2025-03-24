@@ -7,6 +7,7 @@ import com.example.p24zip.domain.task.dto.response.TaskResponseDto;
 import com.example.p24zip.domain.task.service.TaskService;
 import com.example.p24zip.domain.user.entity.User;
 import com.example.p24zip.global.response.ApiResponse;
+import com.example.p24zip.global.validator.MovingPlanValidator;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 public class TaskController {
 
     private final TaskService taskService;
+    private final MovingPlanValidator movingPlanValidator;
 
     @PostMapping
     public ResponseEntity<ApiResponse<TaskResponseDto>> createTask(
@@ -26,6 +28,8 @@ public class TaskController {
             @PathVariable Long taskGroupId,
             @Valid @RequestBody TaskRequestDto requestDto,
             @AuthenticationPrincipal User user) {
+
+        movingPlanValidator.validateMovingPlanAccess(movingPlanId, user);
 
         return ResponseEntity.ok(ApiResponse.ok(
                 "CREATED",
@@ -39,6 +43,8 @@ public class TaskController {
             @PathVariable Long movingPlanId,
             @PathVariable Long taskGroupId,
             @AuthenticationPrincipal User user) {
+
+        movingPlanValidator.validateMovingPlanAccess(movingPlanId, user);
 
         return ResponseEntity.ok(ApiResponse.ok(
                 "OK",
@@ -55,6 +61,8 @@ public class TaskController {
             @Valid @RequestBody TaskRequestDto requestDto,
             @AuthenticationPrincipal User user) {
 
+        movingPlanValidator.validateMovingPlanAccess(movingPlanId, user);
+
         return ResponseEntity.ok(ApiResponse.ok(
            "UPDATED",
                 "체크포인트 내용 수정에 성공했습니다.",
@@ -70,6 +78,8 @@ public class TaskController {
             @Valid @RequestBody TaskCompleteRequestDto requestDto,
             @AuthenticationPrincipal User user) {
 
+        movingPlanValidator.validateMovingPlanAccess(movingPlanId, user);
+
         return ResponseEntity.ok(ApiResponse.ok(
                 "UPDATED",
                 "체크포인트 완료 여부 수정에 성공했습니다.",
@@ -83,6 +93,8 @@ public class TaskController {
             @PathVariable Long taskGroupId,
             @PathVariable Long taskId,
             @AuthenticationPrincipal User user) {
+
+        movingPlanValidator.validateMovingPlanAccess(movingPlanId, user);
 
         taskService.deleteTask(movingPlanId, taskGroupId, taskId);
 

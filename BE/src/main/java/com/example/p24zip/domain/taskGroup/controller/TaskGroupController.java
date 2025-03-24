@@ -8,6 +8,7 @@ import com.example.p24zip.domain.taskGroup.dto.response.TaskGroupResponseDto;
 import com.example.p24zip.domain.taskGroup.service.TaskGroupService;
 import com.example.p24zip.domain.user.entity.User;
 import com.example.p24zip.global.response.ApiResponse;
+import com.example.p24zip.global.validator.MovingPlanValidator;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class TaskGroupController {
 
     private final TaskGroupService taskGroupService;
+    private final MovingPlanValidator movingPlanValidator;
 
     // 체크 그룹 생성
     @PostMapping
@@ -35,6 +37,8 @@ public class TaskGroupController {
         @PathVariable Long movingPlanId,
         @AuthenticationPrincipal User user
     ){
+        movingPlanValidator.validateMovingPlanAccess(movingPlanId, user);
+
         return ResponseEntity.ok(ApiResponse.ok(
             "CREATED",
             "체크 그룹 생성에 성공했습니다.",
@@ -48,6 +52,8 @@ public class TaskGroupController {
         @PathVariable Long movingPlanId,
         @AuthenticationPrincipal User user
     ){
+        movingPlanValidator.validateMovingPlanAccess(movingPlanId, user);
+
         return ResponseEntity.ok(ApiResponse.ok(
             "OK",
             "체크 그룹 리스트 조회에 성공했습니다.",
@@ -63,6 +69,8 @@ public class TaskGroupController {
         @PathVariable Long movingPlanId,
         @AuthenticationPrincipal User user
     ){
+        movingPlanValidator.validateMovingPlanAccess(movingPlanId, user);
+
         return ResponseEntity.ok(ApiResponse.ok(
             "UPDATED",
             "체크 그룹 제목 수정에 성공했습니다.",
@@ -78,6 +86,8 @@ public class TaskGroupController {
         @PathVariable Long movingPlanId,
         @AuthenticationPrincipal User user
     ){
+        movingPlanValidator.validateMovingPlanAccess(movingPlanId, user);
+
         return ResponseEntity.ok(ApiResponse.ok(
             "UPDATED",
             "체크 그룹 메모 수정에 성공했습니다.",
@@ -92,6 +102,8 @@ public class TaskGroupController {
         @PathVariable Long movingPlanId,
         @AuthenticationPrincipal User user
     ){
+        movingPlanValidator.validateMovingPlanAccess(movingPlanId, user);
+
         taskGroupService.deleteTaskGroup(taskGroupId, movingPlanId);
         return ResponseEntity.ok(ApiResponse.ok(
             "DELETED",
