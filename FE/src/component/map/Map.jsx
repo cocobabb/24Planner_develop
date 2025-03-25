@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import MapModal from './MapModal';
 import mapApi from '../../api/mapApi';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
 export default function Map({
   setHouseId,
@@ -17,6 +17,8 @@ export default function Map({
   const [showModal, setShowModal] = useState(false);
 
   const [selectedButton, setSelectedButton] = useState(null);
+
+  const navigate = useNavigate();
 
   const mapStyle = 'flex flex-col flex-2 h-full w-full border-r-1 border-gray-300 px-4';
   const mapPlusStyle =
@@ -68,32 +70,41 @@ export default function Map({
     }
 
     async function fetchMapMarker() {
-      let responses = await mapApi.maplist(movingPlanId);
+      try {
+        let responses = await mapApi.maplist(movingPlanId);
 
-      responses = responses.data.data.houses;
-      setMapLists(responses);
+        responses = responses.data.data.houses;
+        setMapLists(responses);
 
-      responses.map((response) => {
-        const { latitude, longitude, id } = response;
+        responses.map((response) => {
+          const { latitude, longitude, id } = response;
 
-        // 마커 생성
-        const markerPosition = new kakao.maps.LatLng(latitude, longitude);
-        const marker = new kakao.maps.Marker({
-          position: markerPosition,
-        });
-
-        // 지도에 마커 추가
-        marker.setMap(map);
-
-        // 마커 클릭 이벤트 추가
-        kakao.maps.event.addListener(marker, 'click', function () {
-          setAddressData({
-            centerlatitude: latitude,
-            centerlongitude: longitude,
+          // 마커 생성
+          const markerPosition = new kakao.maps.LatLng(latitude, longitude);
+          const marker = new kakao.maps.Marker({
+            position: markerPosition,
           });
-          setSelectedButton(`${id}`);
+
+          // 지도에 마커 추가
+          marker.setMap(map);
+
+          // 마커 클릭 이벤트 추가
+          kakao.maps.event.addListener(marker, 'click', function () {
+            setAddressData({
+              centerlatitude: latitude,
+              centerlongitude: longitude,
+            });
+            setSelectedButton(`${id}`);
+
+            setHouseId(id);
+          });
         });
-      });
+      } catch (error) {
+        // 임시로 만들어놓은 not-found
+        if (error.response.data.code == 'NOT_FOUND') {
+          navigate('/not-found');
+        }
+      }
     }
     fetchMapMarker();
   }, [addressData, nickname]);
