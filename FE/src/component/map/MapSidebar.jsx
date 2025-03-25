@@ -13,13 +13,17 @@ export default function MapSidebar({
 
   const [housedetails, setHouseDetails] = useState('');
 
-  const [mapselect, setSelect] = useState(false);
+  const [mapselect, setMapSelect] = useState(false);
 
   const [isnicknameEditing, setNickNameIsEditing] = useState(false);
 
   const [isaddressEditing, setAddressIsEditing] = useState(false);
 
   const { nickname, address1, address2, content, id } = housedetails;
+
+  const [nicknameError, setNicknameError] = useState('');
+
+  const [addressError, setAddressError] = useState('');
 
   const mapSidebar = 'w-full h-full flex flex-col justify-center flex-1 pl-4 gap-2';
   const houseDelete = 'text-gray-500 text-opacity-70 underline cursor-pointer hover:text-primary';
@@ -28,9 +32,9 @@ export default function MapSidebar({
   const textareaStyle =
     'w-full h-full p-6 border-2 rounded-2xl border-black resize-none focus:outline-none';
   const nicknameupdateStyle =
-    'w-40 text-xl text-black font-bold border-b-[1px] border-black outline-none px-1 inline-block';
+    'w-40 text-xl text-black font-semibold border-b-[1px] border-black outline-none px-1 inline-block';
   const addressupdateStyle =
-    'w-100 text-black font-bold border-b-[1px] border-black outline-none inline-block';
+    'w-90 text-black border-b-[1px] border-black outline-none inline-block';
 
   useEffect(() => {
     async function fetchHouseDetail() {
@@ -40,7 +44,7 @@ export default function MapSidebar({
         const response = await mapApi.housedetail(movingPlanId, houseId);
 
         setHouseDetails(response.data.data);
-        setSelect(true);
+        setMapSelect(true);
       } catch (error) {
         console.log(error);
       }
@@ -60,6 +64,7 @@ export default function MapSidebar({
         centerlatitude: null,
         centerlongitude: null,
       }));
+      setMapSelect(false);
     } catch (err) {
       console.log(err);
     }
@@ -86,10 +91,16 @@ export default function MapSidebar({
 
   // 닉네임 업데이트
   const updateNickname = async (e) => {
+    if (!nickname.trim()) {
+      setNicknameError('별명을 넣어주세요.');
+      return;
+    }
+
     try {
       const { id } = e.target;
       await mapApi.nicknameupdate(movingPlanId, id, { nickname });
       setNickName(nickname);
+      setNicknameError('');
     } catch (err) {
       console.log(err);
     }
@@ -103,12 +114,16 @@ export default function MapSidebar({
 
   // 상세주소 업데이트
   const updateAddress = async (e) => {
+    if (!address2.trim()) {
+      setAddressError('상세 주소를 넣어주세요.');
+      return;
+    }
+
     try {
       const { id } = e.target;
 
-      console.log(id);
-
       await mapApi.addressupdate(movingPlanId, id, { address2 });
+      setAddressError('');
     } catch (err) {
       console.log(err);
     }
@@ -131,18 +146,23 @@ export default function MapSidebar({
           <div>
             <div className="flex items-center mb-2">
               {isnicknameEditing ? (
-                <input
-                  type="text"
-                  className={nicknameupdateStyle}
-                  id={id}
-                  maxLength="5"
-                  value={nickname}
-                  onChange={handleNicknameChange}
-                  onBlur={updateNickname}
-                />
+                <div>
+                  <input
+                    type="text"
+                    className={nicknameupdateStyle}
+                    id={id}
+                    maxLength="5"
+                    value={nickname}
+                    onChange={handleNicknameChange}
+                    onBlur={updateNickname}
+                  />
+                  {nicknameError && (
+                    <div className="text-red-500 text-sm mt-1">{nicknameError}</div>
+                  )}
+                </div>
               ) : (
                 <>
-                  <h2 className="text-2xl text-black font-semibold">{nickname}</h2>
+                  <h2 className="text-xl text-black font-semibold">{nickname}</h2>
                   <div className={updateStyle} onClick={() => setNickNameIsEditing(true)}>
                     수정
                   </div>
@@ -150,18 +170,23 @@ export default function MapSidebar({
               )}
             </div>
             <div>
-              <div className="text-base mb-2">{address1}</div>
+              <div className="mb-2">{address1}</div>
               <div className="flex ">
                 {isaddressEditing ? (
-                  <input
-                    type="text"
-                    className={addressupdateStyle}
-                    id={id}
-                    maxLength="35"
-                    value={address2}
-                    onChange={handleAddressChange}
-                    onBlur={updateAddress}
-                  />
+                  <div className='mb-5'>
+                    <input
+                      type="text"
+                      className={addressupdateStyle}
+                      id={id}
+                      maxLength="35"
+                      value={address2}
+                      onChange={handleAddressChange}
+                      onBlur={updateAddress}
+                    />
+                    {addressError && (
+                      <div className="text-red-500 text-sm mt-1">{addressError}</div>
+                    )}
+                  </div>
                 ) : (
                   <>
                     <div className="max-w-90 mb-5">

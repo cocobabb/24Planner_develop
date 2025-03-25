@@ -89,7 +89,7 @@ export default function MapModal({ modalClose, setAddressData, setSelectedButton
 
   const createhouse = async () => {
     const errors = {};
-    if (!formData.nickname) errors.nickname = '별명을 지어주세요.';
+    if (!formData.nickname) errors.nickname = '별명을 넣어주세요.';
     if (!formData.address1) errors.address1 = '주소를 넣어주세요.';
     if (!formData.address2) errors.address2 = '상세 주소를 넣어주세요.';
 
