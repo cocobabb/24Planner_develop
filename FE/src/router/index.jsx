@@ -10,6 +10,7 @@ import PlanList from '../pages/PlanList';
 import Houses from '../pages/Houses';
 import Calendar from '../pages/Calendar';
 import NotFound from '../pages/NotFound';
+import PlanSetting from '../pages/PlanSetting';
 
 const router = createBrowserRouter([
   {
@@ -35,6 +36,10 @@ const router = createBrowserRouter([
       {
         index: true,
         element: <PlanList />,
+      },
+      {
+        path: ':movingPlanId/setting',
+        element: <PlanSetting />,
       },
       {
         path: ':movingPlanId',

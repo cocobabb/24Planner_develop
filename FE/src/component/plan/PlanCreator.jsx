@@ -1,0 +1,101 @@
+import { useEffect, useRef, useState } from 'react';
+import planApi from '../../api/planApi';
+
+export default function PlanCreator({ onPlanCreated }) {
+  const liRef = useRef(null);
+
+  // 상태 관리 데이터
+  const [isCreating, setIsCreating] = useState(false);
+  const [newPlan, setNewPlan] = useState('');
+
+  // 이사 플랜 생성 상태 토글
+  const toggleCreating = () => {
+    setIsCreating((prev) => !prev);
+    setNewPlan('');
+  };
+
+  // 플랜 이름 입력 감지 및 검증
+  const handleInput = (e) => {
+    const { value } = e.target;
+
+    setNewPlan(value);
+  };
+
+  // 이사 플랜 생성 요청
+  const handleCreatePlan = async () => {
+    if (newPlan.trim()) {
+      try {
+        const response = await planApi.createPlan(newPlan);
+        const data = response.data.data;
+
+        onPlanCreated(data);
+
+        toggleCreating();
+        setNewPlan('');
+      } catch (error) {}
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      handleCreatePlan();
+    }
+  };
+
+  // 외부 클릭 감지
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (isCreating && liRef.current && !liRef.current.contains(e.target)) {
+        toggleCreating();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isCreating]);
+
+  // CSS
+  const planLi =
+    'w-full h-20 flex items-center justify-center mb-10 py-5 border-2 rounded-3xl relative cursor-pointer';
+  const defaultLi = 'border-gray-200';
+  const creatingLi = 'border-primary';
+  const planText = 'w-full text-center text-2xl text-gray-200 text-opacity-70';
+  const createDiv = 'flex';
+  const inputStyle = 'w-80 px-2 focus:outline-none text-center text-2xl';
+  const createButton =
+    'absolute right-5 w-15 border-2 border-primary rounded-xl py-1 text-primary cursor-pointer hover:bg-primary hover:text-white';
+
+  return (
+    <li
+      ref={liRef}
+      className={`${planLi} ${isCreating ? creatingLi : defaultLi}`}
+      onClick={!isCreating ? toggleCreating : undefined}
+    >
+      {!isCreating ? (
+        <p className={planText}>+</p>
+      ) : (
+        <div className={createDiv}>
+          <div>
+            <input
+              type="text"
+              value={newPlan}
+              placeholder="이사 플랜 추가"
+              className={inputStyle}
+              onChange={handleInput}
+              onKeyDown={handleKeyDown}
+              required
+              autoFocus
+            />
+            <hr />
+          </div>
+          <button className={createButton} onClick={handleCreatePlan}>
+            추가
+          </button>
+        </div>
+      )}
+    </li>
+  );
+}

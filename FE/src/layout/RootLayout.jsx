@@ -5,7 +5,7 @@ import Footer from '../component/Footer';
 export default function RootLayout() {
   return (
     <>
-      <div className="flex flex-col items-center h-screen w-screen min-h-210 min-w-320 font-roboto">
+      <div className="flex flex-col items-center h-screen min-h-210 min-w-320 font-roboto">
         <div className="min-h-28 min-w-320">
           <Header />
         </div>
