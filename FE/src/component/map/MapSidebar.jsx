@@ -130,6 +130,20 @@ export default function MapSidebar({
     setAddressIsEditing(false);
   };
 
+    // 엔터키 눌러 별칭 수정
+    const handleAdressEnter = (e) => {
+      if (e.key === 'Enter') {
+        updateAddress(e);
+      }
+    };
+
+     // 엔터키 눌러 주소 수정
+     const handleNicknameEnter = (e) => {
+      if (e.key === 'Enter') {
+        updateNickname(e);
+      }
+    };
+
   return (
     <section className={mapSidebar}>
       {!mapselect || maplists.length == 0 ? (
@@ -155,6 +169,8 @@ export default function MapSidebar({
                     value={nickname}
                     onChange={handleNicknameChange}
                     onBlur={updateNickname}
+                    onKeyDown={handleNicknameEnter}
+                    autoFocus
                   />
                   {nicknameError && (
                     <div className="text-red-500 text-sm mt-1">{nicknameError}</div>
@@ -182,6 +198,8 @@ export default function MapSidebar({
                       value={address2}
                       onChange={handleAddressChange}
                       onBlur={updateAddress}
+                      onKeyDown={handleAdressEnter}
+                      autoFocus
                     />
                     {addressError && (
                       <div className="text-red-500 text-sm mt-1">{addressError}</div>

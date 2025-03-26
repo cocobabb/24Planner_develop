@@ -60,6 +60,10 @@ export default function Map({
     };
     const map = new kakao.maps.Map(container.current, options);
 
+    // 지도 확대 축소를 제어할 수 있는  줌 컨트롤을 생성합니다
+    const zoomControl = new kakao.maps.ZoomControl();
+    map.addControl(zoomControl, kakao.maps.ControlPosition.RIGHT);
+
     // 지도 중심지 설정
     if (centerlatitude == null || centerlongitude == null) {
       position = new kakao.maps.LatLng(33.450701, 126.570667);
