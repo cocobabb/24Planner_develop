@@ -65,7 +65,11 @@ export default function TaskGroupBox({ taskGroups, setTaskGroups }) {
   return (
     <section className={`${section}`}>
       {taskGroups.map((task) => (
-        <div key={task.id} className={`${groupBox}`}>
+        <div
+          key={task.id}
+          className={`${groupBox}`}
+          onClick={() => navigate(`/plans/${movingPlanId}/task/${task.id}`)}
+        >
           <span className={`${boxText}`}>{task.title}</span>
           <div className={`${progress}`} style={{ position: 'relative' }}>
             {task.progress ? (
