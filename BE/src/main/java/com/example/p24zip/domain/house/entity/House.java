@@ -13,14 +13,11 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.validator.constraints.Length;
 
 @Entity
 @Table(name = "house")
@@ -36,16 +33,15 @@ public class House extends BaseTimeEntity {
     @JoinColumn(name = "movingPlan_id", nullable = false)
     private MovingPlan movingPlan;
 
-    @NotBlank
-    @Length(max = 5)
+    @Column(length = 5, nullable = false)
     private String nickname;
-    @NotBlank
+    @Column(nullable = false)
     private String address1;
-    @Length(max = 35)
+    @Column(length = 35, nullable = false)
     private String address2; // 상세 주소
-    @NotNull
+    @Column(nullable = false)
     private double longitude; // 경도
-    @NotNull
+    @Column(nullable = false)
     private double latitude; // 위도
     @Column(length = 1000)
     private String content;

@@ -21,6 +21,7 @@ public class AddHouseRequestDto {
     private String nickname;
     @NotBlank
     private String address1;
+    @NotBlank
     @Length(max = 35)
     private String address2;
 

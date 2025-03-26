@@ -5,13 +5,14 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.validator.constraints.Length;
 
 @Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class ChangeHouseContentRequestDto {
-    @Column(length = 1000)
+    @Length(max = 1000)
     private String content;
 
 }
