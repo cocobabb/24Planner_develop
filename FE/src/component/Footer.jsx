@@ -1,7 +1,9 @@
 export default function Footer() {
+  const footerClass = 'h-18 flex flex-col justify-center items-center';
+  const footerTextClass = 'text-md';
   return (
-    <footer className="h-18 flex justify-center items-center">
-      <div className="text-md m-4">planner24.zip</div>
+    <footer className={footerClass}>
+      <div className={footerTextClass}>planner24.zip</div>
     </footer>
   );
 }

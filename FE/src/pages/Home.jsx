@@ -11,9 +11,8 @@ export default function Home() {
   // 따라서 첫 방문 여부에 따라 출력 Component 구분
   // useEffect는 한 번만 실행되어야 하나, setIsAlreadyVisited(() => false); 때문에 한 번 더 실행됨
   // 이 때문에 visitCount가 2회가 될 때까지를 첫 방문으로 가정
-  // TODO: 개발 모드가 아닌 경우의 동작에 따라 수정이 요구될 수 있음
   useEffect(() => {
-    if (!localStorage.getItem('visitCount')) {
+    if (!localStorage.getItem('visitCount') || localStorage.getItem('visitCount') === '0') {
       localStorage.setItem('visitCount', '1');
       setIsAlreadyVisited(() => false);
     } else if (localStorage.getItem('visitCount') === '1') {

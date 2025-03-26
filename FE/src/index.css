@@ -2,6 +2,7 @@
 @import 'tailwindcss';
 @theme {
   --font-roboto: 'Roboto', 'sans-serif';
+  --text-tiny: 0.6rem;
   --color-primary: #69db7c;
   --color-secondary: #2f9e44;
 
@@ -99,6 +100,75 @@ input::-webkit-inner-spin-button {
 /* 일부 환경에서 hover가 동작하지 않는 문제 수정을 위한 설정 */
 /* https://tailwindcss.com/docs/upgrade-guide#hover-styles-on-mobile */
 @custom-variant hover (&:hover);
+
+/* 달력 관련 CSS 지정 */
+:root {
+  --fc-neutral-bg-color: #ffffff;
+  --fc-today-bg-color: #ffffff;
+}
+
+.fc-col-header-cell {
+  background-color: #f3f3f3;
+}
+
+.fc-day-disabled {
+  background-color: #ffffff;
+}
+
+.fc-day-sun {
+  color: red;
+}
+
+.fc-day-sat {
+  color: blue;
+}
+
+.fc .fc-daygrid-day-top {
+  flex-direction: row;
+}
+
+.fc-day-today .fc-daygrid-day-number {
+  background-color: #69db7c;
+}
+
+/* 달력 내 event뿐만 아니라 fc-event를 여기에서 설정해야 달력 높이도 감소함 */
+.fc-event {
+  height: 17px !important;
+}
+
+.fc .fc-popover {
+  z-index: 8;
+  color: #000000;
+}
+
+/* DatePicker 용 CSS */
+.react-datepicker__day-names .react-datepicker__day-name:first-child,
+.react-datepicker__month-container .react-datepicker__day:first-child {
+  color: #ff0000 !important;
+}
+
+.react-datepicker__day-names .react-datepicker__day-name:last-child,
+.react-datepicker__month-container .react-datepicker__day:last-child {
+  color: #0000ff !important;
+}
+
+.react-datepicker__day--outside-month {
+  color: #cccccc !important;
+}
+
+.react-datepicker__month-container
+  .react-datepicker__day:first-child.react-datepicker__day--outside-month {
+  color: #ffcccc !important;
+}
+
+.react-datepicker__month-container
+  .react-datepicker__day:last-child.react-datepicker__day--outside-month {
+  color: #ccccff !important;
+}
+
+.react-datepicker__day--keyboard-selected {
+  background-color: #ffffff !important;
+}
 
 * {
   box-sizing: border-box;
