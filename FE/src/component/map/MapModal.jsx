@@ -21,6 +21,8 @@ export default function MapModal({ modalClose, setAddressData, setSelectedButton
 
   const [isOpen, setIsOpen] = useState(false);
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const loadPostcodeScript = () => {
     return new Promise((resolve, reject) => {
       // 이미 스크립트가 로드된 경우 바로 resolve
@@ -88,6 +90,11 @@ export default function MapModal({ modalClose, setAddressData, setSelectedButton
   };
 
   const createhouse = async () => {
+
+    if (isSubmitting) return; 
+
+    setIsSubmitting(true); 
+
     const errors = {};
     if (!formData.nickname) errors.nickname = '별명을 넣어주세요.';
     if (!formData.address1) errors.address1 = '주소를 넣어주세요.';
@@ -116,6 +123,8 @@ export default function MapModal({ modalClose, setAddressData, setSelectedButton
       modalClose();
     } catch (error) {
       console.log(error);
+    } finally {
+      setIsSubmitting(false); // 요청 완료 후 다시 버튼 활성화
     }
   };
 
