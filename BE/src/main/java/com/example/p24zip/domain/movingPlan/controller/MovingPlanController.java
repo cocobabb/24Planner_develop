@@ -51,6 +51,20 @@ public class MovingPlanController {
         ));
     }
 
+    @GetMapping("/{movingPlanId}")
+    public ResponseEntity<ApiResponse<MovingPlanResponseDto>> readMovingPlanById(
+            @PathVariable Long movingPlanId,
+            @AuthenticationPrincipal User user) {
+
+        movingPlanValidator.validateMovingPlanAccess(movingPlanId, user);
+
+        return ResponseEntity.ok(ApiResponse.ok(
+                "OK",
+                "플랜 조회에 성공했습니다.",
+                movingPlanService.readMovingPlanById(movingPlanId)
+        ));
+    }
+
     @PutMapping("/{movingPlanId}")
     public ResponseEntity<ApiResponse<MovingPlanResponseDto>> updateMovingPlan(
             @PathVariable Long movingPlanId,

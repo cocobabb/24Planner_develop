@@ -14,7 +14,7 @@ export default function PlanCreator({ onPlanCreated }) {
     setNewPlan('');
   };
 
-  // 플랜 이름 입력 감지 및 검증
+  // 플랜 제목 입력 감지 및 검증
   const handleInput = (e) => {
     const { value } = e.target;
 
@@ -22,7 +22,7 @@ export default function PlanCreator({ onPlanCreated }) {
   };
 
   // 이사 플랜 생성 요청
-  const handleCreatePlan = async () => {
+  const createPlan = async () => {
     if (newPlan.trim()) {
       try {
         const response = await planApi.createPlan(newPlan);
@@ -38,7 +38,7 @@ export default function PlanCreator({ onPlanCreated }) {
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') {
-      handleCreatePlan();
+      createPlan();
     }
   };
 
@@ -59,12 +59,12 @@ export default function PlanCreator({ onPlanCreated }) {
 
   // CSS
   const planLi =
-    'w-full h-20 flex items-center justify-center mb-10 py-5 border-2 rounded-3xl relative cursor-pointer';
+    'w-180 h-20 flex items-center justify-center mt-5 border-2 rounded-3xl cursor-pointer';
   const defaultLi = 'border-gray-200';
   const creatingLi = 'border-primary';
-  const planText = 'w-full text-center text-2xl text-gray-200 text-opacity-70';
-  const createDiv = 'flex';
-  const inputStyle = 'w-80 px-2 focus:outline-none text-center text-2xl';
+  const planText = 'w-full text-center text-3xl text-gray-200 text-opacity-70';
+  const createDiv = 'w-full flex items-center justify-center relative';
+  const inputStyle = 'w-80 px-2 focus:outline-none text-center text-xl';
   const createButton =
     'absolute right-5 w-15 border-2 border-primary rounded-xl py-1 text-primary cursor-pointer hover:bg-primary hover:text-white';
 
@@ -91,7 +91,7 @@ export default function PlanCreator({ onPlanCreated }) {
             />
             <hr />
           </div>
-          <button className={createButton} onClick={handleCreatePlan}>
+          <button className={createButton} onClick={createPlan}>
             추가
           </button>
         </div>

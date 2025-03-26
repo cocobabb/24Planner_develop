@@ -7,8 +7,8 @@ export default function Plan({ plan }) {
 
   // CSS
   const planLi =
-    'w-full h-20 flex items-center justify-center mb-10 py-5 border-2 border-primary rounded-3xl relative cursor-pointer';
-  const planText = 'w-full text-center text-2xl ';
+    'w-180 h-20 flex items-center justify-center mt-10 border-2 border-primary rounded-3xl relative cursor-pointer';
+  const planText = 'w-full text-center text-xl';
   const settingLink = 'absolute right-5 text-xl cursor-pointer';
 
   return (

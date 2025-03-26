@@ -30,6 +30,13 @@ public class MovingPlanService {
                 .toList();
     }
 
+    public MovingPlanResponseDto readMovingPlanById(Long id) {
+        MovingPlan movingPlan = movingPlanRepository.findById(id)
+                .orElseThrow(ResourceNotFoundException::new);
+
+        return MovingPlanResponseDto.from(movingPlan);
+    }
+
     @Transactional
     public MovingPlanResponseDto updateMovingPlan(Long id, MovingPlanRequestDto requestDto) {
         MovingPlan movingPlan = movingPlanRepository.findById(id)

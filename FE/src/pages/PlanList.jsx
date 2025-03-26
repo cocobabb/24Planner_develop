@@ -26,23 +26,25 @@ export default function PlanList() {
   };
 
   // CSS
-  const displayStyle = 'px-3 py-10 flex flex-col items-center gap-10 text-center';
-  const planHeader = 'w-full';
+  const displayStyle = 'w-300 mx-auto my-5 text-center';
   const titleStyle = 'text-2xl';
-  const lineStyle = 'mx-20 mt-5 border-t-2 border-primary';
-  const planDiv = 'w-full px-60 py-10 list-none max-w-full';
+  const lineStyle = 'mx-30 mt-5 border-t-2 border-primary';
+  const planListContainer = 'flex flex-col items-center px-60 py-10 list-none';
+  const emptyText = 'mt-10 text-primary text-2xl';
 
   return (
     <div className={displayStyle}>
-      <div className={planHeader}>
+      <div>
         <h2 className={titleStyle}>이사 목록</h2>
         <hr className={lineStyle} />
       </div>
-      <ul className={planDiv}>
+      <ul className={planListContainer}>
         <PlanCreator onPlanCreated={handleNewPlan} />
-        {plans.map((plan) => (
-          <Plan key={plan.id} plan={plan} />
-        ))}
+        {plans.length > 0 ? (
+          plans.map((plan) => <Plan key={plan.id} plan={plan} />)
+        ) : (
+          <p className={emptyText}>새 이사 플랜을 추가해보세요</p>
+        )}
       </ul>
     </div>
   );
