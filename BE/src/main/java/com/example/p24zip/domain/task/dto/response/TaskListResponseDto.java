@@ -10,13 +10,15 @@ import java.util.List;
 @Builder
 public class TaskListResponseDto {
 
+    private String title;
     private Long totalCount;
     private Long completeCount;
     private List<TaskResponseDto> tasks;
     private String memo;
 
-    public static TaskListResponseDto from(Long totalCount, Long completeCount, List<Task> tasks, String memo) {
+    public static TaskListResponseDto from(String title, Long totalCount, Long completeCount, List<Task> tasks, String memo) {
         return TaskListResponseDto.builder()
+                .title(title)
                 .totalCount(totalCount)
                 .completeCount(completeCount)
                 .tasks(tasks.stream()

@@ -6,12 +6,14 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.validator.constraints.Length;
 
 @Getter
 @NoArgsConstructor
 public class TaskGroupRequestDto {
 
     @NotBlank
+    @Length(max = 18)
     private String title;
 
     @Builder

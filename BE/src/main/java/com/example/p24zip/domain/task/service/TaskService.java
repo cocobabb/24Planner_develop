@@ -45,11 +45,12 @@ public class TaskService {
         isMovingPlanIdMatched(movingPlanId, taskGroup);
 
         List<Task> tasks = taskRepository.findByTaskGroup(taskGroup);
+        String title = taskGroup.getTitle();
         long totalCount = tasks.size();
         long completeCount = taskRepository.countByTaskGroupAndIsCompletedTrue(taskGroup);
         String memo = taskGroup.getMemo() != null ? taskGroup.getMemo() : "";
 
-        return TaskListResponseDto.from(totalCount, completeCount, tasks, memo);
+        return TaskListResponseDto.from(title, totalCount, completeCount, tasks, memo);
     }
 
     @Transactional

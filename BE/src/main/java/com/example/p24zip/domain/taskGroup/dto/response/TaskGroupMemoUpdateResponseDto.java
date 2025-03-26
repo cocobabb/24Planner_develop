@@ -14,7 +14,7 @@ public class TaskGroupMemoUpdateResponseDto {
     public static TaskGroupMemoUpdateResponseDto from(TaskGroup entity){
         return TaskGroupMemoUpdateResponseDto.builder()
             .id(entity.getId())
-            .memo(entity.getTitle())
+            .memo(entity.getMemo())
             .build();
     }
 }
