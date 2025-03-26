@@ -22,7 +22,7 @@ export default function Map({
 
   const mapStyle = 'flex flex-col flex-2 h-full w-full border-r-1 border-gray-300 px-4';
   const mapPlusStyle =
-    'w-22 h-12 border-2 rounded-xl px-2 py-1 bg-primary text-2xl text-white me-2';
+    'w-22 h-12 border-2 rounded-xl px-2 py-1 bg-primary text-2xl text-white me-2 cursor-pointer';
   const mapButtonStyle =
     'cursor-pointer w-25 h-12 border-2 rounded-xl px-2 py-1 text-black hover:bg-white hover:text-primary mx-3';
 

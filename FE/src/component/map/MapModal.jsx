@@ -48,12 +48,12 @@ export default function MapModal({ modalClose, setAddressData, setSelectedButton
 
   const inputWrapperStyle = 'w-130 mt-4';
   const adressWrapperStyle = 'flex h-11';
-  const inputStyle = 'w-full text-xl pl-3 focus:outline-none focus:placeholder-transparent mt-5';
+  const inputStyle = 'w-8/9 text-xl pl-3 focus:outline-none focus:placeholder-transparent mt-5 mr-5';
   const lineStyle = 'mt-2';
   const buttonStyle =
-    'block mt-10 mx-auto border-2 rounded-2xl px-9 py-2 text-2xl text-primary hover:bg-primary hover:text-white';
+    'block mt-10 mx-auto border-2 rounded-2xl px-9 py-2 text-2xl text-primary hover:bg-primary hover:text-white cursor-pointer';
   const adressButtonStyle =
-    'w-30 border-2 rounded-full px-2 py-1 text-primary hover:bg-primary hover:text-white';
+    'w-30 border-2 rounded-full px-2 py-1 text-primary hover:bg-primary hover:text-white cursor-pointer';
   const inputRequestMessageStyle = 'text-red-400 mt-1';
 
   const handleSubmit = (e) => {
