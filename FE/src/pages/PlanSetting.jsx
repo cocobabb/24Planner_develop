@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import planApi from '../api/planApi';
+import { useDispatch } from 'react-redux';
+import { setCurrentPlanTitle } from '../store/slices/planForHeaderSlice';
 
 export default function PlanSetting() {
   const { movingPlanId } = useParams();
 
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   // 상태 관리 데이터
   const [title, setTitle] = useState('');
@@ -56,6 +59,7 @@ export default function PlanSetting() {
         const data = response.data.data;
 
         setTitle(data.title);
+        dispatch(setCurrentPlanTitle({ title: data.title }));
       } catch (error) {}
     }
 
@@ -86,10 +90,9 @@ export default function PlanSetting() {
   const displayStyle = 'w-300 mx-auto my-5';
   const titleHeader = 'h-full mx-60 flex justify-between';
   const titleDiv = 'flex';
-  const titleStyle = 'text-2xl mr-5';
-  const titleButton =
-    'text-xl text-gray-500 text-opacity-70 underline cursor-pointer hover:text-primary';
-  const titleInputStyle = 'text-gray-700 text-2xl border-b outline-none';
+  const titleStyle = 'text-2xl mr-3';
+  const titleButton = 'text-gray-500 text-opacity-70 underline cursor-pointer hover:text-primary';
+  const titleInputStyle = 'w-120 text-gray-700 text-2xl border-b outline-none';
 
   return (
     <div className={displayStyle}>

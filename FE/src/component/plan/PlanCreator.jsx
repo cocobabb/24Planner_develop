@@ -67,9 +67,9 @@ export default function PlanCreator({ onPlanCreated }) {
   // CSS
   const planLi =
     'w-180 h-20 flex items-center justify-center mt-5 border-2 rounded-3xl cursor-pointer';
-  const defaultLi = 'border-gray-200';
+  const defaultLi = 'border-gray-300';
   const creatingLi = 'border-primary';
-  const planText = 'w-full text-center text-3xl text-gray-200 text-opacity-70';
+  const planText = 'w-full text-center text-3xl text-gray-300 text-opacity-70';
   const createDiv = 'w-full flex items-center justify-center relative';
   const inputStyle = 'w-105 px-2 focus:outline-none text-center text-xl';
   const createButton =
