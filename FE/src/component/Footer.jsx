@@ -3,7 +3,7 @@ export default function Footer() {
   const footerTextClass = 'text-md';
   return (
     <footer className={footerClass}>
-      <div className={footerTextClass}>planner24.zip</div>
+      <div className={footerTextClass}>24zip.com</div>
     </footer>
   );
 }

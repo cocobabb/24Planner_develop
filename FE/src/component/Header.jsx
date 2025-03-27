@@ -3,7 +3,7 @@ import HeaderRight from './header/HeaderRight';
 
 export default function Header() {
   const headerStyle = 'h-full relative';
-  const navStyle = 'flex justify-between h-full p-2 text-2xl';
+  const navStyle = 'flex justify-between h-full p-2 text-xl';
 
   return (
     <header className={headerStyle}>

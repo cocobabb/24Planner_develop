@@ -1,23 +1,58 @@
+import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { logout } from '../../store/slices/authSlice';
+import { setCurrentPlanTitle } from '../../store/slices/planForHeaderSlice';
+import authApi from '../../api/authApi';
+import planApi from '../../api/planApi';
 
 export default function HeaderRight() {
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const splitedUrlString = location.pathname.split('/');
+  const [storedPlanId, setStoredPlanId] = useState(0);
 
-  const handleLogoutClick = () => {
+  const currentPlanTitle = useSelector((state) => state.planForHeader.title);
+  const isLoggedIn = useSelector((state) => state.auth.isLoggedIn);
+
+  const splitedUrlString = location.pathname.split('/');
+  let currentPlanId = splitedUrlString[2];
+  currentPlanId = currentPlanId === undefined ? 0 : currentPlanId;
+
+  if (currentPlanId != storedPlanId) {
+    setStoredPlanId(currentPlanId);
+  }
+
+  useEffect(() => {
+    async function setPlanTitle() {
+      try {
+        const response = await planApi.readPlan(storedPlanId);
+        dispatch(setCurrentPlanTitle({ title: response.data.data.title }));
+      } catch (error) {
+        console.log(error);
+        setStoredPlanId(() => 0);
+        dispatch(setCurrentPlanTitle({ title: '' }));
+      }
+    }
+
+    if (storedPlanId) {
+      setPlanTitle();
+    } else {
+      dispatch(setCurrentPlanTitle({ title: '' }));
+    }
+  }, [storedPlanId]);
+
+  const handleLogoutClick = async () => {
     dispatch(logout());
+    await authApi.logout();
     navigate('/');
   };
 
-  const headerListStyle = 'flex flex-6 justify-end';
+  const headerListStyle = 'flex flex-1 justify-end';
   const headerItemStyle = 'flex items-center p-4';
-  const headerDropdownStyle = headerItemStyle + ' relative group';
-  const headerDropdownButtonStyle = 'text-secondary cursor-pointer';
+  const headerDropdownStyle = headerItemStyle + ' relative group min-w-30';
+  const headerDropdownButtonStyle = 'w-full text-center text-secondary cursor-pointer';
   const headerDropdownBodyStyle =
     'absolute text-xl text-center top-15 space-y-4 left-0 right-0 w-full py-4 bg-gray-100 shadow-sm opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300';
   const headerDropdownItemStyle = 'w-full';
@@ -30,7 +65,7 @@ export default function HeaderRight() {
       splitedUrlString[2] &&
       Number.parseInt(splitedUrlString[2]) > 0 ? (
         <li className={headerDropdownStyle}>
-          <span className={headerDropdownButtonStyle}>이사 플랜 이름</span>
+          <div className={headerDropdownButtonStyle}>{currentPlanTitle}</div>
           <ul className={headerDropdownBodyStyle}>
             <li className={headerDropdownItemStyle}>
               <Link to="/plans" className={headerDropdownLinkStyle}>
@@ -38,7 +73,10 @@ export default function HeaderRight() {
               </Link>
             </li>
             <li className={headerDropdownItemStyle}>
-              <Link to="/config" className={headerDropdownLinkStyle}>
+              <Link
+                to={`/plans/${splitedUrlString[2]}/setting`}
+                className={headerDropdownLinkStyle}
+              >
                 이사 설정
               </Link>
             </li>
@@ -48,14 +86,12 @@ export default function HeaderRight() {
         <></>
       )}
 
-      {splitedUrlString[1] === 'plans' ? (
+      {isLoggedIn && (
         <li className={headerItemStyle}>
           <div className="cursor-pointer" onClick={handleLogoutClick}>
             로그아웃
           </div>
         </li>
-      ) : (
-        <></>
       )}
     </ul>
   );
