@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios from 'axios';
 import authApi from './authApi';
 import store from '../store/store';
 import { logout } from '../store/slices/authSlice';
@@ -49,25 +49,22 @@ api.interceptors.response.use(
         const response = await authApi.reissue();
         const data = response.data;
         const newAccessToken = data.data.accessToken;
- 
+
         // 새로 발급받은 accessToken을 로컬스토리지에 저장
         localStorage.setItem('accessToken', newAccessToken);
 
         // 실패한 요청 재시도
         return api(originalRequest);
-
       } catch (error) {
-
-        alert("토큰 만료로 로그아웃됩니다.");
-        
-        // 서버에 로그아웃 요청
-        await authApi.logout();
+        alert('로그아웃되었습니다. 다시 로그인해주세요.');
 
         // redux와 localStorage에서 accessToken 삭제
         store.dispatch(logout());
 
-        return Promise.reject(error);
+        // 서버에 로그아웃 요청
+        await authApi.logout();
 
+        return Promise.reject(error);
       } finally {
         flag = false;
       }
