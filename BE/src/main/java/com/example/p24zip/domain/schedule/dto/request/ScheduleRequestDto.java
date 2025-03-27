@@ -7,12 +7,14 @@ import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.validator.constraints.Length;
 
 @Getter
 @NoArgsConstructor
 public class ScheduleRequestDto {
 
     @NotBlank
+    @Length(max = 20)
     private String content;
 
     @NotNull

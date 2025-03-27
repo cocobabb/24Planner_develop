@@ -20,7 +20,7 @@ public class Task extends BaseTimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(length = 100, nullable = false)
     private String content;
 
     private Boolean isCompleted = false;

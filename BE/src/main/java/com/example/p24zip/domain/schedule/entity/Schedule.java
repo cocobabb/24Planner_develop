@@ -29,7 +29,7 @@ public class Schedule extends BaseTimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(length = 20, nullable = false)
     private String content;
 
     @Column(nullable = false)
