@@ -7,28 +7,39 @@ export default function TaskGroupBox({ taskGroups, setTaskGroups }) {
 
   const [clickAdd, setClickAdd] = useState(false);
   const [message, setMessage] = useState();
+  const [formData, setFormData] = useState({
+    title: '',
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const taskGroupText = useRef();
   const navigate = useNavigate();
 
-  const blockParentEvent = (e) => {
-    e.stopPropagation(); //부모 태그로 이벤트 전파 방지
+  const saveinputValues = (e) => {
     setMessage();
+    const { name, value } = e.target;
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   const postTaskGroup = async (e) => {
-    e.stopPropagation(); //부모 태그로 이벤트 전파 방지
-    const inputValue = taskGroupText.current.value;
+    e.preventDefault();
+
+    if (isSubmitting) return;
+    setIsSubmitting(true);
 
     try {
-      const response = await taskGroupApi.postTaskGroup(movingPlanId, { title: inputValue });
+      const response = await taskGroupApi.postTaskGroup(movingPlanId, formData);
       const code = response.code;
       const id = response.data.id;
       if (code === 'CREATED') {
         setClickAdd(false);
         setMessage();
-        const add = { id, title: inputValue, progress: 0 };
+        const add = { id, title: formData.title, progress: 0 };
         setTaskGroups((prev) => [...prev, add]);
+        setFormData({});
       }
     } catch (error) {
       const errorData = error.response.data;
@@ -42,12 +53,14 @@ export default function TaskGroupBox({ taskGroups, setTaskGroups }) {
       } else if (code === 'NOT_FOUND') {
         navigate('/not-found');
       }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const section = 'm-10 grid grid-cols-2 gap-14';
   const groupBox =
-    'w-100 h-35 border-3 rounded-3xl px-2 py-5 bg-white font-roboto flex flex-col items-center justify-center';
+    'w-100 h-35 border-3 rounded-3xl px-2 py-5 bg-white font-roboto flex flex-col items-center justify-center hover:cursor-pointer';
   const boxText = 'text-lg font-roboto m-3';
   const progress = 'w-90 h-7 border-2 rounded-full border-primary';
   const progressPercent = 'bg-primary border-primary border-1 rounded-full';
@@ -59,8 +72,10 @@ export default function TaskGroupBox({ taskGroups, setTaskGroups }) {
   const addBtn =
     'w-20 border-2 rounded-xl px-2 py-1 border-primary text-primary hover:bg-primary hover:text-white cursor-pointer';
   const inputText =
-    'w-50 mt-6 border-3 border-b-gray-300 border-x-white border-t-white placeholder:text-gray-300';
+    'w-50 mt-6 border-3 border-b-gray-300 border-x-white border-t-white placeholder:text-gray-300 focus:outline-none';
   const messageStyle = 'font-semibold text-red-400';
+  const X = 'text-gray-500 text-opacity-70 cursor-pointer';
+  const xContainer = 'w-full grid justify-items-end';
 
   return (
     <section className={`${section}`}>
@@ -79,7 +94,7 @@ export default function TaskGroupBox({ taskGroups, setTaskGroups }) {
                   width: 2 + 0.985 * task.progress + '%',
                   height: '100%',
                   position: 'absolute',
-                  left: -2,
+                  left: -1,
                 }}
               ></div>
             ) : (
@@ -90,17 +105,23 @@ export default function TaskGroupBox({ taskGroups, setTaskGroups }) {
       ))}
 
       {clickAdd ? (
-        <div
-          className={`${changeAddBox}`}
-          onClick={() => {
-            setClickAdd(false);
-          }}
-        >
-          <div>
+        <div className={`${changeAddBox}`}>
+          <div className={`${xContainer}`}>
+            <button
+              className={`${X}`}
+              onClick={() => {
+                setMessage();
+                setClickAdd(false);
+              }}
+            >
+              X
+            </button>
+          </div>
+          <form>
             <input
-              ref={taskGroupText}
+              name="title"
               className={`${inputText}`}
-              onClick={blockParentEvent}
+              onChange={saveinputValues}
               type="text"
               placeholder="체크 그룹 추가"
               required
@@ -108,7 +129,7 @@ export default function TaskGroupBox({ taskGroups, setTaskGroups }) {
             <button className={`${addBtn}`} onClick={postTaskGroup}>
               추가
             </button>
-          </div>
+          </form>
           {message ? <span className={`${messageStyle}`}>{message}</span> : <div>&nbsp;</div>}
         </div>
       ) : (

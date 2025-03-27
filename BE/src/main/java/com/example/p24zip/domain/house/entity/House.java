@@ -30,7 +30,7 @@ public class House extends BaseTimeEntity {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "movingPlan_id", nullable = false)
+    @JoinColumn(name = "moving_plan_id", nullable = false)
     private MovingPlan movingPlan;
 
     @Column(length = 5, nullable = false)

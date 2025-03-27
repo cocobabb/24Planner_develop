@@ -33,7 +33,7 @@ export default function TaskGroups() {
   const progress = 'w-215 h-10 border-4 rounded-full m-5 border-primary';
   const progressPercent = 'bg-primary border-primary border-1 rounded-full';
   const house =
-    'w-215 border-3 rounded-3xl m-5 px-2 py-5  text-lg text-black text-center font-bold bg-white font-roboto';
+    'w-215 border-3 rounded-3xl m-5 px-2 py-5  text-lg text-black text-center font-bold bg-white font-roboto hover:cursor-pointer';
 
   return (
     <section className={`${section}`}>
@@ -51,7 +51,7 @@ export default function TaskGroups() {
               width: 2 + 0.985 * totalProgress + '%',
               height: '100%',
               position: 'absolute',
-              left: -2,
+              left: -1,
             }}
           ></div>
         ) : (
