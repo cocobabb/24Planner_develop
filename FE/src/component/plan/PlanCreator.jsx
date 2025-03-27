@@ -7,6 +7,7 @@ export default function PlanCreator({ onPlanCreated }) {
   // 상태 관리 데이터
   const [isCreating, setIsCreating] = useState(false);
   const [newPlan, setNewPlan] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // 이사 플랜 생성 상태 토글
   const toggleCreating = () => {
@@ -23,16 +24,21 @@ export default function PlanCreator({ onPlanCreated }) {
 
   // 이사 플랜 생성 요청
   const createPlan = async () => {
-    if (newPlan.trim()) {
-      try {
-        const response = await planApi.createPlan(newPlan);
-        const data = response.data.data;
+    if (isSubmitting || !newPlan.trim()) return;
 
-        onPlanCreated(data);
+    try {
+      setIsSubmitting(true);
 
-        toggleCreating();
-        setNewPlan('');
-      } catch (error) {}
+      const response = await planApi.createPlan(newPlan);
+      const data = response.data.data;
+
+      onPlanCreated(data);
+
+      toggleCreating();
+      setNewPlan('');
+    } catch (error) {
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -46,6 +52,7 @@ export default function PlanCreator({ onPlanCreated }) {
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (isCreating && liRef.current && !liRef.current.contains(e.target)) {
+        setIsSubmitting(false);
         toggleCreating();
       }
     };
@@ -64,7 +71,7 @@ export default function PlanCreator({ onPlanCreated }) {
   const creatingLi = 'border-primary';
   const planText = 'w-full text-center text-3xl text-gray-200 text-opacity-70';
   const createDiv = 'w-full flex items-center justify-center relative';
-  const inputStyle = 'w-80 px-2 focus:outline-none text-center text-xl';
+  const inputStyle = 'w-105 px-2 focus:outline-none text-center text-xl';
   const createButton =
     'absolute right-5 w-15 border-2 border-primary rounded-xl py-1 text-primary cursor-pointer hover:bg-primary hover:text-white';
 
@@ -83,6 +90,7 @@ export default function PlanCreator({ onPlanCreated }) {
               type="text"
               value={newPlan}
               placeholder="이사 플랜 추가"
+              maxLength="20"
               className={inputStyle}
               onChange={handleInput}
               onKeyDown={handleKeyDown}

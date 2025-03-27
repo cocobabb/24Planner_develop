@@ -8,6 +8,7 @@ import com.example.p24zip.domain.taskGroup.entity.TaskGroup;
 import com.example.p24zip.domain.user.entity.User;
 import com.example.p24zip.global.entity.BaseTimeEntity;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 
 import java.util.ArrayList;
@@ -22,7 +23,7 @@ public class MovingPlan extends BaseTimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(length = 20, nullable = false)
     private String title;
 
     @ManyToOne
