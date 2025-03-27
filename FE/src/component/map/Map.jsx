@@ -127,7 +127,7 @@ export default function Map({
         )}
 
       <section className={mapStyle}>
-        <h1 className="text-xl font-semibold mb-4">살 곳 정하기</h1>
+        <div>&nbsp;</div>
         <div className="flex mb-4">
           <button className={mapPlusStyle} onClick={handleCalendarModal}>
             +
