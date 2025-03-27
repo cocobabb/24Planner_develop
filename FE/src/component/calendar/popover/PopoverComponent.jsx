@@ -2,15 +2,6 @@ import { useSelector, useDispatch } from 'react-redux';
 import { mouseMoveReducer } from '../../../store/slices/popoverSlice';
 
 export default function PopoverComponent() {
-  // Tailwind CSS에서 사용할 색상 Class들을 미리 선언
-  // TODO: 임시적인 목록이므로, 추후 변경될 수 있음
-  const tempUsingColor = [
-    'border-[#69db7c]',
-    'border-[#4dabf7]',
-    'border-[#2f9e44]',
-    'border-[#fcc2d7]',
-  ];
-
   const dispatch = useDispatch();
   const pointerPositionX = useSelector((state) => state.popover.x);
   const pointerPositionY = useSelector((state) => state.popover.y);

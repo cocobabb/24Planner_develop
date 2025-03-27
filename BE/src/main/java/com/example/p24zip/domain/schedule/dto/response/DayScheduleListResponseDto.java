@@ -10,9 +10,9 @@ import lombok.Getter;
 public class DayScheduleListResponseDto {
 
     private final LocalDate date;
-    private final List<DayScheduleResponseDto> schedules;
+    private final List<ScheduleResponseDto> schedules;
 
-    public static DayScheduleListResponseDto from(LocalDate date, List<DayScheduleResponseDto> schedules){
+    public static DayScheduleListResponseDto from(LocalDate date, List<ScheduleResponseDto> schedules){
         return DayScheduleListResponseDto.builder()
             .date(date)
             .schedules(schedules)

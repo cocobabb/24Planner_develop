@@ -1,22 +1,4 @@
-export default function CalendarColorModal({ selectColor, setSelectColor }) {
-  // Tailwind CSS에서 사용할 수 있도록 바탕 색상을 미리 정의하는 부분으로, 실제 대입하지는 않음
-  const colorsListForSelect = [
-    [
-      ['bg-[#FFC9C9]', 'bg-[#FF8787]', 'bg-[#FA5252]', 'bg-[#E03131]'],
-      ['bg-[#FFD8A8]', 'bg-[#FFA94D]', 'bg-[#FD7E14]', 'bg-[#E8590C]'],
-      ['bg-[#FFEC99]', 'bg-[#FFD43B]', 'bg-[#FAB005]', 'bg-[#F08C00]'],
-      ['bg-[#96F2D7]', 'bg-[#38D9A9]', 'bg-[#12B886]', 'bg-[#099268]'],
-      ['bg-[#B2F2BB]', 'bg-[#69DB7C]', 'bg-[#40C057]', 'bg-[#2F9E44]'],
-    ],
-    [
-      ['bg-[#A5D8FF]', 'bg-[#4DABF7]', 'bg-[#228BE6]', 'bg-[#1971C2]'],
-      ['bg-[#D0BFFF]', 'bg-[#9775FA]', 'bg-[#7950F2]', 'bg-[#6741D9]'],
-      ['bg-[#EEBEFA]', 'bg-[#DA77F2]', 'bg-[#BE4BDB]', 'bg-[#9C36B5]'],
-      ['bg-[#EADDD7]', 'bg-[#D2BAB0]', 'bg-[#A18072]', 'bg-[#846358]'],
-      ['bg-[#E9ECEF]', 'bg-[#CED4DA]', 'bg-[#868E96]', 'bg-[#343A40]'],
-    ],
-  ];
-
+export default function CalendarColorModal({ color, setColor }) {
   const colorsList = [
     [
       ['#FFC9C9', '#FF8787', '#FA5252', '#E03131'],
@@ -34,13 +16,13 @@ export default function CalendarColorModal({ selectColor, setSelectColor }) {
     ],
   ];
 
-  const selectColorUpper = selectColor.toUpperCase();
+  const colorUpper = color.toUpperCase();
 
   const decideColor = (e) => {
     // e.currentTarget으로 하면 null이 되는 문제가 있어서 다음과 같이 보정
     // https://stackoverflow.com/questions/78717419/react-onmouseenter-event-currenttarget-is-always-null
     const { currentTarget } = e;
-    setSelectColor(() => currentTarget.getAttribute('value'));
+    setColor(() => currentTarget.getAttribute('value'));
   };
 
   const circleButtonStyle = 'w-10 h-10 m-1 rounded-4xl';
@@ -50,7 +32,6 @@ export default function CalendarColorModal({ selectColor, setSelectColor }) {
   const flexColStyle = flexStyle + ' flex-col';
   const colorsDivListStyle = flexStyle + ' m-4';
   const subColorsDivListStyle = flexColStyle + ' flex-1';
-  const dropdownTitleStyle = 'text-xl font-semibold';
 
   const colorsDivList = colorsList.map((subColorsList, i) => {
     const subColorsDivList = subColorsList.map((colors, j) => {
@@ -59,7 +40,7 @@ export default function CalendarColorModal({ selectColor, setSelectColor }) {
           <div
             key={k}
             value={color}
-            className={`${circleButtonStyle} bg-[${color}] ${selectColorUpper === color ? selectedButtonStyle : notSelectedButtonStyle}`}
+            className={`${circleButtonStyle} bg-[${color}] ${colorUpper === color ? selectedButtonStyle : notSelectedButtonStyle}`}
             onClick={decideColor}
           />
         );
@@ -79,7 +60,6 @@ export default function CalendarColorModal({ selectColor, setSelectColor }) {
 
   return (
     <div>
-      <div className={dropdownTitleStyle}>색상 선택</div>
       <div className={colorsDivListStyle}>{colorsDivList}</div>
     </div>
   );

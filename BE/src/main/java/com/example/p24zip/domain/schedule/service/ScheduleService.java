@@ -4,7 +4,6 @@ import com.example.p24zip.domain.movingPlan.entity.MovingPlan;
 import com.example.p24zip.domain.movingPlan.repository.MovingPlanRepository;
 import com.example.p24zip.domain.schedule.dto.request.ScheduleRequestDto;
 import com.example.p24zip.domain.schedule.dto.response.DayScheduleListResponseDto;
-import com.example.p24zip.domain.schedule.dto.response.DayScheduleResponseDto;
 import com.example.p24zip.domain.schedule.dto.response.MonthScheduleListResponseDto;
 import com.example.p24zip.domain.schedule.dto.response.ScheduleResponseDto;
 import com.example.p24zip.domain.schedule.entity.Schedule;
@@ -61,8 +60,8 @@ public class ScheduleService {
         List<Schedule> allSchedulesInDate
             = scheduleRepository.findAllByStartDate(movingPlanId, date);
 
-        List<DayScheduleResponseDto> schedulesInDate
-            = allSchedulesInDate.stream().map(DayScheduleResponseDto::from).toList();
+        List<ScheduleResponseDto> schedulesInDate
+            = allSchedulesInDate.stream().map(ScheduleResponseDto::from).toList();
 
         return DayScheduleListResponseDto.from(date, schedulesInDate);
     }

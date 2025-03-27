@@ -1,30 +1,40 @@
-import { useState, useRef } from 'react';
-import { createPortal } from 'react-dom';
+import { useRef } from 'react';
+import { useParams } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import koLocale from '@fullcalendar/core/locales/ko';
 
-import CalendarModal from './CalendarModal';
+import scheduleApi from '../../api/scheduleApi';
+
 import ChevronLeftSvg from './svg/ChevronLeftSvg';
 import ChevronRightSvg from './svg/ChevronRightSvg';
+import calendarUtil from './util/calendarUtil';
 
 import { eventMouseHoverReducer, eventMouseLeaveReducer } from '../../store/slices/popoverSlice';
 
-export default function CalendarContent({ setSelectDate, scheduleList, eventList, setEventList }) {
+export default function CalendarContent({
+  yearState,
+  setYearState,
+  monthState,
+  setMonthState,
+  setSelectDate,
+  monthlyEventList,
+  setMonthlyEventList,
+  setIsShowingModal,
+  setShowingScheduleToModal,
+}) {
   const dispatch = useDispatch();
 
   const calendarRef = useRef(null);
 
-  const [showModal, setShowModal] = useState(false);
-  const [yearState, setYearState] = useState(0);
-  const [monthState, setMonthState] = useState(0);
+  const { movingPlanId } = useParams();
 
   const moveToCurrentMonth = () => {
     const now = new Date();
     calendarRef.current.getApi().gotoDate(now);
-    setSelectDate(parseDateObject(now));
+    setSelectDate(calendarUtil.parseDateFromObject(now));
   };
 
   const moveToPrevMonth = () => {
@@ -32,7 +42,7 @@ export default function CalendarContent({ setSelectDate, scheduleList, eventList
     const targetMonth = ((monthState + 10) % 12) + 1;
     setYearState(targetYear);
     setMonthState(targetMonth);
-    calendarRef.current.getApi().gotoDate(parseDate(targetYear, targetMonth, 1));
+    calendarRef.current.getApi().gotoDate(calendarUtil.parseDate(targetYear, targetMonth, 1));
   };
 
   const moveToNextMonth = () => {
@@ -40,7 +50,7 @@ export default function CalendarContent({ setSelectDate, scheduleList, eventList
     const targetMonth = (monthState % 12) + 1;
     setYearState(targetYear);
     setMonthState(targetMonth);
-    calendarRef.current.getApi().gotoDate(parseDate(targetYear, targetMonth, 1));
+    calendarRef.current.getApi().gotoDate(calendarUtil.parseDate(targetYear, targetMonth, 1));
   };
 
   const handleDateCellClick = (e) => {
@@ -52,7 +62,7 @@ export default function CalendarContent({ setSelectDate, scheduleList, eventList
       eventMouseHoverReducer({
         title: e.event.title,
         start: e.event.startStr,
-        end: parseDateObject(new Date(e.event.end - 86400000)),
+        end: calendarUtil.parseDateFromObject(new Date(e.event.end - 86400000)),
         color: e.event.backgroundColor,
       }),
     );
@@ -63,7 +73,25 @@ export default function CalendarContent({ setSelectDate, scheduleList, eventList
   };
 
   const handleCalendarModal = () => {
-    setShowModal(() => true);
+    setShowingScheduleToModal(() => null);
+    setIsShowingModal(() => true);
+  };
+
+  const loadList = async (yearMonth) => {
+    setMonthlyEventList(() => []);
+
+    try {
+      // 월 단위로 스케줄 가져오기
+      const response = await scheduleApi.getMonthlySchedule(movingPlanId, yearMonth);
+      const scheduleList = response.data.data.schedules;
+
+      // 달력에 맞게 형식 변경
+      setMonthlyEventList(() =>
+        scheduleList.map((schedule) => calendarUtil.scheduleToEvent(schedule)),
+      );
+    } catch (err) {
+      console.log(err);
+    }
   };
 
   const calendarContentStyle = 'flex flex-col flex-2 h-full w-full border-r-1 border-gray-300 my-4';
@@ -83,8 +111,6 @@ export default function CalendarContent({ setSelectDate, scheduleList, eventList
 
   return (
     <>
-      {showModal &&
-        createPortal(<CalendarModal modalClose={() => setShowModal(false)} />, document.body)}
       <section className={calendarContentStyle}>
         <div className={calendarPaddingStyle}>
           <div className={calendarHeaderStyle}>
@@ -123,7 +149,7 @@ export default function CalendarContent({ setSelectDate, scheduleList, eventList
             showNonCurrentDates={false}
             locale={koLocale}
             dayMaxEventRows={3}
-            events={eventList}
+            events={monthlyEventList}
             eventMouseEnter={handleEventMouseEnter}
             eventMouseLeave={handleEventMouseLeave}
             dateClick={handleDateCellClick}
@@ -136,43 +162,18 @@ export default function CalendarContent({ setSelectDate, scheduleList, eventList
             eventContent={(arg) => {
               const color = arg.event.backgroundColor;
               return {
-                html: `<div class="${eventLineStyle} bg-[${color}] ${determineBlackText(hexColorToIntArray(color)) ? 'text-black' : 'text-white'}">${arg.event.title}</div>`,
+                html: `<div class="${eventLineStyle} bg-[${color}] ${calendarUtil.determineBlackText(calendarUtil.hexColorToIntArray(color)) ? 'text-black' : 'text-white'}">${arg.event.title}</div>`,
               };
             }}
-            datesSet={(dateInfo) => {
-              const nowYear = dateInfo.start.getFullYear();
-              const nowMonth = dateInfo.start.getMonth() + 1;
-              const startDate = dateInfo.start.getDate();
-              const endDate = new Date(dateInfo.end - 86400000).getDate();
+            datesSet={async (dateInfo) => {
+              const selectedYear = dateInfo.start.getFullYear();
+              const selectedMonth = dateInfo.start.getMonth() + 1;
 
               // 스타일 수정을 위해 헤더를 외부에서 정의했으므로, 월을 바꿀 때마다 해당 년도와 월을 state에 지정해야 표시됨
-              setYearState(() => nowYear);
-              setMonthState(() => nowMonth);
+              setYearState(() => selectedYear);
+              setMonthState(() => selectedMonth);
 
-              const startInt = nowYear * 10000 + nowMonth * 100 + startDate;
-              const endInt = startInt - startDate + endDate;
-
-              // 월 단위로 스케줄 가져오기
-              const newEventList = [];
-              scheduleList.forEach((schedule) => {
-                const scheduleStartInt = parseIntFromDate(schedule.startDate);
-                const scheduleEndInt = parseIntFromDate(schedule.endDate);
-                if (scheduleEndInt >= startInt && scheduleStartInt <= endInt) {
-                  // 달력에 일정을 출력하기 위해서는 종료일을 하루 뒤로 변경해야 함
-                  // 바로 +를 하면 문자열 연산이 일어나 오작동하므로, -1로 UNIX time으로 변경 뒤 연산 실행
-                  const nextDayOfEndDate = new Date(new Date(schedule.endDate) - 1 + 86400001);
-                  // color가 아니라 backgroundColor와 borderColor를 각각 지정해야 일정 간 간격을 띄울 수 있음
-                  newEventList.push({
-                    title: schedule.content,
-                    start: schedule.startDate,
-                    end: parseDateObject(nextDayOfEndDate),
-                    backgroundColor: schedule.color,
-                    borderColor: '#FFFFFF',
-                  });
-                }
-              });
-
-              setEventList(() => newEventList);
+              loadList(parseMonth(selectedYear, selectedMonth));
             }}
             // 달력 헤더 스타일 수정을 위해, 달력 기본 헤더를 비활성
             headerToolbar={{
@@ -187,48 +188,6 @@ export default function CalendarContent({ setSelectDate, scheduleList, eventList
   );
 }
 
-function parseDateObject(date) {
-  return parseDate(date.getFullYear(), date.getMonth() + 1, date.getDate());
-}
-
-function parseDate(year, month, day) {
-  return `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
-}
-
-function parseIntFromDate(date) {
-  return (
-    Number.parseInt(date.substring(0, 4)) * 10000 +
-    Number.parseInt(date.substring(5, 7)) * 100 +
-    Number.parseInt(date.substring(8, 10))
-  );
-}
-
-function hexColorToIntArray(hexColor) {
-  if (
-    typeof hexColor !== 'string' ||
-    !new RegExp(/#?([\da-fA-F]{2})([\da-fA-F]{2})([\da-fA-F]{2})/g).test(hexColor)
-  ) {
-    return null;
-  }
-
-  const upperCaseHexColor = hexColor.toUpperCase();
-  const result = [];
-
-  for (let i = 1; i < 7; i += 2) {
-    result.push(
-      hexDigitToDecimal(upperCaseHexColor[i]) * 16 + hexDigitToDecimal(upperCaseHexColor[i + 1]),
-    );
-  }
-
-  return result;
-}
-
-function hexDigitToDecimal(hexDigit) {
-  const charCode = hexDigit.charCodeAt(0);
-  return charCode - (charCode < 58 ? 48 : 55);
-}
-
-// https://stackoverflow.com/questions/3942878/how-to-decide-font-color-in-white-or-black-depending-on-background-color
-function determineBlackText(colorIntArray) {
-  return colorIntArray[0] * 0.299 + colorIntArray[1] * 0.587 + colorIntArray[2] * 0.114 > 150;
+function parseMonth(year, month) {
+  return `${year}-${month.toString().padStart(2, '0')}`;
 }
