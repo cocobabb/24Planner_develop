@@ -2,9 +2,11 @@ import { useEffect, useState } from 'react';
 import logo from '../logo.png';
 import { useNavigate } from 'react-router-dom';
 import authApi from '../api/authApi';
+import { useSelector } from 'react-redux';
 
 export default function Signup() {
   const navigate = useNavigate();
+  const accessToken = useSelector((state) => state.auth.accessToken);
 
   // 상태 관리 데이터
   const [formData, setFormData] = useState({
@@ -57,6 +59,14 @@ export default function Signup() {
     validation.password.isValid &&
     validation.password.isEqual;
 
+  // 로그인 상태로 회원가입 페이지 접속 시 메인으로 이동
+  useEffect(() => {
+    if (accessToken) {
+      navigate('/plans');
+      return;
+    }
+  }, []);
+  
   // 로고 클릭 시 메인페이지로 이동
   const toHome = () => {
     navigate('/');

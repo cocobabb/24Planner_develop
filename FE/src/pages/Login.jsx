@@ -1,13 +1,14 @@
 import { useNavigate } from 'react-router-dom';
 import logo from '../logo.png';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import authApi from '../api/authApi';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { login } from '../store/slices/authSlice';
 
 export default function Login() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const accessToken = useSelector((state) => state.auth.accessToken);
 
   // 상태 관리 데이터
   const [errorMessage, setErrorMessage] = useState('');
@@ -16,6 +17,14 @@ export default function Login() {
     username: '',
     password: '',
   });
+
+  // 로그인 상태로 로그인 페이지 접속 시 메인으로 이동
+  useEffect(() => {
+    if (accessToken) {
+      navigate('/plans');
+      return;
+    }
+  }, []);
 
   // 로고 클릭 시 메인 페이지로 이동
   const toHome = () => {
