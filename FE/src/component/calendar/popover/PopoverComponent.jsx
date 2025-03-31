@@ -14,7 +14,7 @@ export default function PopoverComponent() {
     dispatch(mouseMoveReducer({ x: -1, y: -1 }));
   };
 
-  const popoverStyle = `w-fit h-fit absolute bg-white rounded-2xl border-1 p-1 z-10`;
+  const popoverStyle = `size-fit absolute bg-white rounded-2xl border-1 p-1 z-10`;
   const popoverBorderMarginStyle = `rounded-2xl border-1 border-[${popoverBorderColor}]`;
   const popoverContentStyle = 'm-2';
   const popoverTitleStyle = 'text-center font-semibold mb-2';

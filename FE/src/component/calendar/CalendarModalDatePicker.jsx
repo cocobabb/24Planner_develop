@@ -23,7 +23,7 @@ export default function CalendarModalDatePicker({ startDate, setStartDate, endDa
           </button>
         </div>
         <div className={datePickerDateStyle}>
-          {date.getFullYear()}년 {date.getMonth() + 1}월
+          {date.getFullYear()}.{String(date.getMonth() + 1).padStart(2, '0')}
         </div>
         <div className={datePickerButtonDivStyle}>
           <button className={datePickerButtonStyle} onClick={increaseMonth}>

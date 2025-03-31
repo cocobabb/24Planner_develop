@@ -10,7 +10,7 @@ export default function PopoverUtilComponent({ children }) {
     dispatch(mouseMoveReducer({ x: e.clientX, y: e.clientY }));
   };
 
-  const popoverUtilComponentStyle = 'flex flex-col items-center h-full w-full';
+  const popoverUtilComponentStyle = 'flex flex-col items-center size-full';
 
   return (
     <>

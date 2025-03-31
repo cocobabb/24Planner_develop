@@ -4,6 +4,8 @@ import { useParams } from 'react-router-dom';
 import scheduleApi from '../../api/scheduleApi';
 
 import calendarUtil from './util/calendarUtil';
+import scheduleUtil from './util/scheduleUtil';
+import LoadingCircle from './svg/LoadingCircle';
 
 export default function CalendarSidebar({
   yearState,
@@ -17,6 +19,7 @@ export default function CalendarSidebar({
 }) {
   const [content, setContent] = useState('');
   const [errorMessage, setErrorMessage] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const { movingPlanId } = useParams();
 
@@ -24,7 +27,9 @@ export default function CalendarSidebar({
     setDailyScheduleList(() => []);
     try {
       const response = await scheduleApi.getDailySchedule(movingPlanId, selectDate);
-      setDailyScheduleList(() => response.data.data.schedules);
+      setDailyScheduleList(() =>
+        response.data.data.schedules.sort(scheduleUtil.scheduleCompareFunction),
+      );
     } catch (err) {
       console.log(err);
     }
@@ -48,6 +53,8 @@ export default function CalendarSidebar({
     if (!content.length) {
       setErrorMessage(() => '내용은 필수로 입력해야 합니다.');
     } else {
+      setIsLoading(true);
+
       try {
         const response = await scheduleApi.createSchedule(movingPlanId, {
           content: content,
@@ -56,19 +63,23 @@ export default function CalendarSidebar({
           color: '#69DB7C',
         });
 
-        const newSchedule = response.data.data;
-        setDailyScheduleList((prev) => [...prev, newSchedule]);
+        const returnedSchedule = response.data.data;
+        const newDailyScheduleList = [...dailyScheduleList, returnedSchedule];
+        newDailyScheduleList.sort(scheduleUtil.scheduleCompareFunction);
+        setDailyScheduleList(() => newDailyScheduleList);
         setContent(() => '');
 
         const selectedYear = Number.parseInt(selectDate.substring(0, 4));
         const selectedMonth = Number.parseInt(selectDate.substring(5, 7));
         if (selectedYear === yearState && selectedMonth === monthState) {
-          setMonthlyEventList((prev) => [...prev, calendarUtil.scheduleToEvent(newSchedule)]);
+          setMonthlyEventList((prev) => [...prev, calendarUtil.scheduleToEvent(returnedSchedule)]);
         }
       } catch (err) {
         setErrorMessage(() => '등록 도중 오류가 발생했습니다.');
         console.log(err);
       }
+
+      setIsLoading(false);
     }
   };
 
@@ -87,17 +98,10 @@ export default function CalendarSidebar({
     }
   };
 
-  const calendarSidebarStyle = 'flex flex-1 flex-col items-center m-4';
-  const scheduleDateStyle = 'text-xl mt-12';
-  const scheduleListStyle = 'flex flex-col w-full mt-8';
   const scheduleElementDivStyle = 'flex items-center';
-  const scheduleElementContentStyle = 'flex justify-center items-center rounded-3xl w-full p-2 m-2';
+  const scheduleElementContentStyle =
+    'flex justify-center items-center rounded-3xl w-full p-2 m-2 cursor-pointer';
   const deleteButtonDivStyle = 'text-gray-500 text-opacity-70 cursor-pointer';
-  const inputDivStyle =
-    'flex justify-center items-center border-1 border-gray-300 rounded-3xl w-full py-2 pr-5 m-2 h-10';
-  const inputStyle = 'focus:outline-none w-full p-4';
-  const addButtonStyle =
-    'flex justify-center items-center mx-1 px-4 bg-primary rounded-3xl h-10 cursor-pointer';
 
   const dailyScheduleListDiv = dailyScheduleList.map((schedule, i) => {
     return (
@@ -122,6 +126,15 @@ export default function CalendarSidebar({
     );
   });
 
+  const calendarSidebarStyle = 'flex flex-1 flex-col items-center m-4';
+  const scheduleDateStyle = 'text-xl mt-12';
+  const scheduleListStyle = 'flex flex-col w-full mt-8';
+  const inputDivStyle =
+    'flex justify-center items-center border-1 border-gray-300 rounded-3xl w-full py-2 pr-5 m-2 h-10';
+  const inputStyle = 'focus:outline-none w-full p-4';
+  const addButtonStyle = `flex justify-center items-center border-2 border-primary rounded-3xl w-15 h-10 cursor-pointer ${isLoading ? '' : 'bg-primary'}`;
+  const errorMessageStyle = 'px-4 mx-2 text-red-300';
+
   return (
     <section className={calendarSidebarStyle}>
       {selectDate ? (
@@ -144,10 +157,10 @@ export default function CalendarSidebar({
                 />
               </div>
               <div className={addButtonStyle} onClick={handleAddButton}>
-                +
+                {isLoading ? <LoadingCircle /> : '+'}
               </div>
             </div>
-            <div className="px-4 mx-2 text-red-300">{errorMessage ? errorMessage : '\u00A0'}</div>
+            <div className={errorMessageStyle}>{errorMessage ? errorMessage : '\u00A0'}</div>
           </div>
         </>
       ) : (

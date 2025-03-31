@@ -1,10 +1,18 @@
 const calendarUtil = {
-  parseDate: (year, month, day) => {
+  parseDateStr: (year, month, day) => {
     return `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
   },
 
-  parseDateFromObject: (date) => {
-    return calendarUtil.parseDate(date.getFullYear(), date.getMonth() + 1, date.getDate());
+  parseDateStrFromObject: (date) => {
+    return calendarUtil.parseDateStr(date.getFullYear(), date.getMonth() + 1, date.getDate());
+  },
+
+  parseIntFromDateStr: (date) => {
+    return (
+      Number.parseInt(date.substring(0, 4)) * 10000 +
+      Number.parseInt(date.substring(5, 7)) * 100 +
+      Number.parseInt(date.substring(8, 10))
+    );
   },
 
   hexColorToIntArray: (hexColor) => {
@@ -45,7 +53,7 @@ const calendarUtil = {
       start: schedule.startDate,
       // 달력에 일정을 출력하기 위해서는 종료일을 하루 뒤로 변경해야 함
       // 바로 +를 하면 문자열 연산이 일어나 오작동하므로, -1로 UNIX time으로 변경 뒤 연산 실행
-      end: calendarUtil.parseDateFromObject(new Date(new Date(schedule.endDate) - 1 + 86400001)),
+      end: calendarUtil.parseDateStrFromObject(new Date(new Date(schedule.endDate) - 1 + 86400001)),
       // color가 아니라 backgroundColor와 borderColor를 각각 지정해야 일정 간 간격을 띄울 수 있음
       backgroundColor: schedule.color,
       borderColor: '#FFFFFF',

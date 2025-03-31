@@ -1,18 +1,18 @@
 export default function CalendarColorModal({ color, setColor }) {
   const colorsList = [
     [
-      ['#FFC9C9', '#FF8787', '#FA5252', '#E03131'],
-      ['#FFD8A8', '#FFA94D', '#FD7E14', '#E8590C'],
-      ['#FFEC99', '#FFD43B', '#FAB005', '#F08C00'],
-      ['#96F2D7', '#38D9A9', '#12B886', '#099268'],
-      ['#B2F2BB', '#69DB7C', '#40C057', '#2F9E44'],
+      ['#FFF5F5', '#FFC9C9', '#FF8787', '#FA5252', '#E03131'],
+      ['#FFF4E6', '#FFD8A8', '#FFA94D', '#FD7E14', '#E8590C'],
+      ['#FFF9DB', '#FFEC99', '#FFD43B', '#FAB005', '#F08C00'],
+      ['#E6FCF5', '#96F2D7', '#38D9A9', '#12B886', '#099268'],
+      ['#EBFBEE', '#B2F2BB', '#69DB7C', '#40C057', '#2F9E44'],
     ],
     [
-      ['#A5D8FF', '#4DABF7', '#228BE6', '#1971C2'],
-      ['#D0BFFF', '#9775FA', '#7950F2', '#6741D9'],
-      ['#EEBEFA', '#DA77F2', '#BE4BDB', '#9C36B5'],
-      ['#EADDD7', '#D2BAB0', '#A18072', '#846358'],
-      ['#E9ECEF', '#CED4DA', '#868E96', '#343A40'],
+      ['#E7F5FF', '#A5D8FF', '#4DABF7', '#228BE6', '#1971C2'],
+      ['#F3F0FF', '#D0BFFF', '#9775FA', '#7950F2', '#6741D9'],
+      ['#F8F0FC', '#EEBEFA', '#DA77F2', '#BE4BDB', '#9C36B5'],
+      ['#F8F1EE', '#EADDD7', '#D2BAB0', '#A18072', '#846358'],
+      ['#E9ECEF', '#D0D6DC', '#9CA2A8', '#686E74', '#343A40'],
     ],
   ];
 
