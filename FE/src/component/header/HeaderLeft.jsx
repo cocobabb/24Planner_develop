@@ -15,6 +15,7 @@ export default function HeaderLeft() {
     headerLeftList.push({ destinationUrl: '', currentUrl: undefined, text: '체크리스트' });
     headerLeftList.push({ destinationUrl: '/calendar', currentUrl: 'calendar', text: '캘린더' });
     headerLeftList.push({ destinationUrl: '/house', currentUrl: 'house', text: '살 곳 정하기' });
+    headerLeftList.push({ destinationUrl: '/chat', currentUrl: 'chat', text: '채팅방' });
   }
 
   // Linux 환경 Firefox에서 flex에 이미지가 들어가면 무조건 크기를 최대로 차지하는 문제가 있어 flex 크기 수동 지정
