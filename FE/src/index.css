@@ -173,3 +173,17 @@ input::-webkit-inner-spin-button {
 * {
   box-sizing: border-box;
 }
+
+::-webkit-scrollbar {
+  width: 8px; /* 세로 스크롤바 너비 */
+  height: 8px; /* 가로 스크롤바 높이 */
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: lightgray; /* 스크롤바 색상 */
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}

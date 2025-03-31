@@ -50,8 +50,9 @@ export default function Login() {
       const data = response.data;
 
       // 로그인 시 accessToken을 localstorage에 저장
-      const { accessToken } = data.data;
-      dispatch(login({ accessToken }));
+      const { accessToken, nickname } = data.data;
+      
+      dispatch(login({ accessToken, nickname }));
 
       navigate('/plans');
     } catch (error) {

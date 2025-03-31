@@ -50,6 +50,9 @@ dependencies {
 
 	// WebFlux 포함 (WebClient 사용 가능)
 	implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
+	// WebSocket
+	implementation 'org.springframework.boot:spring-boot-starter-websocket'
 }
 
 tasks.named('test') {

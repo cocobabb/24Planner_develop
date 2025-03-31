@@ -77,6 +77,7 @@ services:
         - type=local,dest=/tmp/docker-cache/client,mode=max
       args:
         - VITE_KAKAO_JAVASCRIPT_KEY=${VITE_KAKAO_JAVASCRIPT_KEY}
+        - VITE_CHAT_URL=${VITE_CHAT_URL}
     image: ${DOCKER_USERNAME}/24zip-client-image:latest
     ports:
       - "80:80"

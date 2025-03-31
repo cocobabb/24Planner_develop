@@ -4,6 +4,7 @@ import com.example.p24zip.global.security.handler.CustomAccessDeniedHandler;
 import com.example.p24zip.global.security.handler.JwtAuthenticationEntryPoint;
 import com.example.p24zip.global.security.jwt.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,6 +27,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
+@Slf4j
 public class SecurityConfig {
 
 
@@ -43,6 +45,8 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 // CORS 설정 연결
 
+
+
                 // 보안 로직 비활성
                 .csrf(csrf -> csrf.disable())
                 // session 안쓰는 코드
@@ -51,7 +55,8 @@ public class SecurityConfig {
                 //
                 .authorizeHttpRequests(auth -> auth
                                 .requestMatchers("/auth/verify").authenticated()
-                                .requestMatchers("/auth/**", "/error", "/images/**").permitAll()
+                                .requestMatchers("/auth/**", "/error", "/images/**", "/gs-guide-websocket/**").permitAll()
+//                                .requestMatchers("/ws/**", "/topic/**", "/app/**").permitAll() // WebSocket 관련 경로 추가
                                 .requestMatchers("/swagger-ui/**", "swagger-ui.html", "/api-docs/**").permitAll()
                                 .anyRequest().authenticated()
                 )
