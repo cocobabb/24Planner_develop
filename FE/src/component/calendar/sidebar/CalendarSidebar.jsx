@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 
-import scheduleApi from '../../api/scheduleApi';
+import scheduleApi from '../../../api/scheduleApi';
 
-import calendarUtil from './util/calendarUtil';
-import scheduleUtil from './util/scheduleUtil';
-import LoadingCircle from './svg/LoadingCircle';
+import calendarUtil from '../util/calendarUtil';
+import scheduleUtil from '../util/scheduleUtil';
+import LoadingCircle from '../svg/LoadingCircle';
 
 export default function CalendarSidebar({
   yearState,
@@ -46,10 +46,19 @@ export default function CalendarSidebar({
     setErrorMessage(() => null);
   };
 
-  const handleAddButton = async (e) => {
+  const handleAddButton = (e) => {
     e.preventDefault();
     e.stopPropagation();
+    addSchedule();
+  };
 
+  const handleEnterKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      addSchedule();
+    }
+  };
+
+  const addSchedule = async () => {
     if (!content.length) {
       setErrorMessage(() => '내용은 필수로 입력해야 합니다.');
     } else {
@@ -154,6 +163,7 @@ export default function CalendarSidebar({
                   placeholder="할 일 입력"
                   value={content}
                   onChange={handleContentChange}
+                  onKeyDown={handleEnterKeyDown}
                 />
               </div>
               <div className={addButtonStyle} onClick={handleAddButton}>

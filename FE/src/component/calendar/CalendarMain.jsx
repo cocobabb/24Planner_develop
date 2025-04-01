@@ -1,8 +1,7 @@
 import { useRef } from 'react';
 
-import './style/calendarMain.css';
-import CalendarContent from './CalendarContent';
-import CalendarHeader from './CalendarHeader';
+import CalendarContent from './content/CalendarContent';
+import CalendarHeader from './calendarHeader/CalendarHeader';
 
 export default function CalendarMain({
   yearState,

@@ -1,0 +1,70 @@
+@import 'tailwindcss';
+@theme {
+  --animate-main-char1: main-char-move1 1s ease-in-out;
+  @keyframes main-char-move1 {
+    0% {
+      top: -80px;
+      left: -80px;
+    }
+    100% {
+      top: 0px;
+      left: 0px;
+    }
+  }
+
+  --animate-main-char2: main-char-move2 1s ease-in-out;
+  @keyframes main-char-move2 {
+    0% {
+      top: 80px;
+      left: -80px;
+    }
+    100% {
+      top: 0px;
+      left: 0px;
+    }
+  }
+
+  --animate-main-char3: main-char-move3 1s ease-in-out;
+  @keyframes main-char-move3 {
+    0% {
+      top: -100px;
+    }
+    100% {
+      top: 0px;
+    }
+  }
+
+  --animate-main-char4: main-char-move4 1s ease-in-out;
+  @keyframes main-char-move4 {
+    0% {
+      top: 80px;
+      left: 80px;
+    }
+    100% {
+      top: 0px;
+      left: 0px;
+    }
+  }
+
+  --animate-main-char5: main-char-move5 1s ease-in-out;
+  @keyframes main-char-move5 {
+    0% {
+      top: -80px;
+      left: 80px;
+    }
+    100% {
+      top: 0px;
+      left: 0px;
+    }
+  }
+
+  --animate-main-string: main-string 1s linear 3.5s;
+  @keyframes main-string {
+    0% {
+      color: rgb(0, 0, 0, 0%);
+    }
+    100% {
+      color: rgb(0, 0, 0, 100%);
+    }
+  }
+}

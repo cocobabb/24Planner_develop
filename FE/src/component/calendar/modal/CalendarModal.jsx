@@ -3,11 +3,11 @@ import { useParams } from 'react-router-dom';
 
 import CalendarColorModal from './CalendarColorModal';
 import CalendarModalDatePicker from './CalendarModalDatePicker';
-import scheduleApi from '../../api/scheduleApi';
+import scheduleApi from '../../../api/scheduleApi';
 
-import calendarUtil from './util/calendarUtil';
-import scheduleUtil from './util/scheduleUtil';
-import LoadingCircle from './svg/LoadingCircle';
+import calendarUtil from '../util/calendarUtil';
+import scheduleUtil from '../util/scheduleUtil';
+import LoadingCircle from '../svg/LoadingCircle';
 
 export default function CalendarModal({
   yearState,
@@ -85,98 +85,108 @@ export default function CalendarModal({
     e.stopPropagation();
   };
 
-  const handleButton = async (e) => {
+  const handleButton = (e) => {
     e.preventDefault();
     e.stopPropagation();
 
     if (showColorDropdown) {
       setShowColorDropdown(() => false);
     } else {
-      if (!content.length) {
-        setErrorMessage(() => '내용은 필수 입력 항목입니다.');
-      } else {
-        setIsLoading(true);
+      sendSchedule();
+    }
+  };
 
-        try {
-          const inputSchedule = { ...showingScheduleToModal };
-          inputSchedule.content = content;
-          inputSchedule.startDate = calendarUtil.parseDateStrFromObject(startDate);
-          inputSchedule.endDate = calendarUtil.parseDateStrFromObject(endDate);
-          inputSchedule.color = color;
-          const scheduleId = showingScheduleToModal ? showingScheduleToModal.id : -1;
-          const response = showingScheduleToModal
-            ? await scheduleApi.updateSchedule(movingPlanId, scheduleId, inputSchedule)
-            : await scheduleApi.createSchedule(movingPlanId, inputSchedule);
+  const handleEnterKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      sendSchedule();
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  };
 
-          const returnedSchedule = response.data.data;
-          const selectDateToInt = calendarUtil.parseIntFromDateStr(selectDate);
-          const startDateToInt = calendarUtil.parseIntFromDateStr(returnedSchedule.startDate);
-          const endDateToInt = calendarUtil.parseIntFromDateStr(returnedSchedule.endDate);
-          const startDateOfSelectedMonthToInt = calendarUtil.parseIntFromDateStr(
-            calendarUtil.parseDateStrFromObject(new Date(yearState, monthState - 1, 1)),
-          );
-          const endDateOfSelectedMonthToInt = calendarUtil.parseIntFromDateStr(
-            calendarUtil.parseDateStrFromObject(endDateOfMonthObj(yearState, monthState)),
-          );
+  const sendSchedule = async () => {
+    if (!content.length) {
+      setErrorMessage(() => '내용은 필수 입력 항목입니다.');
+    } else {
+      setIsLoading(true);
 
-          let newDailyScheduleList;
+      try {
+        const inputSchedule = { ...showingScheduleToModal };
+        inputSchedule.content = content;
+        inputSchedule.startDate = calendarUtil.parseDateStrFromObject(startDate);
+        inputSchedule.endDate = calendarUtil.parseDateStrFromObject(endDate);
+        inputSchedule.color = color;
+        const scheduleId = showingScheduleToModal ? showingScheduleToModal.id : -1;
+        const response = showingScheduleToModal
+          ? await scheduleApi.updateSchedule(movingPlanId, scheduleId, inputSchedule)
+          : await scheduleApi.createSchedule(movingPlanId, inputSchedule);
 
-          if (showingScheduleToModal) {
-            newDailyScheduleList = [];
+        const returnedSchedule = response.data.data;
+        const selectDateToInt = calendarUtil.parseIntFromDateStr(selectDate);
+        const startDateToInt = calendarUtil.parseIntFromDateStr(returnedSchedule.startDate);
+        const endDateToInt = calendarUtil.parseIntFromDateStr(returnedSchedule.endDate);
+        const startDateOfSelectedMonthToInt = calendarUtil.parseIntFromDateStr(
+          calendarUtil.parseDateStrFromObject(new Date(yearState, monthState - 1, 1)),
+        );
+        const endDateOfSelectedMonthToInt = calendarUtil.parseIntFromDateStr(
+          calendarUtil.parseDateStrFromObject(endDateOfMonthObj(yearState, monthState)),
+        );
 
-            dailyScheduleList.forEach((schedule) => {
-              if (schedule.id !== scheduleId) {
-                newDailyScheduleList.push(schedule);
-                return;
-              } else if (startDateToInt <= selectDateToInt && endDateToInt >= selectDateToInt) {
-                newDailyScheduleList.push(returnedSchedule);
-              }
-            });
-          } else {
-            newDailyScheduleList = [...dailyScheduleList];
-            if (startDateToInt <= selectDateToInt && endDateToInt >= selectDateToInt) {
+        let newDailyScheduleList;
+
+        if (showingScheduleToModal) {
+          newDailyScheduleList = [];
+
+          dailyScheduleList.forEach((schedule) => {
+            if (schedule.id !== scheduleId) {
+              newDailyScheduleList.push(schedule);
+              return;
+            } else if (startDateToInt <= selectDateToInt && endDateToInt >= selectDateToInt) {
               newDailyScheduleList.push(returnedSchedule);
             }
+          });
+        } else {
+          newDailyScheduleList = [...dailyScheduleList];
+          if (startDateToInt <= selectDateToInt && endDateToInt >= selectDateToInt) {
+            newDailyScheduleList.push(returnedSchedule);
           }
+        }
 
-          setDailyScheduleList(() =>
-            newDailyScheduleList.sort(scheduleUtil.scheduleCompareFunction),
-          );
+        setDailyScheduleList(() => newDailyScheduleList.sort(scheduleUtil.scheduleCompareFunction));
 
-          if (showingScheduleToModal) {
-            const newMonthlyEventList = [];
-            monthlyEventList.forEach((event) => {
-              if (event.scheduleId !== scheduleId) {
-                newMonthlyEventList.push(event);
-              } else if (
-                startDateToInt <= endDateOfSelectedMonthToInt &&
-                endDateToInt >= startDateOfSelectedMonthToInt
-              ) {
-                newMonthlyEventList.push(calendarUtil.scheduleToEvent(returnedSchedule));
-              }
-            });
-
-            setMonthlyEventList(() => newMonthlyEventList);
-          } else {
-            if (
+        if (showingScheduleToModal) {
+          const newMonthlyEventList = [];
+          monthlyEventList.forEach((event) => {
+            if (event.scheduleId !== scheduleId) {
+              newMonthlyEventList.push(event);
+            } else if (
               startDateToInt <= endDateOfSelectedMonthToInt &&
               endDateToInt >= startDateOfSelectedMonthToInt
             ) {
-              setMonthlyEventList((prev) => [
-                ...prev,
-                calendarUtil.scheduleToEvent(returnedSchedule),
-              ]);
+              newMonthlyEventList.push(calendarUtil.scheduleToEvent(returnedSchedule));
             }
-          }
+          });
 
-          modalClose();
-        } catch (err) {
-          setErrorMessage(() => '등록 도중 오류가 발생했습니다.');
-          console.log(err);
+          setMonthlyEventList(() => newMonthlyEventList);
+        } else {
+          if (
+            startDateToInt <= endDateOfSelectedMonthToInt &&
+            endDateToInt >= startDateOfSelectedMonthToInt
+          ) {
+            setMonthlyEventList((prev) => [
+              ...prev,
+              calendarUtil.scheduleToEvent(returnedSchedule),
+            ]);
+          }
         }
 
-        setIsLoading(false);
+        modalClose();
+      } catch (err) {
+        setErrorMessage(() => '등록 도중 오류가 발생했습니다.');
+        console.log(err);
       }
+
+      setIsLoading(false);
     }
   };
 
@@ -209,6 +219,7 @@ export default function CalendarModal({
                   placeholder="할 일 입력"
                   value={content}
                   onChange={handleContentChange}
+                  onKeyDown={handleEnterKeyDown}
                 />
               </div>
               <div className={calendarModalDropdownStyle}>

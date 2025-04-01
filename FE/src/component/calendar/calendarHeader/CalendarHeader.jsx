@@ -1,7 +1,7 @@
-import calendarUtil from './util/calendarUtil';
+import calendarUtil from '../util/calendarUtil';
 
-import ChevronLeftSvg from './svg/ChevronLeftSvg';
-import ChevronRightSvg from './svg/ChevronRightSvg';
+import ChevronLeftSvg from '../svg/ChevronLeftSvg';
+import ChevronRightSvg from '../svg/ChevronRightSvg';
 
 export default function CalendarHeader({
   calendarRef,

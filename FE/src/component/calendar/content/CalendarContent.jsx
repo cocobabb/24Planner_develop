@@ -1,15 +1,17 @@
 import { useDispatch } from 'react-redux';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
 
-import scheduleApi from '../../api/scheduleApi';
+import scheduleApi from '../../../api/scheduleApi';
 
-import calendarUtil from './util/calendarUtil';
+import { eventMouseHoverReducer, eventMouseLeaveReducer } from '../../../store/slices/popoverSlice';
 
-import { eventMouseHoverReducer, eventMouseLeaveReducer } from '../../store/slices/popoverSlice';
+import calendarUtil from '../util/calendarUtil';
+
+import '../style/calendarContent.css';
 
 export default function CalendarContent({
   calendarRef,
@@ -21,6 +23,7 @@ export default function CalendarContent({
   setSelectDate,
 }) {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const { movingPlanId } = useParams();
 
@@ -57,6 +60,10 @@ export default function CalendarContent({
       );
     } catch (err) {
       console.log(err);
+      const errordata = err.response.data;
+      if (errordata.code === 'NOT_FOUND') {
+        navigate('/not-found');
+      }
     }
   };
 

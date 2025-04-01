@@ -1,0 +1,120 @@
+@import url('https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap');
+@import 'tailwindcss';
+@theme {
+  --font-lexend: 'Lexend', 'sans-serif';
+  --text-tiny: 0.6rem;
+  --animate-selected-date: selected-date 1s linear infinite;
+  @keyframes selected-date {
+    0% {
+      transform: translate(0px, 0px);
+    }
+    5% {
+      transform: translate(0px, -2.16px);
+    }
+    10% {
+      transform: translate(0px, -3.84px);
+    }
+    15% {
+      transform: translate(0px, -5.04px);
+    }
+    20% {
+      transform: translate(0px, -5.76px);
+    }
+    25% {
+      transform: translate(0px, -6px);
+    }
+    30% {
+      transform: translate(0px, -5.76px);
+    }
+    35% {
+      transform: translate(0px, -5.04px);
+    }
+    40% {
+      transform: translate(0px, -3.84px);
+    }
+    45% {
+      transform: translate(0px, -2.16px);
+    }
+    50% {
+      transform: translate(0px, 0px);
+    }
+    56% {
+      transform: translate(0px, -1px);
+    }
+    62% {
+      transform: translate(0px, -1.5px);
+    }
+    68% {
+      transform: translate(0px, -1px);
+    }
+    75% {
+      transform: translate(0px, 0px);
+    }
+  }
+}
+
+.fc .fc-col-header-cell-cushion,
+.fc .fc-daygrid-day-top {
+  font-family: 'Lexend', 'sans-serif';
+}
+
+.fc .fc-col-header-cell-cushion {
+  padding-bottom: 8px;
+}
+
+.fc-day-disabled {
+  background-color: #ffffff;
+}
+
+.fc-day-sun,
+.fc-day-sun .fc-col-header-cell-cushion {
+  color: #dd4444;
+}
+
+.fc-day-sat,
+.fc-day-sat .fc-col-header-cell-cushion {
+  color: #4477ee;
+}
+
+.fc .fc-daygrid-day-top {
+  flex-direction: row;
+  justify-content: center;
+}
+
+.fc .fc-daygrid-day-number {
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+.fc-day-today .fc-daygrid-day-number {
+  background-color: #69db7c;
+}
+
+/* 달력 내 event뿐만 아니라 fc-event를 여기에서 설정해야 달력 높이도 감소함 */
+.fc-event {
+  height: 18px !important;
+}
+
+.fc-event-start {
+  border-radius: 8px 0 0 8px;
+}
+
+.fc-event-end {
+  border-radius: 0 8px 8px 0;
+}
+
+.fc-event-start.fc-event-end {
+  border-radius: 8px;
+}
+
+.fc .fc-popover {
+  z-index: 8;
+  color: #000000;
+}
+
+/* 달력에서 일별 전체 일정을 보여 주는 popover에 불필요하게 일자가 적힌 부분을 삭제 */
+.fc-more-popover-misc {
+  display: none;
+}

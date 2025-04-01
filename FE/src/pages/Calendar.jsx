@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import CalendarMain from '../component/calendar/CalendarMain';
-import CalendarSidebar from '../component/calendar/CalendarSidebar';
-import CalendarModal from '../component/calendar/CalendarModal';
+import CalendarSidebar from '../component/calendar/sidebar/CalendarSidebar';
+import CalendarModal from '../component/calendar/modal/CalendarModal';
 
 import calendarUtil from '../component/calendar/util/calendarUtil';
 

@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 
+import './style/homeAnimation.css';
+
 export default function HomeWithAnimation() {
   const [textClass1, setTextClass1] = useState('text-primary invisible');
   const [textClass2, setTextClass2] = useState('text-primary invisible');

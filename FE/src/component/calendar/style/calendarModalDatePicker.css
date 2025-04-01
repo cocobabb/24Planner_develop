@@ -1,0 +1,32 @@
+/* DatePicker 용 CSS */
+.react-datepicker__day-names .react-datepicker__day-name:first-child,
+.react-datepicker__month-container .react-datepicker__day:first-child {
+  color: #cc3333 !important;
+}
+
+.react-datepicker__day-names .react-datepicker__day-name:last-child,
+.react-datepicker__month-container .react-datepicker__day:last-child {
+  color: #3366ff !important;
+}
+
+.react-datepicker__day--outside-month {
+  color: #cccccc !important;
+}
+
+.react-datepicker__month-container
+  .react-datepicker__day:first-child.react-datepicker__day--outside-month {
+  color: #ffcccc !important;
+}
+
+.react-datepicker__month-container
+  .react-datepicker__day:last-child.react-datepicker__day--outside-month {
+  color: #ccccff !important;
+}
+
+.react-datepicker__day--keyboard-selected {
+  background-color: #ffffff !important;
+}
+
+.react-datepicker__day--today {
+  background-color: #2f9e44 !important;
+}
