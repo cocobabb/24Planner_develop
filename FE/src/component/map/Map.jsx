@@ -24,7 +24,7 @@ export default function Map({
   const mapPlusStyle =
     'w-22 h-12 border-2 rounded-xl px-2 py-1 bg-primary text-2xl text-white me-2 cursor-pointer';
   const mapButtonStyle =
-    'cursor-pointer w-25 h-12 border-2 rounded-xl px-2 py-1 text-black hover:bg-white hover:text-primary mx-3';
+    'cursor-pointer w-25 h-12 border-2 rounded-xl px-2 py-1 hover:bg-white hover:text-primary mx-3';
 
   const handleCalendarModal = () => {
     setShowModal(() => true);
@@ -140,7 +140,7 @@ export default function Map({
 
               return (
                 <button
-                  className={`${mapButtonStyle} ${isSelected ? 'bg-white text-primary' : ''}`}
+                  className={`${mapButtonStyle} ${isSelected ? 'bg-white text-primary' : 'text-black'}`}
                   id={id}
                   key={id}
                   data-latitude={latitude}

@@ -1,10 +1,16 @@
 package com.example.p24zip.global.exception;
 
+import com.example.p24zip.domain.chat.dto.response.ChatsErrorResponseDto;
 import com.example.p24zip.global.response.ApiResponse;
 import java.util.NoSuchElementException;
+
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.messaging.handler.annotation.DestinationVariable;
+import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
+import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
@@ -16,6 +22,7 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 
 
 @RestControllerAdvice
+@Slf4j
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(ResourceNotFoundException.class)
@@ -106,6 +113,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity
             .status(HttpStatus.NOT_FOUND)
             .body(ApiResponse.error("NOT_FOUND", "존재하지 않는 id입니다."));
+    }
+
+    @MessageExceptionHandler(StompTokenException.class)
+    @SendTo("/topic/{movingPlanId}/errors")
+    public ChatsErrorResponseDto normalChatExceptionHandler(StompTokenException e,  @DestinationVariable Long movingPlanId) {
+        return new ChatsErrorResponseDto("INVALID_TOKEN","토큰이 유효하지 않습니다.", e.getMessage());
     }
 }
 

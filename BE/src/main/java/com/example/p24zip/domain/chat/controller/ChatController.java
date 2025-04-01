@@ -6,6 +6,8 @@ import com.example.p24zip.domain.chat.dto.response.ChatsResponseDto;
 import com.example.p24zip.domain.chat.dto.response.MessageResponseDto;
 import com.example.p24zip.domain.chat.service.ChatService;
 import com.example.p24zip.domain.user.entity.User;
+import com.example.p24zip.global.exception.StompTokenException;
+import com.example.p24zip.global.exception.TokenException;
 import com.example.p24zip.global.response.ApiResponse;
 import com.example.p24zip.global.security.jwt.JwtTokenProvider;
 import com.example.p24zip.global.validator.MovingPlanValidator;
@@ -41,6 +43,9 @@ public class ChatController {
             MessageRequestDto requestDto) {
 
         String token = headerAccessor.getFirstNativeHeader("Authorization");
+        if(token == null || !jwtTokenProvider.validateToken(token)) {
+            throw new StompTokenException(requestDto.getText());
+        }
         String tokenusername = jwtTokenProvider.getUsername(token);
 
         return chatService.Chatting(movingPlanId, requestDto, tokenusername);

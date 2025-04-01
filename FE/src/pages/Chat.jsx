@@ -3,6 +3,8 @@ import SockJS from 'sockjs-client';
 import { Client } from '@stomp/stompjs';
 import { useNavigate, useParams } from 'react-router-dom';
 import chatApi from '../api/chatApi';
+import { useSelector } from 'react-redux';
+import authApi from '../api/authApi';
 
 export default function Chat() {
   const { movingPlanId } = useParams();
@@ -14,6 +16,8 @@ export default function Chat() {
   const messagesEndRef = useRef(null);
 
   const navigate = useNavigate();
+
+  const storeNickname = useSelector((state) => state.auth.nickname);
 
   const chattingName = 'self-start text-xl ml-2 mb-2';
   const chattingDelete =
@@ -49,9 +53,30 @@ export default function Chat() {
 
     stomp.onConnect = () => {
       stomp.subscribe(`/topic/${movingPlanId}`, (message) => {
-        const parsedMessage = JSON.parse(message.body); // JSON 문자열을 객체로
 
+        const parsedMessage = JSON.parse(message.body); // JSON 문자열을 객체로
         setMessages((prev) => [...prev, parsedMessage]);
+      });
+
+      stomp.subscribe(`/topic/${movingPlanId}/errors`, async (message) => {
+
+        const parsedMessage = JSON.parse(message.body);
+
+        if (parsedMessage.code == "INVALID_TOKEN") {
+
+          const response = await authApi.reissue();
+          const accessToken = response.data.data.accessToken;
+          localStorage.setItem('accessToken', accessToken);
+
+          const messageBody = JSON.stringify({
+            text: parsedMessage.text,
+          });
+          stomp.publish({
+            destination: `/app/chat/${movingPlanId}`,
+            headers: { Authorization: `${accessToken}` },
+            body: messageBody,
+          });
+        }
       });
 
       setStompClient(stomp);
@@ -104,7 +129,9 @@ export default function Chat() {
         await chatApi.chatsdelete(movingPlanId);
         setMessages([]);
       } catch (error) {
-        alert("플랜에 소유자만 삭제할 수 있습니다.");
+        if (error.response.data.code === 'NOT_FOUND') {
+          alert('플랜 소유자만 삭제할 수 있습니다.');
+        }
       }
     }
   };
@@ -124,7 +151,7 @@ export default function Chat() {
             // 이전 값
             const previousMessage = index === 0 ? '' : messages[index - 1];
 
-            const isOwnMessage = nickname === localStorage.getItem('nickname');
+            const isOwnMessage = nickname === storeNickname;
 
             return (
               <div
