@@ -17,7 +17,6 @@ import Mypage from '../pages/Mypage';
 import Chat from '../pages/Chat';
 import Invite from '../pages/Invite';
 
-
 const router = createBrowserRouter([
   {
     path: '/',
@@ -88,7 +87,7 @@ const router = createBrowserRouter([
     element: <NewPassword />,
   },
   {
-    path: '/notfound',
+    path: '/not-found',
     element: <NotFound />,
   },
   {
@@ -99,6 +98,8 @@ const router = createBrowserRouter([
       </ProtectedLayout>
     ),
     children: [{ index: true, element: <Mypage /> }],
+  },
+  {
     path: '/invite',
     element: <Invite />,
     // errorElement: <NotFound />,

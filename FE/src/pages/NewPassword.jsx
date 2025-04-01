@@ -16,7 +16,7 @@ export default function NewPassword() {
 
   useEffect(() => {
     if (!query) {
-      navigate('/notfound');
+      navigate('/not-found');
       return;
     }
     const getRedisValue = async () => {
@@ -31,10 +31,10 @@ export default function NewPassword() {
         const value = response.data.value;
         setValue(value);
         if (!value) {
-          navigate('/notfound');
+          navigate('/not-found');
           return;
         } else if (query !== value) {
-          navigate('/notfound');
+          navigate('/not-found');
           return;
         }
       } catch (error) {
