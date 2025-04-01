@@ -45,7 +45,7 @@ public class ChatService {
         User user = userRepository.findByUsername(tokenusername)
                 .orElseThrow(() -> new ResourceNotFoundException());
 
-//        movingPlanValidator.validateMovingPlanAccess(movingPlanId, user);
+        movingPlanValidator.validateMovingPlanAccess(movingPlanId, user);
 
 
         Chat chat = chatRepository.save(requestDto.toEntity(movingPlan, user));

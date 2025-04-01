@@ -44,13 +44,11 @@ export default function Chat() {
     const chaturl = import.meta.env.VITE_CHAT_URL;
 
     const stomp = new Client({
-      webSocketFactory: () => new SockJS(chaturl)
+      webSocketFactory: () => new SockJS(chaturl),
     });
 
     stomp.onConnect = () => {
       stomp.subscribe(`/topic/${movingPlanId}`, (message) => {
-        console.log('받은 메시지:', message.body); // 메시지 수신 시 출력
-
         const parsedMessage = JSON.parse(message.body); // JSON 문자열을 객체로
 
         setMessages((prev) => [...prev, parsedMessage]);
@@ -102,8 +100,12 @@ export default function Chat() {
     const isConfirmed = window.confirm('채팅을 삭제하시겠습니까?');
 
     if (isConfirmed) {
-      await chatApi.chatsdelete(movingPlanId);
-      setMessages([]);
+      try {
+        await chatApi.chatsdelete(movingPlanId);
+        setMessages([]);
+      } catch (error) {
+        alert("플랜에 소유자만 삭제할 수 있습니다.");
+      }
     }
   };
 

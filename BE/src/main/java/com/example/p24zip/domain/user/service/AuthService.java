@@ -174,8 +174,6 @@ public class AuthService {
         User user = userRepository.findByUsername(requestDto.getUsername())
                 .orElseThrow(() -> new ResourceNotFoundException());
 
-        log.info(user.getNickname());
-
         // 토큰 생성
         String accessjwt = jwtTokenProvider.accessCreateToken(user);
         String refreshjwt = jwtTokenProvider.refreshCreateToken(user);
@@ -184,6 +182,7 @@ public class AuthService {
         Cookie cookie = new Cookie("refreshToken",refreshjwt);
         cookie.setHttpOnly(true);
         cookie.setSecure(true);
+        cookie.setMaxAge(172800);
         cookie.setPath("/");
         response.addCookie(cookie);
 

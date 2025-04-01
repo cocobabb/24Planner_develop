@@ -49,7 +49,7 @@ public class ChatController {
     @GetMapping("/chats/{movingPlanId}")
     public ResponseEntity<ApiResponse<ChatsResponseDto>> readchats(@PathVariable Long movingPlanId, @AuthenticationPrincipal User user) {
 
-//        movingPlanValidator.validateMovingPlanAccess(movingPlanId, user);
+        movingPlanValidator.validateMovingPlanAccess(movingPlanId, user);
 
         return ResponseEntity.ok(
                 ApiResponse.ok("OK",
@@ -61,7 +61,7 @@ public class ChatController {
     @DeleteMapping("/chats/{movingPlanId}")
     public ResponseEntity<ApiResponse<Object>> deletechats(@PathVariable Long movingPlanId, @AuthenticationPrincipal User user) {
 
-//        movingPlanValidator.validateMovingPlanAccess(movingPlanId, user);
+        movingPlanValidator.validateMovingPlanOwnership(movingPlanId, user);
 
         chatService.deletechats(movingPlanId);
 
