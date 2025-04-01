@@ -48,8 +48,6 @@ export default function TaskGroupBox({ taskGroups, setTaskGroups }) {
 
       if (code === 'BAD_REQUEST') {
         setMessage(message);
-      } else if (code === 'INVALID_TOKEN') {
-        setMessage('작성 권한이 없습니다. 로그인 후 다시 이용하세요');
       } else if (code === 'NOT_FOUND') {
         navigate('/not-found');
       }

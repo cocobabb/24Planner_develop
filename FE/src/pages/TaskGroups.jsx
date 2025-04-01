@@ -23,9 +23,7 @@ export default function TaskGroups() {
         const errorData = error.response.data;
         const code = errorData.code;
         const message = errorData.message;
-        if (code === 'INVALID_TOKEN') {
-          alert('로그인 후 다시 이용하세요');
-        } else if (code === 'NOT_FOUND') {
+        if (code === 'NOT_FOUND') {
           navigate('/not-found');
         }
       }
