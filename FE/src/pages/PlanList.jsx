@@ -29,7 +29,7 @@ export default function PlanList() {
   const displayStyle = 'w-300 mx-auto my-5 text-center';
   const titleStyle = 'text-2xl';
   const lineStyle = 'mx-30 mt-5 border-t-2 border-primary';
-  const planListContainer = 'flex flex-col items-center px-60 py-10 list-none';
+  const planListContainer = 'flex flex-col items-center px-60 py-10';
   const emptyText = 'mt-10 text-primary text-2xl';
 
   return (

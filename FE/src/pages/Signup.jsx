@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react';
 import logo from '../logo.png';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import authApi from '../api/authApi';
 import { useSelector } from 'react-redux';
 
 export default function Signup() {
+  const [searchParams] = useSearchParams();
+  const returnUrl = searchParams.get('returnUrl');
+
   const navigate = useNavigate();
   const accessToken = useSelector((state) => state.auth.accessToken);
 
@@ -66,7 +69,7 @@ export default function Signup() {
       return;
     }
   }, []);
-  
+
   // 로고 클릭 시 메인페이지로 이동
   const toHome = () => {
     navigate('/');
@@ -301,7 +304,7 @@ export default function Signup() {
 
     try {
       await authApi.signup(signupData);
-      navigate('/login');
+      navigate(`/login${returnUrl ? '?returnUrl=' + encodeURIComponent(returnUrl) : ''}`);
     } catch (error) {
       const errordata = error.response.data;
       if (errordata.code === 'EXIST_EMAIL' || error.code === 'EXIST_NICKNAME') {

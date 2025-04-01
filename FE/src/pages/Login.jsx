@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import logo from '../logo.png';
 import { useEffect, useState } from 'react';
 import authApi from '../api/authApi';
@@ -6,6 +6,9 @@ import { useDispatch, useSelector } from 'react-redux';
 import { login } from '../store/slices/authSlice';
 
 export default function Login() {
+  const [searchParams] = useSearchParams();
+  const returnUrl = searchParams.get('returnUrl');
+
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const accessToken = useSelector((state) => state.auth.accessToken);
@@ -54,7 +57,7 @@ export default function Login() {
       
       dispatch(login({ accessToken, nickname }));
 
-      navigate('/plans');
+      returnUrl ? navigate(returnUrl) : navigate('/plans');
     } catch (error) {
       const { code } = error.response.data;
 
@@ -81,7 +84,7 @@ export default function Login() {
 
   // 회원가입 버튼 클릭 시 회원가입 페이지로 이동
   const handleClickSignupButton = () => {
-    navigate('/signup');
+    navigate(`/signup${returnUrl ? '?returnUrl=' + encodeURIComponent(returnUrl) : ''}`);
   };
 
   // CSS

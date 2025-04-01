@@ -19,12 +19,30 @@ public class MovingPlanValidator {
         MovingPlan movingPlan = movingPlanRepository.findById(movingPlanId)
                 .orElseThrow(ResourceNotFoundException::new);
 
-        if(!hasAccessPermission(movingPlan, user)) {
+        if (!isMovingPlanMember(movingPlan, user)) {
             throw new ResourceNotFoundException();
         }
     }
 
-    private boolean hasAccessPermission(MovingPlan movingPlan, User user) {
-        return movingPlan.getUser().getId().equals(user.getId());
+    public void validateMovingPlanOwnership(Long movingPlanId, User user) {
+        MovingPlan movingPlan = movingPlanRepository.findById(movingPlanId)
+                .orElseThrow(ResourceNotFoundException::new);
+
+        if (!isMovingPlanOwner(movingPlan, user)) {
+            throw new ResourceNotFoundException();
+        }
+    }
+
+    private boolean isMovingPlanMember(MovingPlan movingPlan, User user) {
+        return movingPlan.getHousemates().stream()
+                .anyMatch(housemate -> housemate.getUser().getId().equals(user.getId()));
+    }
+
+    private boolean isMovingPlanOwner(MovingPlan movingPlan, User user) {
+        return movingPlan.getHousemates().stream()
+                .anyMatch(housemate ->
+                        housemate.getUser().getId().equals(user.getId()) &&
+                        housemate.getIsOwner()
+                );
     }
 }

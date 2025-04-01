@@ -12,6 +12,7 @@ import Calendar from '../pages/Calendar';
 import NotFound from '../pages/NotFound';
 import PlanSetting from '../pages/PlanSetting';
 import Chat from '../pages/Chat';
+import Invite from '../pages/Invite';
 
 const router = createBrowserRouter([
   {
@@ -72,6 +73,11 @@ const router = createBrowserRouter([
   {
     path: '/signup',
     element: <Signup />,
+    // errorElement: <NotFound />,
+  },
+  {
+    path: '/invite',
+    element: <Invite />,
     // errorElement: <NotFound />,
   },
 ]);

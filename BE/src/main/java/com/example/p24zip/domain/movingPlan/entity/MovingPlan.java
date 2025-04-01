@@ -26,9 +26,8 @@ public class MovingPlan extends BaseTimeEntity {
     @Column(length = 20, nullable = false)
     private String title;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User user;
+    @OneToMany(mappedBy = "movingPlan", cascade = CascadeType.REMOVE)
+    private List<Housemate> housemates = new ArrayList<>();
 
     @OneToMany(mappedBy = "movingPlan", cascade = CascadeType.REMOVE)
     private List<TaskGroup> taskGroups = new ArrayList<>();
@@ -43,9 +42,8 @@ public class MovingPlan extends BaseTimeEntity {
     private List<House> houses = new ArrayList<>();
 
     @Builder
-    public MovingPlan(String title, User user) {
+    public MovingPlan(String title) {
         this.title = title;
-        this.user = user;
     }
 
     public MovingPlan update(MovingPlanRequestDto requestDto) {

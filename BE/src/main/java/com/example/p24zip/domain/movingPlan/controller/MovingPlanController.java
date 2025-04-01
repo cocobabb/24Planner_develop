@@ -1,6 +1,8 @@
 package com.example.p24zip.domain.movingPlan.controller;
 
 import com.example.p24zip.domain.movingPlan.dto.request.MovingPlanRequestDto;
+import com.example.p24zip.domain.movingPlan.dto.response.MovingPlanHousemateResponseDto;
+import com.example.p24zip.domain.movingPlan.dto.response.MovingPlanOwnerResponseDto;
 import com.example.p24zip.domain.movingPlan.dto.response.MovingPlanResponseDto;
 import com.example.p24zip.domain.movingPlan.service.MovingPlanService;
 import com.example.p24zip.domain.user.entity.User;
@@ -25,7 +27,7 @@ public class MovingPlanController {
     private final MovingPlanValidator movingPlanValidator;
 
     @PostMapping
-    public ResponseEntity<ApiResponse<MovingPlanResponseDto>> createMovingPlan(
+    public ResponseEntity<ApiResponse<MovingPlanOwnerResponseDto>> createMovingPlan(
             @Valid @RequestBody MovingPlanRequestDto requestDto,
             @AuthenticationPrincipal User user) {
 
@@ -37,11 +39,11 @@ public class MovingPlanController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<Map<String, List<MovingPlanResponseDto>>>> readMovingPlans(
+    public ResponseEntity<ApiResponse<Map<String, List<MovingPlanOwnerResponseDto>>>> readMovingPlans(
             @AuthenticationPrincipal User user) {
-        
-        List<MovingPlanResponseDto> movingPlans = movingPlanService.readMovingPlans(user);
-        Map<String, List<MovingPlanResponseDto>> wrappedData = new HashMap<>();
+
+        List<MovingPlanOwnerResponseDto> movingPlans = movingPlanService.readMovingPlans(user);
+        Map<String, List<MovingPlanOwnerResponseDto>> wrappedData = new HashMap<>();
         wrappedData.put("movingPlans", movingPlans);
 
         return ResponseEntity.ok(ApiResponse.ok(
@@ -52,7 +54,7 @@ public class MovingPlanController {
     }
 
     @GetMapping("/{movingPlanId}")
-    public ResponseEntity<ApiResponse<MovingPlanResponseDto>> readMovingPlanById(
+    public ResponseEntity<ApiResponse<MovingPlanHousemateResponseDto>> readMovingPlanById(
             @PathVariable Long movingPlanId,
             @AuthenticationPrincipal User user) {
 
@@ -61,17 +63,31 @@ public class MovingPlanController {
         return ResponseEntity.ok(ApiResponse.ok(
                 "OK",
                 "플랜 조회에 성공했습니다.",
-                movingPlanService.readMovingPlanById(movingPlanId)
+                movingPlanService.readMovingPlanById(movingPlanId, user)
         ));
     }
 
-    @PutMapping("/{movingPlanId}")
+    @GetMapping("/{movingPlanId}/title")
+    public ResponseEntity<ApiResponse<MovingPlanResponseDto>> readMovingPlanTitleById(
+            @PathVariable Long movingPlanId,
+            @AuthenticationPrincipal User user) {
+
+        movingPlanValidator.validateMovingPlanAccess(movingPlanId, user);
+
+        return ResponseEntity.ok(ApiResponse.ok(
+                "OK",
+                "플랜 제목 조회에 성공했습니다.",
+                movingPlanService.readMovingPlanTitleById(movingPlanId)
+        ));
+    }
+
+    @PatchMapping("/{movingPlanId}/title")
     public ResponseEntity<ApiResponse<MovingPlanResponseDto>> updateMovingPlan(
             @PathVariable Long movingPlanId,
             @Valid @RequestBody MovingPlanRequestDto requestDto,
             @AuthenticationPrincipal User user) {
 
-        movingPlanValidator.validateMovingPlanAccess(movingPlanId, user);
+        movingPlanValidator.validateMovingPlanOwnership(movingPlanId, user);
 
         return ResponseEntity.ok(ApiResponse.ok(
                 "UPDATED",
@@ -85,7 +101,7 @@ public class MovingPlanController {
             @PathVariable Long movingPlanId,
             @AuthenticationPrincipal User user) {
 
-        movingPlanValidator.validateMovingPlanAccess(movingPlanId, user);
+        movingPlanValidator.validateMovingPlanOwnership(movingPlanId, user);
 
         movingPlanService.deleteMovingPlan(movingPlanId);
 

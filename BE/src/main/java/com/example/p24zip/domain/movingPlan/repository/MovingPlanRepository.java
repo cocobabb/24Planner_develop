@@ -10,5 +10,4 @@ import java.util.List;
 @Repository
 public interface MovingPlanRepository extends JpaRepository<MovingPlan, Long> {
 
-    List<MovingPlan> findAllByUserOrderByCreatedAtDesc(User user);
 }

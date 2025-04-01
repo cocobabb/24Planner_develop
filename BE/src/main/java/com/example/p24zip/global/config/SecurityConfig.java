@@ -58,6 +58,7 @@ public class SecurityConfig {
                                 .requestMatchers("/auth/**", "/error", "/images/**", "/gs-guide-websocket/**").permitAll()
 //                                .requestMatchers("/ws/**", "/topic/**", "/app/**").permitAll() // WebSocket 관련 경로 추가
                                 .requestMatchers("/swagger-ui/**", "swagger-ui.html", "/api-docs/**").permitAll()
+                                .requestMatchers("/plans/invitations/validate").permitAll()
                                 .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)

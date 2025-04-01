@@ -29,7 +29,7 @@ export default function HeaderRight() {
   useEffect(() => {
     async function setPlanTitle() {
       try {
-        const response = await planApi.readPlan(storedPlanId);
+        const response = await planApi.readPlanTitle(storedPlanId);
         dispatch(setCurrentPlanTitle({ title: response.data.data.title }));
       } catch (error) {
         console.log(error);

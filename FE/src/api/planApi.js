@@ -21,9 +21,15 @@ const planApi = {
     return response;
   },
 
+  // 플랜 제목 조회
+  readPlanTitle: async (id) => {
+    const response = await api.get(`${ENDPOINT}/${id}/title`);
+    return response;
+  },
+
   // 플랜 제목 수정
-  updatePlan: async (id, title) => {
-    const response = await api.put(`${ENDPOINT}/${id}`, { title });
+  updatePlanTitle: async (id, title) => {
+    const response = await api.patch(`${ENDPOINT}/${id}/title`, { title });
     return response;
   },
 

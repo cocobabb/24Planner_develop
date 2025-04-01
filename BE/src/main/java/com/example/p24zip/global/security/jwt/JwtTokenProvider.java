@@ -22,9 +22,8 @@ public class JwtTokenProvider {
 
     private final long accessTokenValidityInMilliseconds = 1000L * 60 * 30; // 30분
     private final long refreshTokenValidityInMilliseconds = 1000L * 60 * 60 * 48; // 48시간
-  
-//    private final long accessTokenValidityInMilliseconds = 1000L * 30;
-//    private final long refreshTokenValidityInMilliseconds = 1000L * 60;
+
+    private final long invitationTokenValidityInMilliseconds =  1000L * 60 * 60 * 24;   // 24시간
 
     @PostConstruct
     protected void init() {
@@ -84,5 +83,47 @@ public class JwtTokenProvider {
                 .parseClaimsJws(token)
                 .getBody()
                 .getSubject();
+    }
+
+    // 동거인 초대 링크를 위한 토큰 생성
+    public String invitationToken(Long movingPlanId, User user) {
+
+        Claims claims = Jwts.claims();
+        claims.put("type", "invitation");
+        claims.put("movingPlanId", movingPlanId);
+        claims.put("inviterId", user.getId());
+
+        Date now = new Date();
+
+        Date validity = new Date(now.getTime() + invitationTokenValidityInMilliseconds);
+
+        return Jwts.builder()
+                .setClaims(claims)
+                .setIssuedAt(now)
+                .setExpiration(validity)
+                .signWith(Keys.hmacShaKeyFor(secretKey.getBytes()), SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    public Long getMovingPlanId(String token) {
+        return Long.parseLong(
+                Jwts.parserBuilder()
+                        .setSigningKey(Keys.hmacShaKeyFor(secretKey.getBytes()))
+                        .build()
+                        .parseClaimsJws(token)
+                        .getBody()
+                        .get("movingPlanId").toString()
+        );
+    }
+
+    public Long getInviterId(String token) {
+        return Long.parseLong(
+                Jwts.parserBuilder()
+                        .setSigningKey(Keys.hmacShaKeyFor(secretKey.getBytes()))
+                        .build()
+                        .parseClaimsJws(token)
+                        .getBody()
+                        .get("inviterId").toString()
+        );
     }
 }
