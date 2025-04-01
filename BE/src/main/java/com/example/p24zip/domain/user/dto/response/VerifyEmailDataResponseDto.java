@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @Builder
 public class VerifyEmailDataResponseDto {
     @NotNull
-    private ZonedDateTime expiredAt;
+    private final ZonedDateTime expiredAt;
 
     public static VerifyEmailDataResponseDto from (ZonedDateTime expiredAt){
         return VerifyEmailDataResponseDto.builder()

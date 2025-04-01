@@ -146,7 +146,7 @@ public class AuthService {
         }
         // -2: 시간 만료
         if(redisTemplate.getExpire(username+"_mail")!=-2){
-            if(!code.equals(redisTemplate.opsForValue().get(username))){
+            if(!code.equals(redisTemplate.opsForValue().get(username+"_mail"))){
                throw new CustomException("BAD_REQUEST", "인증번호가 틀렸습니다.");
             }else{
                 redisTemplate.delete(username+"_mail");
