@@ -26,7 +26,19 @@ const authApi = {
     const response = await api.post(`${ENDPOINT}/signup`, signupData);
     return response;
   },
-  
+
+  // 비밀번호 찾기
+  findPassword: async (formData) => {
+    const response = await api.post(`${ENDPOINT}/verify-password`, formData);
+    return response.data;
+  },
+
+  // 비밀번호 수정
+  patchPassword: async (formData) => {
+    const response = await api.patch(`${ENDPOINT}/password`, formData);
+    return response.data;
+  },
+
   // 로그인
   login: async (formData) => {
     const response = await api.post(`${ENDPOINT}/login`, formData, { withCredentials: true });
@@ -39,16 +51,33 @@ const authApi = {
     return response;
   },
 
+  // 닉네임 조회
+  getNickname: async () => {
+    const response = await api.get(`${ENDPOINT}/nickname`);
+    return response.data;
+  },
+
+  // 닉네임 수정
+  patchNickname: async (formData) => {
+    const response = await api.patch(`${ENDPOINT}/nickname`, formData);
+    return response.data;
+  },
+
   // 로그아웃
   logout: async () => {
     const response = await api.delete(`${ENDPOINT}/logout`, {}, { withCredentials: true });
+  },
+
+  // redis 값 가져오기
+  redis: async (key) => {
+    const response = await api.get(`${ENDPOINT}/redis/${key}`);
+    return response.data;
   },
 
   // 테스트
   test: async () => {
     const response = await api.get(`/test`);
   },
-
 };
 
 export default authApi;

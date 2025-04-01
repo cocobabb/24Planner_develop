@@ -1,9 +1,8 @@
 package com.example.p24zip.domain.user.dto.request;
 
-
 import com.example.p24zip.domain.user.entity.User;
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -13,10 +12,10 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class VerifyEmailRequestDto {
+public class ChangePasswordRequestDto {
 
     @NotBlank
-    @Email
-    private String username;
+    @Pattern(regexp = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@$!%*#?&])[A-Za-z\\d@$!%*#?&]{8,}$")
+    private String password;
 
 }

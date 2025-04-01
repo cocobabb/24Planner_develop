@@ -11,8 +11,12 @@ import Houses from '../pages/Houses';
 import Calendar from '../pages/Calendar';
 import NotFound from '../pages/NotFound';
 import PlanSetting from '../pages/PlanSetting';
+import FindPassword from '../pages/FindPassword';
+import NewPassword from '../pages/NewPassword';
+import Mypage from '../pages/Mypage';
 import Chat from '../pages/Chat';
 import Invite from '../pages/Invite';
+
 
 const router = createBrowserRouter([
   {
@@ -76,6 +80,25 @@ const router = createBrowserRouter([
     // errorElement: <NotFound />,
   },
   {
+    path: '/password',
+    element: <FindPassword />,
+  },
+  {
+    path: '/newpassword',
+    element: <NewPassword />,
+  },
+  {
+    path: '/notfound',
+    element: <NotFound />,
+  },
+  {
+    path: '/mypage',
+    element: (
+      <ProtectedLayout>
+        <RootLayout />
+      </ProtectedLayout>
+    ),
+    children: [{ index: true, element: <Mypage /> }],
     path: '/invite',
     element: <Invite />,
     // errorElement: <NotFound />,
