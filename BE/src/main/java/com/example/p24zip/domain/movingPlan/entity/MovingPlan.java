@@ -1,5 +1,6 @@
 package com.example.p24zip.domain.movingPlan.entity;
 
+import com.example.p24zip.domain.chat.entity.Chat;
 import com.example.p24zip.domain.house.entity.House;
 import com.example.p24zip.domain.movingPlan.dto.request.MovingPlanRequestDto;
 import com.example.p24zip.domain.schedule.entity.Schedule;
@@ -40,6 +41,9 @@ public class MovingPlan extends BaseTimeEntity {
 
     @OneToMany(mappedBy = "movingPlan", cascade = CascadeType.REMOVE)
     private List<House> houses = new ArrayList<>();
+
+    @OneToMany(mappedBy = "movingPlan", cascade = CascadeType.REMOVE)
+    private List<Chat> chats = new ArrayList<>();
 
     @Builder
     public MovingPlan(String title) {
