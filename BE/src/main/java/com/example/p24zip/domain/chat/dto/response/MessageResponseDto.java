@@ -11,12 +11,14 @@ public class MessageResponseDto {
     private final String text;
     private final String nickname;
     private final String createTime;
+    private final String createDay;
 
-    public static MessageResponseDto from(String text, String nickname, String createTime) {
+    public static MessageResponseDto from(String text, String nickname, String createTime, String createDay) {
         return MessageResponseDto.builder()
                 .text(text)
                 .nickname(nickname)
                 .createTime(createTime)
+                .createDay(createDay)
                 .build();
     }
 }

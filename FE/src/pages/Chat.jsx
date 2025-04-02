@@ -53,17 +53,14 @@ export default function Chat() {
 
     stomp.onConnect = () => {
       stomp.subscribe(`/topic/${movingPlanId}`, (message) => {
-
         const parsedMessage = JSON.parse(message.body); // JSON 문자열을 객체로
         setMessages((prev) => [...prev, parsedMessage]);
       });
 
       stomp.subscribe(`/topic/${movingPlanId}/errors`, async (message) => {
-
         const parsedMessage = JSON.parse(message.body);
 
-        if (parsedMessage.code == "INVALID_TOKEN") {
-
+        if (parsedMessage.code == 'INVALID_TOKEN') {
           const response = await authApi.reissue();
           const accessToken = response.data.data.accessToken;
           localStorage.setItem('accessToken', accessToken);
@@ -147,7 +144,7 @@ export default function Chat() {
         </div>
         <div className={chattingBox}>
           {messages.map((message, index) => {
-            const { nickname, text, createTime } = message;
+            const { nickname, text, createTime, createDay } = message;
             // 이전 값
             const previousMessage = index === 0 ? '' : messages[index - 1];
 
@@ -158,6 +155,15 @@ export default function Chat() {
                 className={`w-full mb-3 flex flex-col ${isOwnMessage ? 'items-end' : 'items-start'}`}
                 key={index}
               >
+                {previousMessage.createDay === createDay ? (
+                  <></>
+                ) : (
+                  <div className="w-full flex flex-col items-center my-5">
+                    <div className="">{createDay}</div>
+                    <hr className='w-1/4 mt-2 border-gray-400'/>
+                  </div>
+                )}
+
                 {previousMessage.nickname === nickname &&
                 previousMessage.createTime === createTime ? (
                   <></>

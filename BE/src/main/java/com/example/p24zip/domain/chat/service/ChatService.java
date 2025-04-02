@@ -50,17 +50,25 @@ public class ChatService {
 
         Chat chat = chatRepository.save(requestDto.toEntity(movingPlan, user));
 
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
-        String createTime = chat.getCreatedAt().format(formatter);
+        log.info(String.valueOf(chat.getCreatedAt()));
+
+        DateTimeFormatter formatterTime = DateTimeFormatter.ofPattern("HH:mm");
+        String createTime = chat.getCreatedAt().format(formatterTime);
+
+        DateTimeFormatter formatterDay = DateTimeFormatter.ofPattern("yyyy" + "년 " + "MM" + "월 " + "dd" + "일");
+        String createDay = chat.getCreatedAt().format(formatterDay);
+
+        log.info(createDay);
 
         String text = HtmlUtils.htmlEscape(chat.getText());
 
-        return MessageResponseDto.from(text, user.getNickname(), createTime);
+        return MessageResponseDto.from(text, user.getNickname(), createTime, createDay);
     }
 
     public ChatsResponseDto readchats(Long movingPlanId) {
 
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
+        DateTimeFormatter formatterTime = DateTimeFormatter.ofPattern("HH:mm");
+        DateTimeFormatter formatterDay = DateTimeFormatter.ofPattern("yyyy" + "년 " + "MM" + "월 " + "dd" + "일");
 
         movingPlanRepository.findById(movingPlanId)
                 .orElseThrow(() -> new ResourceNotFoundException());
@@ -69,7 +77,7 @@ public class ChatService {
 
         List<MessageResponseDto> chatlist =
                 chats.stream()
-                        .map(chat -> MessageResponseDto.from(chat.getText(), chat.getUser().getNickname(), chat.getCreatedAt().format(formatter)))
+                        .map(chat -> MessageResponseDto.from(chat.getText(), chat.getUser().getNickname(), chat.getCreatedAt().format(formatterTime), chat.getCreatedAt().format(formatterDay)))
                         .toList();
 
         return ChatsResponseDto.from(chatlist);
