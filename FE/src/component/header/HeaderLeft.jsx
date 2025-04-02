@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useLocation } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import logo from '../../logo.png';
 
 export default function HeaderLeft() {
@@ -18,6 +19,8 @@ export default function HeaderLeft() {
     headerLeftList.push({ destinationUrl: '/chat', currentUrl: 'chat', text: '채팅방' });
   }
 
+  const isLoggedIn = useSelector((state) => state.auth.isLoggedIn);
+
   // Linux 환경 Firefox에서 flex에 이미지가 들어가면 무조건 크기를 최대로 차지하는 문제가 있어 flex 크기 수동 지정
   const headerListStyle = 'flex flex-1 items-center';
   const headerItemStyle = 'flex items-center px-4 max-h-8';
@@ -27,10 +30,15 @@ export default function HeaderLeft() {
   // NavLink로는 구분이 어려운 URL이 있어서 Link 상에서 Active 수동 구현
   return (
     <ul className={headerListStyle}>
-      <Link to="/" className={headerLogoStyle}>
-        <img src={logo} />
-      </Link>
-
+      {isLoggedIn ? (
+        <Link to="/plans" className={headerLogoStyle}>
+          <img src={logo} />
+        </Link>
+      ) : (
+        <div className={headerLogoStyle}>
+          <img src={logo} />
+        </div>
+      )}
       <li className="flex">
         {headerLeftList.length > 0 &&
           headerLeftList.map((element, i) => {

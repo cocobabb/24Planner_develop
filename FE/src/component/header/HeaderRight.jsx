@@ -92,7 +92,7 @@ export default function HeaderRight() {
         <>
           <li className={headerItemStyle}>
             <Link to="/mypage" className="cursor-pointer">
-              마이 페이지
+              마이페이지
             </Link>
           </li>
           <li className={headerItemStyle}>
