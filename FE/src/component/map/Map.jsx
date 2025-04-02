@@ -66,8 +66,13 @@ export default function Map({
 
     // 지도 중심지 설정
     if (centerlatitude == null || centerlongitude == null) {
-      position = new kakao.maps.LatLng(33.450701, 126.570667);
-      map.setCenter(position);
+      navigator.geolocation.getCurrentPosition((position) => {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+
+        position = new kakao.maps.LatLng(lat, lon);
+        map.setCenter(position);
+      });
     } else {
       position = new kakao.maps.LatLng(centerlatitude, centerlongitude);
       map.setCenter(position);
