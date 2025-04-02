@@ -51,6 +51,10 @@ dependencies {
 	// WebFlux 포함 (WebClient 사용 가능)
 	implementation 'org.springframework.boot:spring-boot-starter-webflux'
 
+  // 카카오 소셜로그인
+	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+	implementation 'org.springframework.security:spring-security-oauth2-jose'
+
 	// WebSocket
 	implementation 'org.springframework.boot:spring-boot-starter-websocket'
 }

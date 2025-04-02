@@ -68,16 +68,22 @@ const authApi = {
     const response = await api.delete(`${ENDPOINT}/logout`, {}, { withCredentials: true });
   },
 
+  // 추가 정보 입력 후 회원가입 (소셜로그인)
+  completeSignup: async (nickname, tempToken) => {
+    const response = await api.post(
+      `${ENDPOINT}/signup/additional-info`,
+      { nickname, tempToken },
+      { withCredentials: true },
+    );
+    return response;
+  },
+  
   // redis 값 가져오기
   redis: async (key) => {
     const response = await api.get(`${ENDPOINT}/redis/${key}`);
     return response.data;
   },
 
-  // 테스트
-  test: async () => {
-    const response = await api.get(`/test`);
-  },
 };
 
 export default authApi;

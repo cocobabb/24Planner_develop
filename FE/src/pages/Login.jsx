@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import authApi from '../api/authApi';
 import { useDispatch, useSelector } from 'react-redux';
 import { login } from '../store/slices/authSlice';
+import KakaoLogin from '../component/login/KakaoLogin';
 
 export default function Login() {
   const [searchParams] = useSearchParams();
@@ -92,15 +93,15 @@ export default function Login() {
   const logoStyle = 'w-64 text-center cursor-pointer';
   const loginWrapperStyle = 'w-full flex flex-col justify-center items-center';
   const loginFormStyle =
-    'w-140 h-3/4 flex flex-col justify-between items-center box-border pt-15 pb-3';
+    'w-140 h-3/4 flex flex-col justify-between items-center box-border pt-15 pb-3 mb-5';
   const inputWrapperStyle = 'w-full';
   const inputStyle = 'w-full text-xl pl-3 focus:outline-none focus:placeholder-transparent mt-5';
   const lineStyle = 'mt-3';
   const inputRequestMessageStyle = 'text-red-400 mt-1';
   const loginErrorMessageStyle = 'text-red-400 mb-5';
   const buttonStyle =
-    'px-12 py-3 text-2xl text-primary cursor-pointer border-3 border-solid rounded-3xl border-primary hover:bg-primary hover:text-white';
-  const signupRequestStyle = 'w-1/3 min-w-100 flex justify-center gap-1 mt-10 pt-2';
+    'w-75 px-12 py-3 text-2xl text-primary cursor-pointer border-3 border-solid rounded-2xl border-primary hover:bg-primary hover:text-white';
+  const signupRequestStyle = 'w-1/3 min-w-100 flex justify-center gap-1 mt-5';
   const signupButtonStyle =
     'border-b border-primary cursor-pointer hover:text-primary hover:font-bold ';
 
@@ -142,6 +143,7 @@ export default function Login() {
           <div className={loginErrorMessageStyle}>{errorMessage || '\u00A0'}</div>
           <button className={buttonStyle}>로그인</button>
         </form>
+        <KakaoLogin></KakaoLogin>
         <div className={signupRequestStyle}>
           <div>계정이 없으신가요?</div>
           <div className={signupButtonStyle} onClick={handleClickSignupButton}>

@@ -43,12 +43,19 @@ public class User extends BaseTimeEntity implements UserDetails {
     @Enumerated(EnumType.STRING)
     private Role role;
 
+    @Column(unique = true)
+    private String providerId;
+
+    private String provider;
+
     @Builder
-    public User(String username, String password, String nickname, Role role) {
+    public User(String username, String password, String nickname, Role role, String providerId, String provider) {
         this.username = username;
         this.password = password;
         this.nickname = nickname;
         this.role = role;
+        this.providerId = providerId;
+        this.provider = provider;
     }
 
     @Override

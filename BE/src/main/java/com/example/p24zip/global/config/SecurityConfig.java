@@ -3,12 +3,14 @@ package com.example.p24zip.global.config;
 import com.example.p24zip.global.security.handler.CustomAccessDeniedHandler;
 import com.example.p24zip.global.security.handler.JwtAuthenticationEntryPoint;
 import com.example.p24zip.global.security.jwt.JwtAuthenticationFilter;
+import com.example.p24zip.domain.user.handler.CustomOAuthLoginFailureHandler;
+import com.example.p24zip.domain.user.handler.CustomOAuthLoginSuccessHandler;
+import com.example.p24zip.domain.user.service.CustomOAuth2UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -34,6 +36,9 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final CustomAccessDeniedHandler accessDeniedHandler;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+    private final CustomOAuth2UserService customOAuth2UserService;
+    private final CustomOAuthLoginSuccessHandler customOAuthLoginSuccessHandler;
+    private final CustomOAuthLoginFailureHandler customOAuthLoginFailureHandler;
 
     @Value("${origin}")
     private String origin;
@@ -56,10 +61,15 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                                 .requestMatchers("/auth/verify").authenticated()
                                 .requestMatchers("/auth/**", "/error", "/images/**", "/gs-guide-websocket/**").permitAll()
-//                                .requestMatchers("/ws/**", "/topic/**", "/app/**").permitAll() // WebSocket 관련 경로 추가
+                                .requestMatchers("/oauth2/**", "/login/oauth2/code/**").permitAll()
                                 .requestMatchers("/swagger-ui/**", "swagger-ui.html", "/api-docs/**").permitAll()
                                 .requestMatchers("/plans/invitations/validate").permitAll()
                                 .anyRequest().authenticated()
+                )
+                .oauth2Login(oauth2 -> oauth2
+                    .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
+                    .successHandler(customOAuthLoginSuccessHandler)
+                    .failureHandler(customOAuthLoginFailureHandler)
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(exception -> exception

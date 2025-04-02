@@ -11,6 +11,8 @@ import Houses from '../pages/Houses';
 import Calendar from '../pages/Calendar';
 import NotFound from '../pages/NotFound';
 import PlanSetting from '../pages/PlanSetting';
+import LoginRedirect from '../pages/LoginRedirect';
+import SignupAdditionalInfo from '../pages/SignupAdditionalInfo';
 import FindPassword from '../pages/FindPassword';
 import NewPassword from '../pages/NewPassword';
 import Mypage from '../pages/Mypage';
@@ -79,6 +81,15 @@ const router = createBrowserRouter([
     // errorElement: <NotFound />,
   },
   {
+    path: '/login-redirect',
+    element: <LoginRedirect />,
+    // errorElement: <NotFound />,
+  },
+  {
+    path: '/signup/additional-info',
+    element: <SignupAdditionalInfo />,
+  },
+  {                                 
     path: '/password',
     element: <FindPassword />,
   },

@@ -5,15 +5,18 @@ import com.example.p24zip.domain.house.dto.response.ShowNicknameResponseDto;
 import com.example.p24zip.domain.user.dto.request.ChangeNicknameRequestDto;
 import com.example.p24zip.domain.user.dto.request.ChangePasswordRequestDto;
 import com.example.p24zip.domain.user.dto.request.LoginRequestDto;
+import com.example.p24zip.domain.user.dto.request.OAuthSignupRequestDto;
 import com.example.p24zip.domain.user.dto.request.SignupRequestDto;
 import com.example.p24zip.domain.user.dto.request.VerifyEmailRequestCodeDto;
 import com.example.p24zip.domain.user.dto.request.VerifyEmailRequestDto;
+import com.example.p24zip.domain.user.dto.response.OAuthSignupResponseDto;
 import com.example.p24zip.domain.user.dto.response.ChangeNicknameResponseDto;
 import com.example.p24zip.domain.user.dto.response.FindPasswordResponseDto;
 import com.example.p24zip.domain.user.dto.response.RedisValueResponseDto;
 import com.example.p24zip.domain.user.dto.response.VerifyEmailDataResponseDto;
 import com.example.p24zip.domain.user.dto.response.AccessTokenResponseDto;
 import com.example.p24zip.domain.user.dto.response.LoginResponseDto;
+import com.example.p24zip.domain.user.entity.Role;
 import com.example.p24zip.domain.user.entity.User;
 import com.example.p24zip.domain.user.repository.UserRepository;
 import com.example.p24zip.global.exception.CustomException;
@@ -33,12 +36,13 @@ import java.time.LocalDateTime;
 
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.Map;
 import java.time.format.DateTimeFormatter;
 import java.util.Random;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -51,7 +55,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
-@Slf4j
 public class AuthService {
 
     private final UserRepository userRepository;
@@ -62,12 +65,13 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
 
+    private final TempUserService tempUserService;
+
     @Value("${ORIGIN}")
     private String origin;
 
     @Value("${MAIL_ADDRESS")
     private String mailAddress;
- 
 
     /**
      * 회원가입
@@ -392,6 +396,60 @@ public class AuthService {
         return ZonedDateTime.now(ZoneId.of("Asia/Seoul")).plusMinutes(3);
     }
 
+    // 기존 사용자 확인 및 신규 사용자 처리
+    @Transactional
+    public OAuthSignupResponseDto completeSignup(HttpServletRequest request,
+        HttpServletResponse response, OAuthSignupRequestDto requestDto) {
+
+        String tempToken = requestDto.getTempToken();
+        String nickname = requestDto.getNickname();
+
+        // 임시 사용자 정보 가져오기
+        Map<String, String> tempUser = tempUserService.getTempUser(tempToken);
+
+        String username = tempUser.get("email");
+        String provider = tempUser.get("provider");
+        String providerId = tempUser.get("providerId");
+
+        // 사용자가 이미 존재하는 경우 처리
+        if (userRepository.existsByUsername(username)){
+            throw new IllegalStateException("이미 가입된 사용자입니다.");
+        }
+
+        String password = String.valueOf(UUID.randomUUID());
+        // 비밀번호 처리 (UUID를 이용해 기본 비밀번호를 설정하고, 이를 암호화)
+        String encodedPassword = passwordEncoder.encode(password);
+
+        // 임시 유저 정보를 일반 사용자로 변환
+        User user = User.builder()
+            .username(username)
+            .password(encodedPassword)
+            .nickname(nickname)
+            .role(Role.ROLE_USER)
+            .provider(provider)
+            .providerId(providerId)
+            .build();
+
+        // User 엔티티로 저장
+        userRepository.save(user);
+
+        // 임시 유저 삭제
+        tempUserService.deleteTempUser(user.getUsername());
+
+        // 토큰 생성
+        String refreshToken = jwtTokenProvider.refreshCreateToken(user);
+        String accessToken = jwtTokenProvider.accessCreateToken(user);
+
+        // 쿠키 생성 및 refreshToken 쿠키에 넣기
+        Cookie cookie = new Cookie("refreshToken", refreshToken);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(true);
+        cookie.setMaxAge(17800);
+        cookie.setPath("/");
+        response.addCookie(cookie);
+
+        return OAuthSignupResponseDto.from(nickname, accessToken);
+    }
 
     public RedisValueResponseDto getRedisValue(String key) {
         String value = redisTemplate.opsForValue().get(key);
