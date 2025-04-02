@@ -55,7 +55,7 @@ export default function Login() {
 
       // 로그인 시 accessToken을 localstorage에 저장
       const { accessToken, nickname } = data.data;
-      
+
       dispatch(login({ accessToken, nickname }));
 
       returnUrl ? navigate(returnUrl) : navigate('/plans');
@@ -88,6 +88,11 @@ export default function Login() {
     navigate(`/signup${returnUrl ? '?returnUrl=' + encodeURIComponent(returnUrl) : ''}`);
   };
 
+  // 비밀번호 찾기 버튼 클릭 시 비밀번호 찾기 페이지로 이동
+  const handleClickFindPasswordButton = () => {
+    navigate('/password');
+  };
+
   // CSS
   const displayStyle = 'h-screen flex flex-col justify-center items-center';
   const logoStyle = 'w-64 text-center cursor-pointer';
@@ -101,8 +106,9 @@ export default function Login() {
   const loginErrorMessageStyle = 'text-red-400 mb-5';
   const buttonStyle =
     'w-75 px-12 py-3 text-2xl text-primary cursor-pointer border-3 border-solid rounded-2xl border-primary hover:bg-primary hover:text-white';
-  const signupRequestStyle = 'w-1/3 min-w-100 flex justify-center gap-1 mt-5';
-  const signupButtonStyle =
+  const requestWrapperStyle = 'mt-3 w-75';
+  const requestStyle = 'w-1/3 min-w-100 flex gap-1 mt-3';
+  const navigateButtonStyle =
     'border-b border-primary cursor-pointer hover:text-primary hover:font-bold ';
 
   return (
@@ -144,10 +150,18 @@ export default function Login() {
           <button className={buttonStyle}>로그인</button>
         </form>
         <KakaoLogin></KakaoLogin>
-        <div className={signupRequestStyle}>
-          <div>계정이 없으신가요?</div>
-          <div className={signupButtonStyle} onClick={handleClickSignupButton}>
-            회원가입
+        <div className={requestWrapperStyle}>
+          <div className={requestStyle}>
+            <div>비밀번호를 잊어버리셨나요?</div>
+            <div className={navigateButtonStyle} onClick={handleClickFindPasswordButton}>
+              비밀번호 찾기
+            </div>
+          </div>
+          <div className={requestStyle}>
+            <div>계정이 없으신가요?</div>
+            <div className={navigateButtonStyle} onClick={handleClickSignupButton}>
+              회원가입
+            </div>
           </div>
         </div>
       </div>
