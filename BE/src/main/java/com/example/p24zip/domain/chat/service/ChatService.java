@@ -36,21 +36,18 @@ public class ChatService {
     public MessageResponseDto Chatting(
             Long movingPlanId,
             MessageRequestDto requestDto,
-            String tokenusername
+            String tokenUsername
             ) {
 
         MovingPlan movingPlan = movingPlanRepository.findById(movingPlanId)
                 .orElseThrow(() -> new ResourceNotFoundException());
 
-        User user = userRepository.findByUsername(tokenusername)
+        User user = userRepository.findByUsername(tokenUsername)
                 .orElseThrow(() -> new ResourceNotFoundException());
 
         movingPlanValidator.validateMovingPlanAccess(movingPlanId, user);
 
-
         Chat chat = chatRepository.save(requestDto.toEntity(movingPlan, user));
-
-        log.info(String.valueOf(chat.getCreatedAt()));
 
         DateTimeFormatter formatterTime = DateTimeFormatter.ofPattern("HH:mm");
         String createTime = chat.getCreatedAt().format(formatterTime);
@@ -58,14 +55,12 @@ public class ChatService {
         DateTimeFormatter formatterDay = DateTimeFormatter.ofPattern("yyyy" + "년 " + "MM" + "월 " + "dd" + "일");
         String createDay = chat.getCreatedAt().format(formatterDay);
 
-        log.info(createDay);
-
         String text = HtmlUtils.htmlEscape(chat.getText());
 
         return MessageResponseDto.from(text, user.getNickname(), createTime, createDay);
     }
 
-    public ChatsResponseDto readchats(Long movingPlanId) {
+    public ChatsResponseDto readChats(Long movingPlanId) {
 
         DateTimeFormatter formatterTime = DateTimeFormatter.ofPattern("HH:mm");
         DateTimeFormatter formatterDay = DateTimeFormatter.ofPattern("yyyy" + "년 " + "MM" + "월 " + "dd" + "일");
@@ -84,11 +79,11 @@ public class ChatService {
     }
 
     @Transactional
-    public void deletechats(Long movingPlanId) {
+    public void deleteChats(Long movingPlanId) {
 
         movingPlanRepository.findById(movingPlanId)
                 .orElseThrow(() -> new ResourceNotFoundException());
 
-        chatRepository.deletechattingplan(movingPlanId);
+        chatRepository.deleteChattingPlan(movingPlanId);
     }
 }

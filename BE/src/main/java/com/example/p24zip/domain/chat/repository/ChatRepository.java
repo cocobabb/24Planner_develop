@@ -14,7 +14,7 @@ public interface ChatRepository extends JpaRepository<Chat, Long> {
         SELECT c FROM Chat c
         WHERE c.movingPlan.id = :movingPlanId
         ORDER BY c.createdAt ASC
-""")
+    """)
     List<Chat> findAllById(@Param("movingPlanId") Long movingPlanId);
 
     @Modifying
@@ -22,6 +22,6 @@ public interface ChatRepository extends JpaRepository<Chat, Long> {
         DELETE
         FROM Chat c
         WHERE c.movingPlan.id = :movingPlanId
-""")
-    void deletechattingplan(@Param("movingPlanId") Long movingPlanId);
+    """)
+    void deleteChattingPlan(@Param("movingPlanId") Long movingPlanId);
 }

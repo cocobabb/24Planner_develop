@@ -46,29 +46,29 @@ public class ChatController {
         if(token == null || !jwtTokenProvider.validateToken(token)) {
             throw new StompTokenException(requestDto.getText());
         }
-        String tokenusername = jwtTokenProvider.getUsername(token);
+        String tokenUsername = jwtTokenProvider.getUsername(token);
 
-        return chatService.Chatting(movingPlanId, requestDto, tokenusername);
+        return chatService.Chatting(movingPlanId, requestDto, tokenUsername);
     }
 
     @GetMapping("/chats/{movingPlanId}")
-    public ResponseEntity<ApiResponse<ChatsResponseDto>> readchats(@PathVariable Long movingPlanId, @AuthenticationPrincipal User user) {
+    public ResponseEntity<ApiResponse<ChatsResponseDto>> readChats(@PathVariable Long movingPlanId, @AuthenticationPrincipal User user) {
 
         movingPlanValidator.validateMovingPlanAccess(movingPlanId, user);
 
         return ResponseEntity.ok(
                 ApiResponse.ok("OK",
                         "조회에 성공했습니다.",
-                        chatService.readchats(movingPlanId))
+                        chatService.readChats(movingPlanId))
         );
     }
 
     @DeleteMapping("/chats/{movingPlanId}")
-    public ResponseEntity<ApiResponse<Object>> deletechats(@PathVariable Long movingPlanId, @AuthenticationPrincipal User user) {
+    public ResponseEntity<ApiResponse<Object>> deleteChats(@PathVariable Long movingPlanId, @AuthenticationPrincipal User user) {
 
         movingPlanValidator.validateMovingPlanOwnership(movingPlanId, user);
 
-        chatService.deletechats(movingPlanId);
+        chatService.deleteChats(movingPlanId);
 
         return ResponseEntity.ok(
                 ApiResponse.ok("DELETED","내용을 삭제했습니다.",null)
