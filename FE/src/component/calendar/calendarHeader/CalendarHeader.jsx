@@ -9,6 +9,7 @@ export default function CalendarHeader({
   setYearState,
   monthState,
   setMonthState,
+  setSelectDate,
   setShowingScheduleToModal,
   setIsShowingModal,
 }) {
