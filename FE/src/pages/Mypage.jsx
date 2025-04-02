@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import Password from '../component/user/Password';
 import { useDispatch } from 'react-redux';
-import { modifyNickname } from '../store/slices/authSlice';
+import { logout, modifyNickname } from '../store/slices/authSlice';
 import userApi from '../api/userApi';
+import { useNavigate } from 'react-router-dom';
 
 export default function Mypage() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+
   const [nickname, setNickname] = useState();
   const [formData, setFormData] = useState({
     nickname: '',
@@ -68,6 +71,19 @@ export default function Mypage() {
     }
   };
 
+  const deleteUser = async () => {
+    if (confirm('탈퇴하시면 이사계획부터 모든 정보가 없어집니다. 정말 탈퇴하시겠습니까?')) {
+      try {
+        const response = await userApi.deleteUser();
+        dispatch(logout());
+        navigate('/');
+        return;
+      } catch (error) {
+        console.error();
+      }
+    }
+  };
+
   const container = 'w-full mt-30 grid content-center justify-items-center ';
   const form = 'mb-20 relative';
   const inputStyle = 'w-110 m-3 px-2 focus:outline-none text-xl';
@@ -101,7 +117,9 @@ export default function Mypage() {
         </form>
 
         <Password></Password>
-        <button className={`${del}`}>탈퇴하기</button>
+        <button className={`${del}`} onClick={deleteUser}>
+          탈퇴하기
+        </button>
       </div>
     </>
   );

@@ -1,7 +1,13 @@
 package com.example.p24zip.domain.user.service;
 
 
+import com.example.p24zip.domain.chat.entity.Chat;
+import com.example.p24zip.domain.chat.repository.ChatRepository;
 import com.example.p24zip.domain.house.dto.response.ShowNicknameResponseDto;
+import com.example.p24zip.domain.movingPlan.entity.Housemate;
+import com.example.p24zip.domain.movingPlan.entity.MovingPlan;
+import com.example.p24zip.domain.movingPlan.repository.HousemateRepository;
+import com.example.p24zip.domain.movingPlan.repository.MovingPlanRepository;
 import com.example.p24zip.domain.user.dto.request.ChangeNicknameRequestDto;
 import com.example.p24zip.domain.user.dto.request.ChangePasswordRequestDto;
 import com.example.p24zip.domain.user.dto.request.LoginRequestDto;
@@ -36,6 +42,7 @@ import java.time.LocalDateTime;
 
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.List;
 import java.util.Map;
 import java.time.format.DateTimeFormatter;
 import java.util.Random;
@@ -58,6 +65,10 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuthService {
 
     private final UserRepository userRepository;
+    private final HousemateRepository housemateRepository;
+    private final MovingPlanRepository movingPlanRepository;
+    private final ChatRepository chatRepository;
+
     private final PasswordEncoder passwordEncoder; // 회원가입 시 비밀번호 암호화
     private final JavaMailSender mailSender; // 메일 보내는 객체
     private final StringRedisTemplate redisTemplate; // redis 객체
@@ -72,6 +83,7 @@ public class AuthService {
 
     @Value("${MAIL_ADDRESS")
     private String mailAddress;
+
 
     /**
      * 회원가입
@@ -349,6 +361,19 @@ public class AuthService {
         response.addCookie(cookie);
     }
 
+    @Transactional
+    public void deleteUser(User user) {
+        List<Housemate> housemateList = housemateRepository.findByUserAndIsOwnerTrue(user);
+        System.out.println(housemateList);
+
+        List<MovingPlan> movingPlanList = housemateList.stream().map(Housemate::getMovingPlan).toList();
+        System.out.println(movingPlanList);
+
+        movingPlanList.forEach(movingPlanRepository::delete);
+        userRepository.delete(user);
+
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////
     // 보조 메서드
@@ -459,5 +484,6 @@ public class AuthService {
         System.out.println(value);
         return new RedisValueResponseDto(value);
     }
+
 
 }

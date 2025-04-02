@@ -26,6 +26,12 @@ const userApi = {
     const response = await api.get(`${ENDPOINT}/redis/${key}`);
     return response.data;
   },
+
+  // 회원탈퇴
+  deleteUser: async () => {
+    const response = await api.delete(`${ENDPOINT}/delete`);
+    return response.data;
+  },
 };
 
 export default userApi;
