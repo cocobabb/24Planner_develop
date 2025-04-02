@@ -22,12 +22,12 @@ public class InvitationController {
 
     @GetMapping("/validate")
     public ResponseEntity<ApiResponse<HousemateInvitationValidateResponseDto>> validateInvitation(
-            @RequestParam String token) {
+            @RequestParam String code) {
 
         return ResponseEntity.ok(ApiResponse.ok(
                 "OK",
                 "유효한 초대 링크입니다.",
-                invitationService.validateInvitationToken(token)
+                invitationService.validateInvitationCode(code)
         ));
     }
 
@@ -36,7 +36,7 @@ public class InvitationController {
             @RequestBody HousemateInvitationRequestDto requestDto,
             @AuthenticationPrincipal User user) {
 
-        HousemateInvitationValidateResponseDto validationResult = invitationService.validateInvitationToken(requestDto.getToken());
+        HousemateInvitationValidateResponseDto validationResult = invitationService.validateInvitationCode(requestDto.getCode());
 
         return ResponseEntity.ok(ApiResponse.ok(
                 "ACCEPTED",

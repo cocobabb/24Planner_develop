@@ -2,6 +2,7 @@ import { useParams } from 'react-router-dom';
 import housemateApi from '../../api/housemateApi';
 import Housemate from './Housemate';
 import { useState } from 'react';
+import { useSelector } from 'react-redux';
 
 export default function HousemateListSection({
   housemates,
@@ -16,6 +17,9 @@ export default function HousemateListSection({
   const [isLoading, setIsLoading] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
+
+  const planTitle = useSelector((state) => state.planForHeader.title);
+  const nickname = localStorage.getItem('nickname');
 
   // 동거인 초대 링크 생성
   const createInvitationLink = async () => {
@@ -40,7 +44,9 @@ export default function HousemateListSection({
   };
 
   const copyToClipboard = () => {
-    navigator.clipboard.writeText(invitationLink);
+    navigator.clipboard.writeText(
+      `[이사모음zip] ${nickname}님의 '${planTitle}' 이사 플랜에 초대합니다. - ${invitationLink}`,
+    );
     setIsCopied(true);
     setTimeout(() => setIsCopied(false), 1000);
   };

@@ -10,14 +10,14 @@ const housemateApi = {
   },
 
   // 동거인 초대 링크 토큰 검증
-  validateInvitation: async (token) => {
-    const response = await api.get(`${ENDPOINT}/invitations/validate`, { params: { token } });
+  validateInvitation: async (code) => {
+    const response = await api.get(`${ENDPOINT}/invitations/validate`, { params: { code } });
     return response;
   },
 
   // 동거인 초대 링크 수락
-  acceptInvitation: async (token) => {
-    const response = await api.post(`${ENDPOINT}/invitations/accept`, { token });
+  acceptInvitation: async (code) => {
+    const response = await api.post(`${ENDPOINT}/invitations/accept`, { code });
     return response;
   },
 

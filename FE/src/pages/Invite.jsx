@@ -6,7 +6,7 @@ import { useSelector } from 'react-redux';
 
 export default function Invite() {
   const [searchParams] = useSearchParams();
-  const token = searchParams.get('token');
+  const code = searchParams.get('code');
 
   const navigate = useNavigate();
 
@@ -22,14 +22,14 @@ export default function Invite() {
   };
 
   useEffect(() => {
-    if (!token) {
+    if (!code) {
       setError('유효하지 않은 초대 링크입니다.');
       return;
     }
 
     const validateInvitation = async () => {
       try {
-        const response = await housemateApi.validateInvitation(token);
+        const response = await housemateApi.validateInvitation(code);
         const data = response.data.data;
 
         setInviteData(data);
@@ -43,7 +43,7 @@ export default function Invite() {
     };
 
     validateInvitation();
-  }, [token]);
+  }, [code]);
 
   const accpetInvitaion = async () => {
     if (!isLoggedIn) {
@@ -58,7 +58,7 @@ export default function Invite() {
     }
 
     try {
-      const response = await housemateApi.acceptInvitation(token);
+      const response = await housemateApi.acceptInvitation(code);
       const data = response.data.data;
 
       navigate(`/plans/${data.movingPlanId}`);

@@ -9,6 +9,6 @@ import lombok.NoArgsConstructor;
 public class HousemateInvitationRequestDto {
 
     @NotBlank
-    private String token;
+    private String code;
 
 }
