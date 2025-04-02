@@ -86,7 +86,7 @@ export default function CalendarContent({
         html: `${arg.text.toUpperCase()}`,
       })}
       dayCellContent={(arg) => ({
-        html: `<div class="${isEqualDay(selectDateObject, arg.date) ? 'animate-selected-date' : ''}">${arg.date.getDate()}</div>`,
+        html: `<div class="text-center ${isEqualDay(selectDateObject, arg.date) ? 'animate-selected-date' : ''}">${arg.date.getDate()}</div>`,
       })}
       // 더 보기 버튼에, 기본 제공되는 +3 개라는 텍스트 대신 +3만 사용
       moreLinkContent={(arg) => ({ html: arg.shortText })}

@@ -202,7 +202,7 @@ export default function CalendarModal({
   const inputStyle = 'grow focus:outline-hidden';
   const circleStyle = `bg-[${color}] size-10 rounded-4xl`;
   const errorDivStyle = 'text-red-300';
-  const buttonStyle = `flex justify-center items-center w-40 h-15 bg-white border-4 border-primary rounded-3xl text-primary text-xl font-bold cursor-pointer ${isLoading ? '' : 'hover:bg-primary hover:text-white'}`;
+  const buttonStyle = `flex justify-center items-center w-40 h-15 bg-white border-4 border-primary rounded-3xl text-primary text-xl font-bold ${isLoading ? 'cursor-progress' : 'hover:bg-primary hover:text-white cursor-pointer'}`;
   const calendarModalDropdownStyle = 'relative group';
   const calendarModalDropdownBodyStyle = `absolute text-xl text-center top-11 space-y-4 -left-57 right-0 w-125 py-4 bg-white border-1 border-primary rounded-2xl shadow-sm z-8 ${showColorDropdown ? 'opacity-100 visible' : 'opacity-0 invisible'}`;
 
@@ -238,7 +238,7 @@ export default function CalendarModal({
               setEndDate={setEndDate}
             />
             <div>
-              <button className={buttonStyle} onClick={handleButton}>
+              <button className={buttonStyle} onClick={handleButton} disabled={isLoading}>
                 {isLoading ? (
                   <LoadingCircle />
                 ) : (

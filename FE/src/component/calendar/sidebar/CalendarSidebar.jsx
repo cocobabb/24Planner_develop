@@ -98,6 +98,10 @@ export default function CalendarSidebar({
   };
 
   const deleteSchedule = async (e, scheduleId) => {
+    if (!confirm(`'${e.target.previousSibling.innerText}' 일정을 삭제합니다.\n계속하시겠습니까?`)) {
+      return;
+    }
+
     try {
       const response = await scheduleApi.deleteSchedule(movingPlanId, scheduleId);
       setDailyScheduleList((prev) => prev.filter((schedule) => schedule.id !== scheduleId));
@@ -124,6 +128,7 @@ export default function CalendarSidebar({
           {schedule.content}
         </div>
         <div
+          val={schedule.content}
           className={deleteButtonDivStyle}
           onClick={(e) => {
             deleteSchedule(e, schedule.id);
@@ -141,7 +146,7 @@ export default function CalendarSidebar({
   const inputDivStyle =
     'flex justify-center items-center border-1 border-gray-300 rounded-3xl w-full py-2 pr-5 m-2 h-10';
   const inputStyle = 'focus:outline-none w-full p-4';
-  const addButtonStyle = `flex justify-center items-center border-2 border-primary rounded-3xl w-15 h-10 cursor-pointer ${isLoading ? '' : 'bg-primary'}`;
+  const addButtonStyle = `flex justify-center items-center border-2 border-primary rounded-3xl w-15 h-10 ${isLoading ? 'cursor-progress' : 'bg-primary cursor-pointer'}`;
   const errorMessageStyle = 'px-4 mx-2 text-red-300';
 
   return (
@@ -166,7 +171,7 @@ export default function CalendarSidebar({
                   onKeyDown={handleEnterKeyDown}
                 />
               </div>
-              <div className={addButtonStyle} onClick={handleAddButton}>
+              <div className={addButtonStyle} onClick={handleAddButton} disabled={isLoading}>
                 {isLoading ? <LoadingCircle /> : '+'}
               </div>
             </div>

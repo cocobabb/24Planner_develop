@@ -51,12 +51,12 @@ export default function HeaderRight() {
     navigate('/');
   };
 
-  const headerListStyle = 'flex flex-1 justify-end';
+  const headerListStyle = 'flex flex-1 justify-end items-center';
   const headerItemStyle = 'flex items-center p-4';
-  const headerDropdownStyle = headerItemStyle + ' relative group min-w-30';
+  const headerDropdownStyle = headerItemStyle + ' relative group max-h-8 min-w-30';
   const headerDropdownButtonStyle = `w-full text-center text-secondary cursor-pointer ${isPlanTitleLong ? 'text-lg' : ''}`;
   const headerDropdownBodyStyle =
-    'absolute text-center top-15 space-y-4 left-0 right-0 w-full py-4 bg-gray-100 shadow-sm opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300';
+    'absolute text-center top-8 space-y-4 left-0 right-0 w-full py-4 bg-gray-100 shadow-sm opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300';
   const headerDropdownItemStyle = 'w-full';
   const headerDropdownLinkStyle = 'block w-full';
 

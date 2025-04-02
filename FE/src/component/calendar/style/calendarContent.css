@@ -89,6 +89,8 @@
 }
 
 .fc-day-today .fc-daygrid-day-number {
+  width: 24px;
+  border-radius: 50%;
   background-color: #69db7c;
 }
 
