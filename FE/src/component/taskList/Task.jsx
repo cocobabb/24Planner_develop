@@ -99,8 +99,8 @@ export default function Task({ task, setTaskGroupDetails }) {
           const prevTaskId = prevTask.id;
           return prevTaskId !== id;
         }),
-        totalCount: prev.totalCount - 1,
-        completeCount: isCompleted ? prev.completeCount - 1 : prev.completeCount,
+        totalCount: Math.max(0, prev.totalCount - 1),
+        completeCount: isCompleted ? Math.max(0, prev.completeCount - 1) : prev.completeCount,
       }));
     } catch (error) {}
   };

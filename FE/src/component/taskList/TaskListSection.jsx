@@ -13,6 +13,7 @@ export default function TaskListSection({ taskGroupDetails, setTaskGroupDetails 
   // 상태 관리 데이터
   const [newContent, setNewContent] = useState('');
   const [isEditing, setIsEditing] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // 체크리스트 변경 시 화면 렌더링
   useEffect(() => {
@@ -31,13 +32,15 @@ export default function TaskListSection({ taskGroupDetails, setTaskGroupDetails 
 
   // 체크포인트 생성
   const handleCreateTask = async (e) => {
-    // 체크포인트 내용이 존재하지 않는 경우
-    if (!e.target.value.trim()) {
+    // 체크포인트 내용이 존재하지 않거나 제출중인 경우
+    if (isSubmitting || !e.target.value.trim()) {
       setIsEditing(false);
-      return;                                                                  
+      return;
     }
 
     try {
+      setIsSubmitting(true);
+
       const response = await taskApi.createTask(movingPlanId, taskGroupId, newContent);
       const task = response.data.data;
 
@@ -48,7 +51,10 @@ export default function TaskListSection({ taskGroupDetails, setTaskGroupDetails 
         totalCount: totalCount + 1,
       }));
       setIsEditing(false);
-    } catch (error) {}
+    } catch (error) {
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // 엔터키 눌러 체크포인트 생성
