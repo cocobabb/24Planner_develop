@@ -89,15 +89,6 @@ public class AuthController {
         );
     }
 
-    @PatchMapping("/password")
-    public ResponseEntity<ApiResponse<Void>> updatePassword(@RequestBody @Valid ChangePasswordRequestDto requestDto,HttpServletResponse response ,@AuthenticationPrincipal User user) {
-        authService.updatePassword(requestDto, response, user);
-
-        return ResponseEntity.ok(
-            ApiResponse.ok("UPDATED","비밀번호 수정에 성공했습니다.", null)
-        );
-    }
-
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<LoginResponseDto>> login(
             @Valid @RequestBody LoginRequestDto requestDto, HttpServletResponse response) {
@@ -114,37 +105,6 @@ public class AuthController {
                 "OK",
                 "accessToken 재발급을 성공했습니다.",
                 authService.reissue(request)
-        ));
-    }
-
-    @GetMapping("/nickname")
-    public ResponseEntity<ApiResponse<ShowNicknameResponseDto>> getNickname(@AuthenticationPrincipal User user){
-
-        return ResponseEntity.ok(ApiResponse.ok(
-                "OK",
-            "닉네임 조회에 성공했습니다.",
-            authService.getNickname(user)
-            )
-        );
-    }
-
-    @GetMapping("/redis/{key}")
-    public ResponseEntity<ApiResponse<RedisValueResponseDto>> getRedisValue(@PathVariable String key){
-
-        return ResponseEntity.ok(ApiResponse.ok(
-            "OK",
-            "redis 접근에 성공했습니다.",
-            authService.getRedisValue(key)
-        ));
-    }
-
-    @PatchMapping("/nickname")
-    public ResponseEntity<ApiResponse<ChangeNicknameResponseDto>> updateNickname(@RequestBody @Valid ChangeNicknameRequestDto requestDto, @AuthenticationPrincipal User user){
-
-        return ResponseEntity.ok(ApiResponse.ok(
-            "UPDATED",
-            "닉네임 수정에 성공했습니다.",
-            authService.updateNickname(requestDto, user)
         ));
     }
 

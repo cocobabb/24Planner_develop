@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import logo from '../logo.png';
 import authApi from '../api/authApi';
 
 export default function FindPassword() {
@@ -53,7 +54,7 @@ export default function FindPassword() {
   return (
     <div className={`${container}`}>
       <form>
-        <img alt="이사모음집 로고" className={`${image}`} src="/src/logo.png"></img>
+        <img alt="이사모음집 로고" className={`${image}`} src={logo}></img>
         <div>
           <input
             type="email"

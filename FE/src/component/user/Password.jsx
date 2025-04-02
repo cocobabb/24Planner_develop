@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import authApi from '../../api/authApi';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { login, logout } from '../../store/slices/authSlice';
+import userApi from '../../api/userApi';
 
 export default function Password({ value }) {
   const dispatch = useDispatch();
@@ -86,10 +86,11 @@ export default function Password({ value }) {
       if (value) {
         dispatch(login({ accessToken: value }));
       }
-      const response = await authApi.patchPassword(formData);
+
+      const response = await userApi.patchPassword(formData);
       const code = response.code;
       const message = response.message;
-      console.log(value);
+
       if (!value && code === 'UPDATED') {
         alert('비밀번호가 수정되었습니다.');
         return;

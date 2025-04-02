@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
+import logo from '../logo.png';
 import Password from '../component/user/Password';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import authApi from '../api/authApi';
 import { jwtDecode } from 'jwt-decode';
+import userApi from '../api/userApi';
 
 export default function NewPassword() {
   const navigate = useNavigate();
@@ -25,8 +26,7 @@ export default function NewPassword() {
         const username = decoded.sub;
         const key = username + '_tempToken';
 
-        const response = await authApi.redis(key);
-        console.log(response);
+        const response = await userApi.redis(key);
         const code = response.code;
         const value = response.data.value;
         setValue(value);
@@ -50,7 +50,7 @@ export default function NewPassword() {
 
   return (
     <div className={`${container}`}>
-      <img alt="이사모음집 로고" className={`${image}`} src="/src/logo.png"></img>
+      <img alt="이사모음집 로고" className={`${image}`} src={logo}></img>
 
       <Password value={value}></Password>
     </div>
