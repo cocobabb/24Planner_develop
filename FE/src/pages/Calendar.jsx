@@ -126,10 +126,6 @@ export default function Calendar() {
             yearState={yearState}
             monthState={monthState}
             selectDate={selectDate}
-            dailyScheduleList={dailyScheduleList}
-            setDailyScheduleList={setDailyScheduleList}
-            monthlyEventList={monthlyEventList}
-            setMonthlyEventList={setMonthlyEventList}
             modalClose={() => {
               setShowingScheduleToModal(() => null);
               setIsShowingModal(() => false);
@@ -156,7 +152,6 @@ export default function Calendar() {
         selectDate={selectDate}
         dailyScheduleList={dailyScheduleList}
         setDailyScheduleList={setDailyScheduleList}
-        setMonthlyEventList={setMonthlyEventList}
         setIsShowingModal={setIsShowingModal}
         setShowingScheduleToModal={setShowingScheduleToModal}
       />

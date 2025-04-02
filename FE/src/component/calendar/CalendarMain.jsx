@@ -29,13 +29,14 @@ export default function CalendarMain({
           setYearState={setYearState}
           monthState={monthState}
           setMonthState={setMonthState}
-          setSelectDate={setSelectDate}
           setIsShowingModal={setIsShowingModal}
           setShowingScheduleToModal={setShowingScheduleToModal}
         />
         <CalendarContent
           calendarRef={calendarRef}
+          yearState={yearState}
           setYearState={setYearState}
+          monthState={monthState}
           setMonthState={setMonthState}
           monthlyEventList={monthlyEventList}
           setMonthlyEventList={setMonthlyEventList}

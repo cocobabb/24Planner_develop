@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import CalendarColorModal from './CalendarColorModal';
 import CalendarModalDatePicker from './CalendarModalDatePicker';
@@ -13,10 +14,6 @@ export default function CalendarModal({
   yearState,
   monthState,
   selectDate,
-  dailyScheduleList,
-  setDailyScheduleList,
-  monthlyEventList,
-  setMonthlyEventList,
   modalClose,
   showingScheduleToModal,
 }) {
@@ -48,9 +45,10 @@ export default function CalendarModal({
         : selectedMonthDateObject,
   );
   const [showColorDropdown, setShowColorDropdown] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
 
   const { movingPlanId } = useParams();
+
+  const queryClient = useQueryClient();
 
   const handleBackgroundClick = () => {
     if (showColorDropdown) {
@@ -85,6 +83,169 @@ export default function CalendarModal({
     e.stopPropagation();
   };
 
+  const {
+    mutate: createMutate,
+    error: createError,
+    isError: isCreateError,
+    isPending: isPendingForCreate,
+  } = useMutation({
+    mutationFn: async (newSchedule) => {
+      const response = await scheduleApi.createSchedule(movingPlanId, newSchedule);
+      return response.data.data;
+    },
+    onMutate: async (newSchedule) => {
+      const selectDateToInt = calendarUtil.parseIntFromDateStr(selectDate);
+      const startDateToInt = calendarUtil.parseIntFromDateStr(newSchedule.startDate);
+      const endDateToInt = calendarUtil.parseIntFromDateStr(newSchedule.endDate);
+
+      await queryClient.cancelQueries({ queryKey: [movingPlanId, selectDate] });
+      const previousDailyScheduleList = queryClient.getQueryData([movingPlanId, selectDate]);
+      const newDailyScheduleList = [...previousDailyScheduleList];
+
+      if (startDateToInt <= selectDateToInt && endDateToInt >= selectDateToInt) {
+        newDailyScheduleList.push(newSchedule);
+        newDailyScheduleList.sort(scheduleUtil.scheduleCompareFunction);
+      }
+
+      queryClient.setQueryData([movingPlanId, selectDate], newDailyScheduleList);
+
+      await queryClient.cancelQueries({ queryKey: [movingPlanId, yearState, monthState] });
+      const previousMonthlyEventList = queryClient.getQueryData([
+        movingPlanId,
+        yearState,
+        monthState,
+      ]);
+
+      const startDateOfSelectedMonthToInt = calendarUtil.parseIntFromDateStr(
+        calendarUtil.parseDateStrFromObject(new Date(yearState, monthState - 1, 1)),
+      );
+      const endDateOfSelectedMonthToInt = calendarUtil.parseIntFromDateStr(
+        calendarUtil.parseDateStrFromObject(endDateOfMonthObj(yearState, monthState)),
+      );
+
+      if (
+        startDateToInt <= endDateOfSelectedMonthToInt &&
+        endDateToInt >= startDateOfSelectedMonthToInt
+      ) {
+        const newMonthlyEventList = [
+          ...previousMonthlyEventList,
+          calendarUtil.scheduleToEvent(newSchedule),
+        ];
+        queryClient.setQueryData([movingPlanId, yearState, monthState], newMonthlyEventList);
+      }
+
+      return { previousDailyScheduleList, previousMonthlyEventList };
+    },
+    onSuccess: (data, newSchedule, context) => {
+      queryClient.invalidateQueries({ queryKey: [movingPlanId, selectDate] });
+      queryClient.invalidateQueries({ queryKey: [movingPlanId, yearState, monthState] });
+      modalClose();
+    },
+    onError: (error, newSchedule, context) => {
+      if (context) {
+        queryClient.setQueryData([movingPlanId, selectDate], context.previousDailyScheduleList);
+        queryClient.setQueryData(
+          [movingPlanId, yearState, monthState],
+          context.previousMonthlyEventList,
+        );
+      }
+    },
+    retry: false,
+  });
+
+  if (isCreateError) {
+    setErrorMessage(() => '등록 도중 오류가 발생했습니다.');
+    console.log(createError);
+  }
+
+  const {
+    mutate: updateMutate,
+    error: updateError,
+    isError: isUpdateError,
+    isPending: isPendingForUpdate,
+  } = useMutation({
+    mutationFn: async (updateData) => {
+      const response = await scheduleApi.updateSchedule(
+        movingPlanId,
+        updateData.id,
+        updateData.schedule,
+      );
+      return response.data.data.schedule;
+    },
+    onMutate: async (data) => {
+      const updateSchedule = data.schedule;
+      const selectDateToInt = calendarUtil.parseIntFromDateStr(selectDate);
+      const startDateToInt = calendarUtil.parseIntFromDateStr(updateSchedule.startDate);
+      const endDateToInt = calendarUtil.parseIntFromDateStr(updateSchedule.endDate);
+
+      await queryClient.cancelQueries({ queryKey: [movingPlanId, selectDate] });
+      const previousDailyScheduleList = queryClient.getQueryData([movingPlanId, selectDate]);
+      const newDailyScheduleList = [];
+
+      previousDailyScheduleList.forEach((schedule) => {
+        if (schedule.id !== updateSchedule.id) {
+          newDailyScheduleList.push(schedule);
+          return;
+        } else if (startDateToInt <= selectDateToInt && endDateToInt >= selectDateToInt) {
+          newDailyScheduleList.push(updateSchedule);
+        }
+      });
+
+      newDailyScheduleList.sort(scheduleUtil.scheduleCompareFunction);
+      queryClient.setQueryData([movingPlanId, selectDate], newDailyScheduleList);
+
+      await queryClient.cancelQueries({ queryKey: [movingPlanId, yearState, monthState] });
+      const previousMonthlyEventList = queryClient.getQueryData([
+        movingPlanId,
+        yearState,
+        monthState,
+      ]);
+
+      const startDateOfSelectedMonthToInt = calendarUtil.parseIntFromDateStr(
+        calendarUtil.parseDateStrFromObject(new Date(yearState, monthState - 1, 1)),
+      );
+      const endDateOfSelectedMonthToInt = calendarUtil.parseIntFromDateStr(
+        calendarUtil.parseDateStrFromObject(endDateOfMonthObj(yearState, monthState)),
+      );
+
+      const newMonthlyEventList = [];
+      previousMonthlyEventList.forEach((event) => {
+        if (event.scheduleId !== updateSchedule.id) {
+          newMonthlyEventList.push(event);
+        } else if (
+          startDateToInt <= endDateOfSelectedMonthToInt &&
+          endDateToInt >= startDateOfSelectedMonthToInt
+        ) {
+          newMonthlyEventList.push(calendarUtil.scheduleToEvent(updateSchedule));
+        }
+      });
+
+      queryClient.setQueryData([movingPlanId, yearState, monthState], newMonthlyEventList);
+
+      return { previousDailyScheduleList, previousMonthlyEventList };
+    },
+    onSuccess: (data, newSchedule, context) => {
+      queryClient.invalidateQueries({ queryKey: [movingPlanId, selectDate] });
+      queryClient.invalidateQueries({ queryKey: [movingPlanId, yearState, monthState] });
+      modalClose();
+    },
+    onError: (error, newSchedule, context) => {
+      if (context) {
+        queryClient.setQueryData([movingPlanId, selectDate], context.previousDailyScheduleList);
+        queryClient.setQueryData(
+          [movingPlanId, yearState, monthState],
+          context.previousMonthlyEventList,
+        );
+      }
+    },
+    retry: false,
+  });
+
+  if (isUpdateError) {
+    setErrorMessage(() => '수정 도중 오류가 발생했습니다.');
+    console.log(updateError);
+  }
+
   const handleButton = (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -108,85 +269,23 @@ export default function CalendarModal({
     if (!content.length) {
       setErrorMessage(() => '내용은 필수 입력 항목입니다.');
     } else {
-      setIsLoading(true);
+      const inputSchedule = { ...showingScheduleToModal };
+      inputSchedule.content = content;
+      inputSchedule.startDate = calendarUtil.parseDateStrFromObject(startDate);
+      inputSchedule.endDate = calendarUtil.parseDateStrFromObject(endDate);
+      inputSchedule.color = color;
+      const scheduleId = showingScheduleToModal ? showingScheduleToModal.id : -1;
 
       try {
-        const inputSchedule = { ...showingScheduleToModal };
-        inputSchedule.content = content;
-        inputSchedule.startDate = calendarUtil.parseDateStrFromObject(startDate);
-        inputSchedule.endDate = calendarUtil.parseDateStrFromObject(endDate);
-        inputSchedule.color = color;
-        const scheduleId = showingScheduleToModal ? showingScheduleToModal.id : -1;
-        const response = showingScheduleToModal
-          ? await scheduleApi.updateSchedule(movingPlanId, scheduleId, inputSchedule)
-          : await scheduleApi.createSchedule(movingPlanId, inputSchedule);
-
-        const returnedSchedule = response.data.data;
-        const selectDateToInt = calendarUtil.parseIntFromDateStr(selectDate);
-        const startDateToInt = calendarUtil.parseIntFromDateStr(returnedSchedule.startDate);
-        const endDateToInt = calendarUtil.parseIntFromDateStr(returnedSchedule.endDate);
-        const startDateOfSelectedMonthToInt = calendarUtil.parseIntFromDateStr(
-          calendarUtil.parseDateStrFromObject(new Date(yearState, monthState - 1, 1)),
-        );
-        const endDateOfSelectedMonthToInt = calendarUtil.parseIntFromDateStr(
-          calendarUtil.parseDateStrFromObject(endDateOfMonthObj(yearState, monthState)),
-        );
-
-        let newDailyScheduleList;
-
         if (showingScheduleToModal) {
-          newDailyScheduleList = [];
-
-          dailyScheduleList.forEach((schedule) => {
-            if (schedule.id !== scheduleId) {
-              newDailyScheduleList.push(schedule);
-              return;
-            } else if (startDateToInt <= selectDateToInt && endDateToInt >= selectDateToInt) {
-              newDailyScheduleList.push(returnedSchedule);
-            }
-          });
+          updateMutate({ id: scheduleId, schedule: inputSchedule });
         } else {
-          newDailyScheduleList = [...dailyScheduleList];
-          if (startDateToInt <= selectDateToInt && endDateToInt >= selectDateToInt) {
-            newDailyScheduleList.push(returnedSchedule);
-          }
+          createMutate(inputSchedule);
         }
-
-        setDailyScheduleList(() => newDailyScheduleList.sort(scheduleUtil.scheduleCompareFunction));
-
-        if (showingScheduleToModal) {
-          const newMonthlyEventList = [];
-          monthlyEventList.forEach((event) => {
-            if (event.scheduleId !== scheduleId) {
-              newMonthlyEventList.push(event);
-            } else if (
-              startDateToInt <= endDateOfSelectedMonthToInt &&
-              endDateToInt >= startDateOfSelectedMonthToInt
-            ) {
-              newMonthlyEventList.push(calendarUtil.scheduleToEvent(returnedSchedule));
-            }
-          });
-
-          setMonthlyEventList(() => newMonthlyEventList);
-        } else {
-          if (
-            startDateToInt <= endDateOfSelectedMonthToInt &&
-            endDateToInt >= startDateOfSelectedMonthToInt
-          ) {
-            setMonthlyEventList((prev) => [
-              ...prev,
-              calendarUtil.scheduleToEvent(returnedSchedule),
-            ]);
-          }
-        }
-
-        modalClose();
       } catch (err) {
         setErrorMessage(() => '등록 도중 오류가 발생했습니다.');
         console.log(err);
       }
-
-      setIsLoading(false);
     }
   };
 
@@ -202,7 +301,7 @@ export default function CalendarModal({
   const inputStyle = 'grow focus:outline-hidden';
   const circleStyle = `bg-[${color}] size-10 rounded-4xl`;
   const errorDivStyle = 'text-red-300';
-  const buttonStyle = `flex justify-center items-center w-40 h-15 bg-white border-4 border-primary rounded-3xl text-primary text-xl font-bold ${isLoading ? 'cursor-progress' : 'hover:bg-primary hover:text-white cursor-pointer'}`;
+  const buttonStyle = `flex justify-center items-center w-40 h-15 bg-white border-4 border-primary rounded-3xl text-primary text-xl font-bold ${isPendingForCreate || isPendingForUpdate ? 'cursor-progress' : 'hover:bg-primary hover:text-white cursor-pointer'}`;
   const calendarModalDropdownStyle = 'relative group';
   const calendarModalDropdownBodyStyle = `absolute text-xl text-center top-11 space-y-4 -left-57 right-0 w-125 py-4 bg-white border-1 border-primary rounded-2xl shadow-sm z-8 ${showColorDropdown ? 'opacity-100 visible' : 'opacity-0 invisible'}`;
 
@@ -238,8 +337,12 @@ export default function CalendarModal({
               setEndDate={setEndDate}
             />
             <div>
-              <button className={buttonStyle} onClick={handleButton} disabled={isLoading}>
-                {isLoading ? (
+              <button
+                className={buttonStyle}
+                onClick={handleButton}
+                disabled={isPendingForCreate || isPendingForUpdate}
+              >
+                {isPendingForCreate || isPendingForUpdate ? (
                   <LoadingCircle />
                 ) : (
                   `할 일 ${showingScheduleToModal ? '수정' : '추가'}하기`

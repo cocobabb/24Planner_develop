@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import scheduleApi from '../../../api/scheduleApi';
 
@@ -13,38 +14,118 @@ export default function CalendarSidebar({
   selectDate,
   dailyScheduleList,
   setDailyScheduleList,
-  setMonthlyEventList,
   setIsShowingModal,
   setShowingScheduleToModal,
 }) {
   const [content, setContent] = useState('');
   const [errorMessage, setErrorMessage] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
 
   const { movingPlanId } = useParams();
 
-  const loadList = async () => {
-    setDailyScheduleList(() => []);
-    try {
+  const queryClient = useQueryClient();
+
+  const {
+    data: readData,
+    isLoading,
+    isError: isReadError,
+    error: readError,
+  } = useQuery({
+    queryKey: [movingPlanId, selectDate],
+    queryFn: async () => {
+      // 일 단위로 스케줄 가져오기
       const response = await scheduleApi.getDailySchedule(movingPlanId, selectDate);
-      setDailyScheduleList(() =>
-        response.data.data.schedules.sort(scheduleUtil.scheduleCompareFunction),
-      );
-    } catch (err) {
-      console.log(err);
+      return await response.data.data.schedules;
+    },
+    staleTime: 1000 * 3,
+    retry: false,
+  });
+
+  if (isReadError) {
+    setDailyScheduleList(() => []);
+    console.log(readError);
+  }
+
+  useEffect(() => {
+    if (!isLoading && readData) {
+      setDailyScheduleList(() => readData.sort(scheduleUtil.scheduleCompareFunction));
     }
-  };
+  }, [isLoading, readData]);
 
   useEffect(() => {
     setErrorMessage(() => null);
     setContent(() => '');
-    loadList();
   }, [selectDate]);
 
-  const handleContentChange = (e) => {
-    setContent(() => e.target.value.substring(0, 20));
-    setErrorMessage(() => null);
-  };
+  const {
+    mutate: createMutate,
+    error: createError,
+    isError: isCreateError,
+    isPending: isPendingForCreate,
+  } = useMutation({
+    mutationFn: async (newSchedule) => {
+      const response = await scheduleApi.createSchedule(movingPlanId, newSchedule);
+      return response.data.data;
+    },
+    onMutate: async (newSchedule) => {
+      await queryClient.cancelQueries({ queryKey: [movingPlanId, selectDate] });
+      const previousDailyScheduleList = queryClient.getQueryData([movingPlanId, selectDate]);
+      const newDailyScheduleList = [...previousDailyScheduleList];
+
+      newDailyScheduleList.push(newSchedule);
+      newDailyScheduleList.sort(scheduleUtil.scheduleCompareFunction);
+
+      queryClient.setQueryData([movingPlanId, selectDate], newDailyScheduleList);
+
+      const selectedYear = Number.parseInt(selectDate.substring(0, 4));
+      const selectedMonth = Number.parseInt(selectDate.substring(5, 7));
+
+      await queryClient.cancelQueries({ queryKey: [movingPlanId, selectedYear, selectedMonth] });
+      const previousMonthlyEventList = queryClient.getQueryData([
+        movingPlanId,
+        selectedYear,
+        selectedMonth,
+      ]);
+
+      if (selectedYear === yearState && selectedMonth === monthState) {
+        const newMonthlyEventList = [
+          ...previousMonthlyEventList,
+          calendarUtil.scheduleToEvent(newSchedule),
+        ];
+        queryClient.setQueryData([movingPlanId, selectedYear, selectedMonth], newMonthlyEventList);
+      }
+
+      return { previousDailyScheduleList, previousMonthlyEventList };
+    },
+    onSuccess: (data, newSchedule, context) => {
+      queryClient.invalidateQueries({ queryKey: [movingPlanId, selectDate] });
+
+      const selectedYear = Number.parseInt(selectDate.substring(0, 4));
+      const selectedMonth = Number.parseInt(selectDate.substring(5, 7));
+      if (selectedYear === yearState && selectedMonth === monthState) {
+        queryClient.invalidateQueries({ queryKey: [movingPlanId, selectedYear, selectedMonth] });
+      }
+    },
+    onError: (error, newSchedule, context) => {
+      if (context) {
+        queryClient.setQueryData([movingPlanId, selectDate], context.previousDailyScheduleList);
+
+        const selectedYear = Number.parseInt(selectDate.substring(0, 4));
+        const selectedMonth = Number.parseInt(selectDate.substring(5, 7));
+        if (selectedYear === yearState && selectedMonth === monthState) {
+          queryClient.setQueryData(
+            [movingPlanId, selectedYear, selectedMonth],
+            context.previousMonthlyEventList,
+          );
+        }
+      }
+    },
+    retry: false,
+  });
+
+  if (isCreateError) {
+    setErrorMessage(() => '등록 도중 오류가 발생했습니다.');
+    console.log(createError);
+  }
 
   const handleAddButton = (e) => {
     e.preventDefault();
@@ -62,34 +143,19 @@ export default function CalendarSidebar({
     if (!content.length) {
       setErrorMessage(() => '내용은 필수로 입력해야 합니다.');
     } else {
-      setIsLoading(true);
-
-      try {
-        const response = await scheduleApi.createSchedule(movingPlanId, {
-          content: content,
-          startDate: selectDate,
-          endDate: selectDate,
-          color: '#69DB7C',
-        });
-
-        const returnedSchedule = response.data.data;
-        const newDailyScheduleList = [...dailyScheduleList, returnedSchedule];
-        newDailyScheduleList.sort(scheduleUtil.scheduleCompareFunction);
-        setDailyScheduleList(() => newDailyScheduleList);
-        setContent(() => '');
-
-        const selectedYear = Number.parseInt(selectDate.substring(0, 4));
-        const selectedMonth = Number.parseInt(selectDate.substring(5, 7));
-        if (selectedYear === yearState && selectedMonth === monthState) {
-          setMonthlyEventList((prev) => [...prev, calendarUtil.scheduleToEvent(returnedSchedule)]);
-        }
-      } catch (err) {
-        setErrorMessage(() => '등록 도중 오류가 발생했습니다.');
-        console.log(err);
-      }
-
-      setIsLoading(false);
+      createMutate({
+        content: content,
+        startDate: selectDate,
+        endDate: selectDate,
+        color: '#69DB7C',
+      });
+      setContent(() => '');
     }
+  };
+
+  const handleContentChange = (e) => {
+    setContent(() => e.target.value.substring(0, 20));
+    setErrorMessage(() => null);
   };
 
   const modalForUpdateSchedule = async (e, schedule) => {
@@ -97,18 +163,71 @@ export default function CalendarSidebar({
     setIsShowingModal(() => true);
   };
 
+  const {
+    mutate: deleteMutate,
+    error: deleteError,
+    isError: isDeleteError,
+  } = useMutation({
+    mutationFn: async (scheduleId) => {
+      const response = await scheduleApi.deleteSchedule(movingPlanId, scheduleId);
+      return scheduleId;
+    },
+    onMutate: async (scheduleId) => {
+      await queryClient.cancelQueries({ queryKey: [movingPlanId, selectDate] });
+      const previousDailyScheduleList = queryClient.getQueryData([movingPlanId, selectDate]);
+      const newDailyScheduleList = previousDailyScheduleList.filter(
+        (schedule) => schedule.id !== scheduleId,
+      );
+      queryClient.setQueryData([movingPlanId, selectDate], newDailyScheduleList);
+
+      const selectedYear = Number.parseInt(selectDate.substring(0, 4));
+      const selectedMonth = Number.parseInt(selectDate.substring(5, 7));
+
+      await queryClient.cancelQueries({ queryKey: [movingPlanId, selectedYear, selectedMonth] });
+      const previousMonthlyEventList = queryClient.getQueryData([
+        movingPlanId,
+        selectedYear,
+        selectedMonth,
+      ]);
+      const newMonthlyEventList = previousMonthlyEventList.filter(
+        (event) => event.scheduleId !== scheduleId,
+      );
+      queryClient.setQueryData([movingPlanId, selectedYear, selectedMonth], newMonthlyEventList);
+
+      return { previousDailyScheduleList, previousMonthlyEventList };
+    },
+    onSuccess: (data, scheduleId, context) => {
+      queryClient.invalidateQueries({ queryKey: [movingPlanId, selectDate] });
+
+      const selectedYear = Number.parseInt(selectDate.substring(0, 4));
+      const selectedMonth = Number.parseInt(selectDate.substring(5, 7));
+      queryClient.invalidateQueries({ queryKey: [movingPlanId, selectedYear, selectedMonth] });
+    },
+    onError: (error, scheduleId, context) => {
+      if (context) {
+        queryClient.setQueryData([movingPlanId, selectDate], context.previousDailyScheduleList);
+
+        const selectedYear = Number.parseInt(selectDate.substring(0, 4));
+        const selectedMonth = Number.parseInt(selectDate.substring(5, 7));
+        queryClient.setQueryData(
+          [movingPlanId, selectedYear, selectedMonth],
+          context.previousMonthlyEventList,
+        );
+      }
+    },
+    retry: false,
+  });
+
+  if (isDeleteError) {
+    console.log(deleteError);
+  }
+
   const deleteSchedule = async (e, scheduleId) => {
     if (!confirm(`'${e.target.previousSibling.innerText}' 일정을 삭제합니다.\n계속하시겠습니까?`)) {
       return;
     }
 
-    try {
-      const response = await scheduleApi.deleteSchedule(movingPlanId, scheduleId);
-      setDailyScheduleList((prev) => prev.filter((schedule) => schedule.id !== scheduleId));
-      setMonthlyEventList((prev) => prev.filter((event) => event.scheduleId !== scheduleId));
-    } catch (err) {
-      console.log(err);
-    }
+    deleteMutate(scheduleId);
   };
 
   const scheduleElementDivStyle = 'flex items-center';
@@ -146,7 +265,7 @@ export default function CalendarSidebar({
   const inputDivStyle =
     'flex justify-center items-center border-1 border-gray-300 rounded-3xl w-full py-2 pr-5 m-2 h-10';
   const inputStyle = 'focus:outline-none w-full p-4';
-  const addButtonStyle = `flex justify-center items-center border-2 border-primary rounded-3xl w-15 h-10 ${isLoading ? 'cursor-progress' : 'bg-primary cursor-pointer'}`;
+  const addButtonStyle = `flex justify-center items-center border-2 border-primary rounded-3xl w-15 h-10 ${isPendingForCreate ? 'cursor-progress' : 'bg-primary cursor-pointer'}`;
   const errorMessageStyle = 'px-4 mx-2 text-red-300';
 
   return (
@@ -171,8 +290,12 @@ export default function CalendarSidebar({
                   onKeyDown={handleEnterKeyDown}
                 />
               </div>
-              <div className={addButtonStyle} onClick={handleAddButton} disabled={isLoading}>
-                {isLoading ? <LoadingCircle /> : '+'}
+              <div
+                className={addButtonStyle}
+                onClick={handleAddButton}
+                disabled={isPendingForCreate}
+              >
+                {isPendingForCreate ? <LoadingCircle /> : '+'}
               </div>
             </div>
             <div className={errorMessageStyle}>{errorMessage ? errorMessage : '\u00A0'}</div>
