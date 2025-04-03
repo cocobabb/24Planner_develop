@@ -6,7 +6,7 @@ import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 import scheduleApi from '../../../api/scheduleApi';
 
@@ -31,6 +31,7 @@ export default function CalendarContent({
   const navigate = useNavigate();
 
   const { movingPlanId } = useParams();
+  const queryClient = useQueryClient();
 
   const handleEventMouseEnter = (e) => {
     dispatch(
@@ -51,7 +52,7 @@ export default function CalendarContent({
     setSelectDate(() => e.dateStr);
   };
 
-  const { data, isLoading, isError, error } = useQuery({
+  const { data, isLoading, isError, error, isStale } = useQuery({
     queryKey: [movingPlanId, yearState, monthState],
     queryFn: async () => {
       // 월 단위로 스케줄 가져오기
@@ -116,12 +117,21 @@ export default function CalendarContent({
         const selectedYear = dateInfo.start.getFullYear();
         const selectedMonth = dateInfo.start.getMonth() + 1;
 
-        // 스타일 수정을 위해 헤더를 외부에서 정의했으므로, 월을 바꿀 때마다 해당 년도와 월을 state에 지정해야 표시됨
-        setYearState(() => selectedYear);
-        setMonthState(() => selectedMonth);
+        // 같은 달일 경우, TanStack Query의 Cache가 제대로 적용되지 않는 문제가 있으므로 조건문 추가
+        if (yearState !== selectedYear || monthState !== selectedMonth) {
+          // 스타일 수정을 위해 헤더를 외부에서 정의했으므로, 월을 바꿀 때마다 해당 년도와 월을 state에 지정해야 표시됨
+          setYearState(() => selectedYear);
+          setMonthState(() => selectedMonth);
 
-        // 여기서 초기화하지 않을 경우, Tanstack Query의 Cache가 적용되면서 이전 선택 달의 일정 일부가 남는 문제가 있음
-        setMonthlyEventList(() => []);
+          // 여기서 초기화하지 않을 경우, TanStack Query의 Cache가 적용되면서 이전 선택 달의 일정 일부가 남는 문제가 있음
+          setMonthlyEventList(() => []);
+        } else {
+          if (isStale) {
+            queryClient.invalidateQueries({
+              queryKey: [movingPlanId, selectedYear, selectedMonth],
+            });
+          }
+        }
       }}
       // 달력 헤더 스타일 수정을 위해, 달력 기본 헤더를 비활성
       headerToolbar={{
