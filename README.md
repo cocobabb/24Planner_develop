@@ -29,7 +29,7 @@
 </br>
 이사 준비하면서 공유할 게 많다면? 채팅방에서 빠르게 의견을 나누고 이사 정보를 공유할 수 있어요.
 
-### **이제 이사 준비, 하나의 공간에서!</br>막막했던 이사, 이사모음.zip과 함께 시작해보세요! 🚛✨**
+### **이제 이사 준비를 하나의 공간에서!</br>막막했던 이사, 이사모음.zip과 함께 시작해보세요! 🚛✨**
 </br>
 
 ## 📖 프로젝트 개요
@@ -38,18 +38,24 @@
 - 프로젝트 참여인원: 5명
 </br>
 
-### 🛠️ 기술스택
-- Frontend : React, Redux, Axios
-- Backend : Spring Boot, Spring Data JPA, Spring Security, OAuth2
-- Database : MySQL
-- DevOps : Docker, AWS EC2, GitHub Action, Git Hooks
+## 🛠️ 기술스택
+- Frontend : React, Vite, Redux, Axios, Tailwind
+- Backend : Spring Boot, Spring Data JPA, Spring Security, OAuth 2.0
+- Database : MySQL, Redis
+- Infra : Docker, AWS EC2, GitHub Action, Git Hooks
 - Tool : GitHub, Postman, Jira, Figma, Notion, Discord
 </br>
 
-### 🏗️ 아키텍처
-</br>
+## 🏗️ 아키텍처
 
-### ⚙️ 설치 및 실행 방법
+### - 서비스 아키텍처
+![서비스_아키텍처](https://github.com/user-attachments/assets/f740a60c-4962-4871-8048-b8e39445a8d3)
+
+### - CI/CD
+![CI_CD](https://github.com/user-attachments/assets/50cab2e9-2c51-455d-a23c-ae906d431b42)
+</br></br>
+
+## ⚙️ 설치 및 실행 방법
 - 환경변수는 각 경로에 있는 `.env.example` 파일을 참고하여 작성
 
 **프론트엔드**
@@ -66,57 +72,62 @@ cd BE/
 ```
 </br>
 
-### 🧩 ERD
+## 🧩 ERD
 ![Planner24_erd](https://github.com/user-attachments/assets/e26ab98b-d05b-4fde-8f6e-46a179518ebf)
 </br>
 
-### 💫 주요 기능
+## 💫 주요 기능
 
-
-메인페이지
+</br>**메인페이지**
 
 https://github.com/user-attachments/assets/2cb69a38-66fa-44c0-90fa-4a431229dd14
 
-회원가입
+</br></br> **회원가입**
 
 https://github.com/user-attachments/assets/202b6ddd-099c-40b1-b898-b8a6cf42cf03
 
-일반 로그인
+</br></br> **일반 로그인**
 
 https://github.com/user-attachments/assets/edcc8657-3015-4b73-aedc-368488dc7cce
 
-소셜 로그인
+</br></br> **소셜 로그인**
 
 https://github.com/user-attachments/assets/1da52d26-8c69-49f0-81e7-6531acd59f94
 
-이사 목록
+</br></br> **비밀번호 찾기**
+
+
+</br></br> **마이페이지**
+
+
+</br></br> **이사 목록**
 
 https://github.com/user-attachments/assets/0e4bfc91-cce4-4d2e-a037-ac299128427e
 
-체크리스트
+</br></br> **체크리스트**
 
 https://github.com/user-attachments/assets/f7e6780a-23db-4431-b39a-3a897ae6acc3
 
-캘린더
+</br></br> **캘린더**
 
 https://github.com/user-attachments/assets/f2c2bf57-137c-48eb-baa8-23251247158e
 
-지도
+</br></br> **지도**
 
 https://github.com/user-attachments/assets/8e802640-82c4-4e34-b517-143c68c0400b
 
-동거인 초대
+</br></br> **동거인 초대**
 
 https://github.com/user-attachments/assets/b7293141-2453-433e-8d71-a794a5c931fe
 
-채팅 및 동거인 나가기
+</br></br> **채팅 및 동거인 나가기**
 
 https://github.com/user-attachments/assets/0c0f51a0-ab0f-4518-86d9-a36c2240fd49
 
 
 </br>
 
-### 👥 팀 소개
+## 👥 팀 소개
 | [강경훈](https://github.com/rkdrudgns0412) | [박재훈](https://github.com/bjh0499) | [박하은](https://github.com/apricity2u) | [임유진](https://github.com/cocobabb) | [정여원](https://github.com/koho512) |
 | :---: | :---: | :---: | :---: | :---: |
 | ![강경훈](https://github.com/rkdrudgns0412.png) | ![박재훈](https://github.com/bjh0499.png) | ![박하은](https://github.com/apricity2u.png) | ![임유진](https://github.com/cocobabb.png) | ![정여원](https://github.com/koho512.png) | 
