@@ -58,7 +58,7 @@ public class ChatController {
 
         return ResponseEntity.ok(
                 ApiResponse.ok("OK",
-                        "조회에 성공했습니다.",
+                        "댓글 조회에 성공했습니다.",
                         chatService.readChats(movingPlanId))
         );
     }
@@ -71,7 +71,7 @@ public class ChatController {
         chatService.deleteChats(movingPlanId);
 
         return ResponseEntity.ok(
-                ApiResponse.ok("DELETED","내용을 삭제했습니다.",null)
+                ApiResponse.ok("DELETED","댓글을 삭제했습니다.",null)
         );
     }
 }

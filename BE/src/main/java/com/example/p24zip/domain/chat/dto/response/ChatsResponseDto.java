@@ -9,11 +9,11 @@ import java.util.List;
 @Builder
 public class ChatsResponseDto {
 
-    private final List<MessageResponseDto> Chats;
+    private final List<MessageResponseDto> chats;
 
     public static ChatsResponseDto from(List<MessageResponseDto> chat) {
         return ChatsResponseDto.builder()
-                .Chats(chat)
+                .chats(chat)
                 .build();
     }
 }
