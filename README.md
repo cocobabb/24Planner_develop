@@ -101,17 +101,17 @@ https://github.com/user-attachments/assets/f7e6780a-23db-4431-b39a-3a897ae6acc3
 
 https://github.com/user-attachments/assets/f2c2bf57-137c-48eb-baa8-23251247158e
 
+지도
 
+https://github.com/user-attachments/assets/8e802640-82c4-4e34-b517-143c68c0400b
 
+동거인 초대
 
+https://github.com/user-attachments/assets/b7293141-2453-433e-8d71-a794a5c931fe
 
+채팅 및 동거인 나가기
 
-
-
-
-
-
-
+https://github.com/user-attachments/assets/0c0f51a0-ab0f-4518-86d9-a36c2240fd49
 
 
 </br>
