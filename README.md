@@ -96,9 +96,11 @@ https://github.com/user-attachments/assets/1da52d26-8c69-49f0-81e7-6531acd59f94
 
 </br></br> **비밀번호 찾기**
 
+https://github.com/user-attachments/assets/ec5d133c-10f2-40c7-9125-277bd254a10c
 
 </br></br> **마이페이지**
 
+https://github.com/user-attachments/assets/54a0e1f5-0304-4830-b9ca-e0ef2793088a
 
 </br></br> **이사 목록**
 
