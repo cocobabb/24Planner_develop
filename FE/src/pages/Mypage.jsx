@@ -1,13 +1,20 @@
 import React, { useEffect, useState } from 'react';
+import social from '../kakao_favicon.ico';
 import Password from '../component/user/Password';
 import { useDispatch } from 'react-redux';
 import { logout, modifyNickname } from '../store/slices/authSlice';
 import userApi from '../api/userApi';
 import { useNavigate } from 'react-router-dom';
+import { jwtDecode } from 'jwt-decode';
 
 export default function Mypage() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  const token = localStorage.getItem('accessToken');
+  const decode = jwtDecode(token);
+  const username = decode.sub;
+  const provider = decode.provider;
 
   const [nickname, setNickname] = useState();
   const [formData, setFormData] = useState({
@@ -27,8 +34,13 @@ export default function Mypage() {
         }
       } catch (error) {
         const errorData = error.response.data;
+        const code = errorData.code;
         const message = errorData.message;
-        setMessage(message);
+        if (code !== 'INVALID_TOKEN') {
+          setMessage(message);
+        } else {
+          setMessage('');
+        }
       }
     };
     getNickname();
@@ -63,8 +75,11 @@ export default function Mypage() {
       const errorData = error.response.data;
       const code = errorData.code;
       const message = errorData.message;
+
       if (code !== 'INVALID_TOKEN') {
         setMessage(message);
+      } else {
+        setMessage('');
       }
     } finally {
       setIsSubmitting(false);
@@ -83,7 +98,9 @@ export default function Mypage() {
       }
     }
   };
-
+  const userInfoContainer = 'w-full mt-30 flex justify-center items-center';
+  const userInfo = 'text-2xl';
+  const image = 'size-8 m-3';
   const container = 'w-full mt-30 grid content-center justify-items-center ';
   const form = 'mb-20 relative';
   const inputStyle = 'w-110 m-3 px-2 focus:outline-none text-xl';
@@ -96,6 +113,11 @@ export default function Mypage() {
 
   return (
     <>
+      <div className={`${userInfoContainer}`}>
+        <h1 className={`${userInfo}`}>{username}</h1>
+        {provider && <img className={`${image}`} src={social} alt="" />}
+      </div>
+
       <div className={`${container}`}>
         <form className={`${form}`} onSubmit={patchNickname}>
           <input
@@ -116,7 +138,7 @@ export default function Mypage() {
           <p className={`${messageStyle}`}>{message || '\u00A0'}</p>
         </form>
 
-        <Password></Password>
+        {!provider && <Password></Password>}
         <button className={`${del}`} onClick={deleteUser}>
           탈퇴하기
         </button>

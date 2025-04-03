@@ -4,43 +4,49 @@ import Password from '../component/user/Password';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 import userApi from '../api/userApi';
+import { useSelector } from 'react-redux';
 
 export default function NewPassword() {
   const navigate = useNavigate();
 
-  const [value, setValue] = useState();
+  const [token, setToken] = useState();
+  const [email, setEmail] = useState();
 
   const [search] = useSearchParams();
   const query = search.get('query');
 
-  const accessTokenData = localStorage.getItem('accessToken');
+  const accessTokenData = useSelector((state) => state.auth.accessToken);
 
+  const getRedisValue = async () => {
+    try {
+      const decoded = jwtDecode(query);
+      const username = decoded.sub;
+      const key = username + '_tempToken';
+      setEmail(username);
+
+      const response = await userApi.redis(key);
+      const code = response.code;
+      const value = response.data.value;
+      setToken(value);
+      if (!value) {
+        navigate('/not-found');
+        return;
+      } else if (query !== value) {
+        navigate('/not-found');
+        return;
+      }
+    } catch (error) {
+      console.error();
+    }
+  };
   useEffect(() => {
     if (!query) {
       navigate('/not-found');
       return;
+    } else if (accessTokenData) {
+      navigate('/');
+      return;
     }
-    const getRedisValue = async () => {
-      try {
-        const decoded = jwtDecode(query);
-        const username = decoded.sub;
-        const key = username + '_tempToken';
-
-        const response = await userApi.redis(key);
-        const code = response.code;
-        const value = response.data.value;
-        setValue(value);
-        if (!value) {
-          navigate('/not-found');
-          return;
-        } else if (query !== value) {
-          navigate('/not-found');
-          return;
-        }
-      } catch (error) {
-        console.error();
-      }
-    };
 
     getRedisValue();
   }, []);
@@ -52,7 +58,7 @@ export default function NewPassword() {
     <div className={`${container}`}>
       <img alt="이사모음집 로고" className={`${image}`} src={logo}></img>
 
-      <Password value={value}></Password>
+      <Password token={token} email={email}></Password>
     </div>
   );
 }

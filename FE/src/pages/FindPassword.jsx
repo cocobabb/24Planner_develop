@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import logo from '../logo.png';
 import authApi from '../api/authApi';
+import { useNavigate } from 'react-router-dom';
 
 export default function FindPassword() {
+  const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState();
   const [formData, setFormData] = useState({
@@ -54,7 +56,12 @@ export default function FindPassword() {
   return (
     <div className={`${container}`}>
       <form>
-        <img alt="이사모음집 로고" className={`${image}`} src={logo}></img>
+        <img
+          alt="이사모음집 로고"
+          className={`${image}`}
+          src={logo}
+          onClick={() => navigate('/')}
+        ></img>
         <div>
           <input
             type="email"

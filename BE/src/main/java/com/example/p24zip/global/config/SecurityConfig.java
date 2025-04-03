@@ -60,7 +60,7 @@ public class SecurityConfig {
                 //
                 .authorizeHttpRequests(auth -> auth
                                 .requestMatchers("/auth/verify").authenticated()
-                                .requestMatchers("/auth/**", "/error", "/images/**", "/gs-guide-websocket/**").permitAll()
+                                .requestMatchers("/user/password","/user/redis/**","/auth/**", "/error", "/images/**", "/gs-guide-websocket/**").permitAll()
                                 .requestMatchers("/oauth2/**", "/login/oauth2/code/**").permitAll()
                                 .requestMatchers("/swagger-ui/**", "swagger-ui.html", "/api-docs/**").permitAll()
                                 .requestMatchers("/plans/invitations/validate").permitAll()

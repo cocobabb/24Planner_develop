@@ -4,8 +4,10 @@ const ENDPOINT = '/user';
 
 const userApi = {
   // 비밀번호 수정
-  patchPassword: async (formData) => {
-    const response = await api.patch(`${ENDPOINT}/password`, formData);
+  patchPassword: async (formData, token) => {
+    const response = await api.patch(`${ENDPOINT}/password`, formData, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
     return response.data;
   },
 

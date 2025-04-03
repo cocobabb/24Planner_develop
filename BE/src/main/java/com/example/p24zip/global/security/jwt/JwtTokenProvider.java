@@ -38,6 +38,8 @@ public class JwtTokenProvider {
 
         Claims claims = Jwts.claims().setSubject(user.getUsername());
         claims.put("nickname", user.getNickname());
+        claims.put("providerId", user.getProviderId());
+        claims.put("provider", user.getProvider());
 
         Date now = new Date();
 
