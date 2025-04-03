@@ -9,23 +9,23 @@
 </br>
 </br>
 
-**✔ 체크리스트로 이사 진행도 확인!**
+**✔ 체크리스트로 이사 진행도 확인**
 </br>
 이사 전에 해야 할 일들을 체크리스트로 정리하고, 완료한 항목을 체크하면 진행도를 퍼센트로 확인할 수 있어요.
 
-**📅 캘린더로 이사 일정 관리!**
+**📅 캘린더로 이사 일정 관리**
 </br>
 이사 날짜, 매물 방문 일정, 서류 준비 기한까지! 캘린더에 기록해 이사 계획을 한눈에 볼 수 있어요.
 
-**📍 매물 기록 & 지도 연동!**
+**📍 매물 기록 & 지도 연동**
 </br>
 방문한 매물의 주소를 등록하면 지도에 표시되고, 방문 후 남기고 싶은 메모도 함께 저장할 수 있어요.
 
-**👥 룸메이트와 함께 이사 계획!**
+**👥 룸메이트와 함께 이사 계획**
 </br>
 혼자만의 이사가 아니라면? 룸메이트를 초대해서 체크리스트도 함께 작성하고 일정도 공유할 수 있어요.
 
-**💬 이사 전용 채팅방!**
+**💬 이사 전용 채팅방**
 </br>
 이사 준비하면서 공유할 게 많다면? 채팅방에서 빠르게 의견을 나누고 이사 정보를 공유할 수 있어요.
 
@@ -71,6 +71,49 @@ cd BE/
 </br>
 
 ### 💫 주요 기능
+
+
+메인페이지
+
+https://github.com/user-attachments/assets/2cb69a38-66fa-44c0-90fa-4a431229dd14
+
+회원가입
+
+https://github.com/user-attachments/assets/202b6ddd-099c-40b1-b898-b8a6cf42cf03
+
+일반 로그인
+
+https://github.com/user-attachments/assets/edcc8657-3015-4b73-aedc-368488dc7cce
+
+소셜 로그인
+
+https://github.com/user-attachments/assets/1da52d26-8c69-49f0-81e7-6531acd59f94
+
+이사 목록
+
+https://github.com/user-attachments/assets/0e4bfc91-cce4-4d2e-a037-ac299128427e
+
+체크리스트
+
+https://github.com/user-attachments/assets/f7e6780a-23db-4431-b39a-3a897ae6acc3
+
+캘린더
+
+https://github.com/user-attachments/assets/f2c2bf57-137c-48eb-baa8-23251247158e
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 </br>
 
 ### 👥 팀 소개
