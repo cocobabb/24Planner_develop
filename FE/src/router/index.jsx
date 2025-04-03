@@ -23,7 +23,7 @@ const router = createBrowserRouter([
   {
     path: '/',
     element: <RootLayout />,
-    // errorElement: <NotFound />,
+    errorElement: <NotFound />,
     children: [
       {
         index: true,
@@ -38,7 +38,7 @@ const router = createBrowserRouter([
         <RootLayout />
       </ProtectedLayout>
     ),
-    // errorElement: <NotFound />,
+    errorElement: <NotFound />,
     children: [
       {
         index: true,
@@ -73,23 +73,23 @@ const router = createBrowserRouter([
   {
     path: '/login',
     element: <Login />,
-    // errorElement: <NotFound />,
+    errorElement: <NotFound />,
   },
   {
     path: '/signup',
     element: <Signup />,
-    // errorElement: <NotFound />,
+    errorElement: <NotFound />,
   },
   {
     path: '/login-redirect',
     element: <LoginRedirect />,
-    // errorElement: <NotFound />,
+    errorElement: <NotFound />,
   },
   {
     path: '/signup/additional-info',
     element: <SignupAdditionalInfo />,
   },
-  {                                 
+  {
     path: '/password',
     element: <FindPassword />,
   },
@@ -113,7 +113,7 @@ const router = createBrowserRouter([
   {
     path: '/invite',
     element: <Invite />,
-    // errorElement: <NotFound />,
+    errorElement: <NotFound />,
   },
 ]);
 

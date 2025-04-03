@@ -98,16 +98,17 @@ export default function Mypage() {
       }
     }
   };
-  const userInfoContainer = 'w-full mt-30 flex justify-center items-center';
+
+  const userInfoContainer = 'w-full mt-20 flex justify-center items-center';
   const userInfo = 'text-2xl';
   const image = 'size-8 m-3';
   const container = 'w-full mt-30 grid content-center justify-items-center ';
-  const form = 'mb-20 relative';
+  const form = 'mb-10 relative';
   const inputStyle = 'w-110 m-3 px-2 focus:outline-none text-xl';
   const lineStyle = 'w-168';
   const buttonStyle =
     'w-35 border-2 rounded-full px-2 py-1 border-primary text-primary hover:bg-primary hover:text-white cursor-pointer absolute right-1';
-  const del = 'text-gray-300 relative top-20';
+  const del = 'text-gray-300 mt-10';
   const messageStyle = 'mb-2 pl-2 font-semibold text-red-400';
   const noticeTextStyle = 'm-2 pl-2 font-semibold text-secondary';
 
