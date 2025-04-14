@@ -108,7 +108,7 @@ export default function Mypage() {
   const lineStyle = 'w-168';
   const buttonStyle =
     'w-35 border-2 rounded-full px-2 py-1 border-primary text-primary hover:bg-primary hover:text-white cursor-pointer absolute right-1';
-  const del = 'text-gray-300 mt-10';
+  const del = 'text-gray-300 mt-10 cursor-pointer';
   const messageStyle = 'mb-2 pl-2 font-semibold text-red-400';
   const noticeTextStyle = 'm-2 pl-2 font-semibold text-secondary';
 

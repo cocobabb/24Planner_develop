@@ -232,8 +232,8 @@ export default function CalendarSidebar({
 
   const scheduleElementDivStyle = 'flex items-center';
   const scheduleElementContentStyle =
-    'flex justify-center items-center rounded-3xl w-full p-2 m-2 cursor-pointer';
-  const deleteButtonDivStyle = 'text-gray-500 text-opacity-70 cursor-pointer';
+    'flex justify-center items-center rounded-3xl w-5/6 p-2 m-2 cursor-pointer';
+  const deleteButtonDivStyle = 'text-gray-500 text-opacity-70 cursor-pointer ml-5';
 
   const dailyScheduleListDiv = dailyScheduleList.map((schedule, i) => {
     return (

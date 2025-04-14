@@ -202,6 +202,10 @@ public class AuthService {
         String username = requestDto.getUsername();
         User user = userRepository.findByUsername(username).orElseThrow(()-> new CustomException("NOT_EXIST_EMAIL", "존재하지 않는 이메일입니다."));
 
+        if(user.getProvider()!=null){
+            throw new CustomException("SOCIAL_LOGIN", "소셜 로그인은 비밀번호 찾기를 진행할 수 없습니다.");
+        }
+
         if(redisTemplate.hasKey(username+"_tempToken")){
             ZonedDateTime checkAccessTime = ZonedDateTime.parse(
                 redisTemplate.opsForValue().get(username + "_tempToken_createdAt"));
@@ -261,15 +265,20 @@ public class AuthService {
     // 로그인
     public LoginResponseDto login(LoginRequestDto requestDto, HttpServletResponse response){
 
+        User user = userRepository.findByUsername(requestDto.getUsername())
+                .orElseThrow(() -> new ResourceNotFoundException());
+
+        // 소셜로그인 계정은 일반 로그인 제한
+        if (user.getProvider() != null){
+            throw new CustomException("SOCIAL_LOGIN_NEEDED", "소셜 계정으로 가입된 유저입니다. 가입한 소셜 계정으로 로그인해주세요.");
+        }
+
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         requestDto.getUsername(),
                         requestDto.getPassword()
                 )
         );
-
-        User user = userRepository.findByUsername(requestDto.getUsername())
-                .orElseThrow(() -> new ResourceNotFoundException());
 
         // 토큰 생성
         String accessjwt = jwtTokenProvider.accessCreateToken(user);

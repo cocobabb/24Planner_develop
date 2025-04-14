@@ -63,7 +63,7 @@ export default function Login() {
       const { code } = error.response.data;
 
       // 로그인 실패 시 메세지
-      if (code === 'INVALID_CREDENTIALS') {
+      if (code === 'INVALID_CREDENTIALS' || code === 'SOCIAL_LOGIN_NEEDED') {
         setErrorMessage(error.response.data.message);
       } else if (error.status === 500) {
         setErrorMessage('로그인에 실패했습니다. 새로고침 후 다시 한 번 로그인을 시도해주세요.');

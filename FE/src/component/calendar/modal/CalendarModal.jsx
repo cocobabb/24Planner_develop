@@ -299,9 +299,9 @@ export default function CalendarModal({
     'flex justify-between items-center w-full border-b-1 border-gray-500 text-xl p-1 m-3';
   const inputWrapperStyle = 'flex grow';
   const inputStyle = 'grow focus:outline-hidden';
-  const circleStyle = `bg-[${color}] size-10 rounded-4xl`;
+  const circleStyle = `bg-[${color}] size-10 rounded-4xl cursor-pointer`;
   const errorDivStyle = 'text-red-300';
-  const buttonStyle = `flex justify-center items-center w-40 h-15 bg-white border-4 border-primary rounded-3xl text-primary text-xl font-bold ${isPendingForCreate || isPendingForUpdate ? 'cursor-progress' : 'hover:bg-primary hover:text-white cursor-pointer'}`;
+  const buttonStyle = `flex justify-center items-center w-50 h-15 bg-white border-3 border-primary rounded-3xl text-primary text-xl mt-5 ${isPendingForCreate || isPendingForUpdate ? 'cursor-progress' : 'hover:bg-primary hover:text-white cursor-pointer'}`;
   const calendarModalDropdownStyle = 'relative group';
   const calendarModalDropdownBodyStyle = `absolute text-xl text-center top-11 space-y-4 -left-57 right-0 w-125 py-4 bg-white border-1 border-primary rounded-2xl shadow-sm z-8 ${showColorDropdown ? 'opacity-100 visible' : 'opacity-0 invisible'}`;
 
