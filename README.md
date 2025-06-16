@@ -42,7 +42,7 @@
 - Frontend : React, Vite, Redux, Axios, Tailwind
 - Backend : Spring Boot, Spring Data JPA, Spring Security, OAuth 2.0
 - Database : MySQL, Redis
-- Infra : Docker, AWS EC2, GitHub Action, Git Hooks
+- Infra : Docker, AWS EC2, GitHub Actions, Git Hooks
 - Tool : GitHub, Postman, Jira, Figma, Notion, Discord
 </br>
 
