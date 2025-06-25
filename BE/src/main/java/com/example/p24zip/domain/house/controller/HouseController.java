@@ -29,7 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/plans/{movingPlanId}/houses")
+@RequestMapping("/api/plans/{movingPlanId}/houses")
 public class HouseController {
     private final HouseService houseService;
     private final MovingPlanValidator movingPlanValidator;

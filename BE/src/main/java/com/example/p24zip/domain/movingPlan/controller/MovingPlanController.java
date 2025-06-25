@@ -20,7 +20,7 @@ import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/plans")
+@RequestMapping("/api/plans")
 public class MovingPlanController {
 
     private final MovingPlanService movingPlanService;

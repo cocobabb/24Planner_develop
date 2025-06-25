@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/plans/{movingPlanId}/taskgroups/{taskGroupId}/tasks")
+@RequestMapping("/api/plans/{movingPlanId}/taskgroups/{taskGroupId}/tasks")
 public class TaskController {
 
     private final TaskService taskService;
