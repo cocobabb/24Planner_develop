@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/plans/invitations")
+@RequestMapping("/api/plans/invitations")
 public class InvitationController {
 
     private final HousemateService housemateService;

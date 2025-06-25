@@ -59,11 +59,11 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 //
                 .authorizeHttpRequests(auth -> auth
-                                .requestMatchers("/auth/verify").authenticated()
-                                .requestMatchers("/user/password","/user/redis/**","/auth/**", "/error", "/images/**", "/gs-guide-websocket/**").permitAll()
-                                .requestMatchers("/oauth2/**", "/login/oauth2/code/**").permitAll()
-                                .requestMatchers("/swagger-ui/**", "swagger-ui.html", "/api-docs/**").permitAll()
-                                .requestMatchers("/plans/invitations/validate").permitAll()
+                                .requestMatchers("/api/auth/verify").authenticated()
+                                .requestMatchers("/api/user/password","/api/user/redis/**","/api/auth/**", "/api/error", "/api/images/**", "/api/gs-guide-websocket/**").permitAll()
+                                .requestMatchers("/api/oauth2/**", "/api/login/oauth2/code/**").permitAll()
+                                .requestMatchers("/api/swagger-ui/**", "/api/swagger-ui.html", "/api-docs/**").permitAll()
+                                .requestMatchers("/api/plans/invitations/validate").permitAll()
                                 .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth2 -> oauth2
