@@ -1,21 +1,15 @@
 package com.example.p24zip.domain.user.controller;
 
-import com.example.p24zip.domain.house.dto.response.ShowNicknameResponseDto;
-import com.example.p24zip.domain.user.dto.request.ChangeNicknameRequestDto;
-import com.example.p24zip.domain.user.dto.request.ChangePasswordRequestDto;
 import com.example.p24zip.domain.user.dto.request.LoginRequestDto;
 import com.example.p24zip.domain.user.dto.request.OAuthSignupRequestDto;
 import com.example.p24zip.domain.user.dto.request.SignupRequestDto;
 import com.example.p24zip.domain.user.dto.request.VerifyEmailRequestCodeDto;
 import com.example.p24zip.domain.user.dto.request.VerifyEmailRequestDto;
 import com.example.p24zip.domain.user.dto.response.OAuthSignupResponseDto;
-import com.example.p24zip.domain.user.dto.response.ChangeNicknameResponseDto;
 import com.example.p24zip.domain.user.dto.response.FindPasswordResponseDto;
-import com.example.p24zip.domain.user.dto.response.RedisValueResponseDto;
 import com.example.p24zip.domain.user.dto.response.VerifyEmailDataResponseDto;
 import com.example.p24zip.domain.user.dto.response.AccessTokenResponseDto;
 import com.example.p24zip.domain.user.dto.response.LoginResponseDto;
-import com.example.p24zip.domain.user.entity.User;
 import com.example.p24zip.domain.user.service.AuthService;
 import com.example.p24zip.global.response.ApiResponse;
 import jakarta.mail.MessagingException;
@@ -23,9 +17,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import java.io.UnsupportedEncodingException;
+import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -54,7 +48,7 @@ public class AuthController {
     }
 
     @PostMapping("/verify-email")
-    public ResponseEntity<ApiResponse<VerifyEmailDataResponseDto>> verifyEmail(@RequestBody @Valid VerifyEmailRequestDto requestDto)
+    public ResponseEntity<ApiResponse<CompletableFuture<VerifyEmailDataResponseDto>>> verifyEmail(@RequestBody @Valid VerifyEmailRequestDto requestDto)
         throws MessagingException, UnsupportedEncodingException {
 
         return ResponseEntity.ok(
@@ -81,7 +75,7 @@ public class AuthController {
     }
 
     @PostMapping("/verify-password")
-    public ResponseEntity<ApiResponse<FindPasswordResponseDto>> findPassword(@RequestBody @Valid VerifyEmailRequestDto requestDto)
+    public ResponseEntity<ApiResponse<CompletableFuture<FindPasswordResponseDto>>> findPassword(@RequestBody @Valid VerifyEmailRequestDto requestDto)
         throws MessagingException, UnsupportedEncodingException {
 
         return ResponseEntity.ok(
