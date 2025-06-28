@@ -1,7 +1,6 @@
 package com.example.p24zip.domain.user.service;
 
 
-import com.example.p24zip.domain.chat.entity.Chat;
 import com.example.p24zip.domain.chat.repository.ChatRepository;
 import com.example.p24zip.domain.house.dto.response.ShowNicknameResponseDto;
 import com.example.p24zip.domain.movingPlan.entity.Housemate;
@@ -47,12 +46,14 @@ import java.util.Map;
 import java.time.format.DateTimeFormatter;
 import java.util.Random;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -112,7 +113,8 @@ public class AuthService {
      * @param requestDto 입력한 email을 가지고 있는 DTO
      * @return 만료일 가진 responseDto
      * **/
-    public VerifyEmailDataResponseDto sendEmail(VerifyEmailRequestDto requestDto)
+    @Async
+    public CompletableFuture<VerifyEmailDataResponseDto> sendEmail(VerifyEmailRequestDto requestDto)
         throws UnsupportedEncodingException, MessagingException {
         String username = requestDto.getUsername();
 
@@ -144,7 +146,7 @@ public class AuthService {
         // redis인증 코드 저장
         ZonedDateTime expiredAt = saveCodeToRedis(username, codeNum);
 
-        return VerifyEmailDataResponseDto.from(expiredAt);
+        return CompletableFuture.completedFuture(VerifyEmailDataResponseDto.from(expiredAt));
 
     }
 
@@ -197,7 +199,8 @@ public class AuthService {
      * @param requestDto username:email
      * @return null
      **/
-    public FindPasswordResponseDto findPassword(VerifyEmailRequestDto requestDto)
+    @Async
+    public CompletableFuture<FindPasswordResponseDto> findPassword(VerifyEmailRequestDto requestDto)
         throws UnsupportedEncodingException, MessagingException {
         String username = requestDto.getUsername();
         User user = userRepository.findByUsername(username).orElseThrow(()-> new CustomException("NOT_EXIST_EMAIL", "존재하지 않는 이메일입니다."));
@@ -234,7 +237,7 @@ public class AuthService {
         ZonedDateTime date = ZonedDateTime.now().plusMinutes(2);
         String expiredAt = date.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);;
 
-        return new FindPasswordResponseDto(tempJwt,expiredAt);
+        return CompletableFuture.completedFuture(new FindPasswordResponseDto(tempJwt,expiredAt));
     }
 
     /**
