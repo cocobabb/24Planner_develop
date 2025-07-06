@@ -1,20 +1,17 @@
 package com.example.p24zip;
 
+import java.util.TimeZone;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
-import java.util.TimeZone;
-import org.springframework.scheduling.annotation.EnableAsync;
-
 @EnableJpaAuditing
 @SpringBootApplication
-@EnableAsync
 public class P24zipApplication {
 
-	public static void main(String[] args) {
-		TimeZone.setDefault(TimeZone.getTimeZone("Asia/Seoul"));
-		SpringApplication.run(P24zipApplication.class, args);
-	}
+    public static void main(String[] args) {
+        TimeZone.setDefault(TimeZone.getTimeZone("Asia/Seoul"));
+        SpringApplication.run(P24zipApplication.class, args);
+    }
 
 }
