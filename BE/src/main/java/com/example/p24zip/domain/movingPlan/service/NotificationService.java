@@ -50,7 +50,7 @@ public class NotificationService {
             RedisNotificationDto redisNotificationDto = RedisNotificationDto.builder()
                 .username(username)
                 .type("newHousemate")
-                .message(String.format("%s님이 \"%s\" 플랜에 참여했습니다.",
+                .message(String.format("%s님이 [%s] 플랜에 참여했습니다.",
                     housemateNotificationDto.getNewHousemateName(),
                     housemateNotificationDto.getMovingPlanTitle()))
                 .build();
