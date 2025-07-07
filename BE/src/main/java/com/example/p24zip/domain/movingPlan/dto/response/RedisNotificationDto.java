@@ -5,11 +5,9 @@ import java.time.ZonedDateTime;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import lombok.ToString;
 
 @Getter
-@Setter
 @NoArgsConstructor
 @ToString
 public class RedisNotificationDto implements Serializable {
@@ -35,17 +33,6 @@ public class RedisNotificationDto implements Serializable {
         this.redisKey = redisKey;
     }
 
-    // 깊은 복사를 위한 복사 생성자
-    public RedisNotificationDto(RedisNotificationDto other) {
-        this.id = other.id;
-        this.username = other.username;
-        this.type = other.type;
-        this.message = other.message;
-        this.timestamp = other.timestamp;
-        this.read = other.read;
-        this.redisKey = other.redisKey;
-    }
-    
     // 알림 읽음 처리 메서드
     public void markAsRead() {
         this.read = true;

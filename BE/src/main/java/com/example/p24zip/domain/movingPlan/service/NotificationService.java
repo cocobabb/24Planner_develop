@@ -7,6 +7,7 @@ import com.example.p24zip.domain.user.entity.User;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import java.io.IOException;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -70,6 +71,9 @@ public class NotificationService {
             notification.getId(),
             notification
         );
+
+        // Redis 알림 데이터에 만료일 설정
+        redisTemplate.expire("notifications:" + notification.getUsername(), Duration.ofMinutes(5));
     }
 
     // Redis에서 사용자의 알림 조회
@@ -129,15 +133,14 @@ public class NotificationService {
             notificationId);
 
         if (notification != null) {
-            // 깊은 복사 후 읽음 처리
-            RedisNotificationDto updatedNotification = new RedisNotificationDto(notification);
-            updatedNotification.markAsRead();
+            // 알림 읽음
+            notification.markAsRead();
 
             // Redis에 업데이트된 알림 저장
             redisTemplate.opsForHash().put(
                 "notifications:" + user.getUsername(),
                 notificationId,
-                updatedNotification
+                notification
             );
         }
     }
@@ -149,9 +152,8 @@ public class NotificationService {
 
         List<RedisNotificationDto> updatedNotifications = notifications.stream()
             .map(notification -> {
-                RedisNotificationDto updatedNotification = new RedisNotificationDto(notification);
-                updatedNotification.markAsRead();
-                return updatedNotification;
+                notification.markAsRead();
+                return notification;
             })
             .collect(Collectors.toList());
 
