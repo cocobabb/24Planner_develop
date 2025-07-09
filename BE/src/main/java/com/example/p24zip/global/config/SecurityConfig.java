@@ -1,11 +1,11 @@
 package com.example.p24zip.global.config;
 
-import com.example.p24zip.global.security.handler.CustomAccessDeniedHandler;
-import com.example.p24zip.global.security.handler.JwtAuthenticationEntryPoint;
-import com.example.p24zip.global.security.jwt.JwtAuthenticationFilter;
 import com.example.p24zip.domain.user.handler.CustomOAuthLoginFailureHandler;
 import com.example.p24zip.domain.user.handler.CustomOAuthLoginSuccessHandler;
 import com.example.p24zip.domain.user.service.CustomOAuth2UserService;
+import com.example.p24zip.global.security.handler.CustomAccessDeniedHandler;
+import com.example.p24zip.global.security.handler.JwtAuthenticationEntryPoint;
+import com.example.p24zip.global.security.jwt.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -47,36 +47,35 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
         http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                // CORS 설정 연결
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            // CORS 설정 연결
 
-
-
-                // 보안 로직 비활성
-                .csrf(csrf -> csrf.disable())
-                // session 안쓰는 코드
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                //
-                .authorizeHttpRequests(auth -> auth
-                                .requestMatchers("/auth/verify").authenticated()
-                                .requestMatchers("/user/password","/user/redis/**","/auth/**", "/error", "/images/**", "/gs-guide-websocket/**").permitAll()
-                                .requestMatchers("/oauth2/**", "/login/oauth2/code/**").permitAll()
-                                .requestMatchers("/swagger-ui/**", "swagger-ui.html", "/api-docs/**").permitAll()
-                                .requestMatchers("/plans/invitations/validate").permitAll()
-                                .anyRequest().authenticated()
-                )
-                .oauth2Login(oauth2 -> oauth2
-                    .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
-                    .successHandler(customOAuthLoginSuccessHandler)
-                    .failureHandler(customOAuthLoginFailureHandler)
-                )
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                .exceptionHandling(exception -> exception
-                        .accessDeniedHandler(accessDeniedHandler)
-                        .authenticationEntryPoint(jwtAuthenticationEntryPoint)
-                );
-
+            // 보안 로직 비활성
+            .csrf(csrf -> csrf.disable())
+            // session 안쓰는 코드
+            .sessionManagement(session -> session
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            //
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/auth/verify").authenticated()
+                .requestMatchers("/user/password", "/user/redis/**", "/auth/**", "/error",
+                    "/images/**", "/gs-guide-websocket/**").permitAll()
+                .requestMatchers("/oauth2/**", "/login/oauth2/code/**").permitAll()
+                .requestMatchers("/swagger-ui/**", "swagger-ui.html", "/api-docs/**").permitAll()
+                .requestMatchers("/plans/invitations/validate").permitAll()
+                .requestMatchers("/notifications/**").permitAll()
+                .anyRequest().authenticated()
+            )
+            .oauth2Login(oauth2 -> oauth2
+                .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
+                .successHandler(customOAuthLoginSuccessHandler)
+                .failureHandler(customOAuthLoginFailureHandler)
+            )
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+            .exceptionHandling(exception -> exception
+                .accessDeniedHandler(accessDeniedHandler)
+                .authenticationEntryPoint(jwtAuthenticationEntryPoint)
+            );
 
         return http.build();
     }
@@ -104,8 +103,8 @@ public class SecurityConfig {
 
     @Bean
     public AuthenticationManager authenticationManager(
-            UserDetailsService userDetailsService,
-            PasswordEncoder passwordEncoder) {
+        UserDetailsService userDetailsService,
+        PasswordEncoder passwordEncoder) {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
         authProvider.setUserDetailsService(userDetailsService);
         authProvider.setPasswordEncoder(passwordEncoder);
