@@ -5,6 +5,7 @@ import com.example.p24zip.domain.movingPlan.dto.response.RedisNotificationDto;
 import com.example.p24zip.domain.movingPlan.service.NotificationService;
 import com.example.p24zip.domain.user.entity.User;
 import com.example.p24zip.global.response.ApiResponse;
+import jakarta.servlet.http.HttpServletResponse;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -25,7 +26,11 @@ public class NotificationController {
 
     // SSE 구독 엔드포인트 (기존 코드 유지)
     @GetMapping(value = "/subscribe", produces = "text/event-stream")
-    public SseEmitter subscribe(@AuthenticationPrincipal User user) {
+    public SseEmitter subscribe(@AuthenticationPrincipal User user, HttpServletResponse response) {
+        response.setHeader("Cache-Control", "no-cache");
+        response.setHeader("Connection", "keep-alive");
+        response.setHeader("Access-Control-Allow-Origin", "*");
+
         return notificationService.createEmitter(user.getUsername());
     }
 
