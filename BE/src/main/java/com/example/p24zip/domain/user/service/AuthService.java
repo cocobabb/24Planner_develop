@@ -14,13 +14,13 @@ import com.example.p24zip.domain.user.dto.request.OAuthSignupRequestDto;
 import com.example.p24zip.domain.user.dto.request.SignupRequestDto;
 import com.example.p24zip.domain.user.dto.request.VerifyEmailRequestCodeDto;
 import com.example.p24zip.domain.user.dto.request.VerifyEmailRequestDto;
-import com.example.p24zip.domain.user.dto.response.OAuthSignupResponseDto;
+import com.example.p24zip.domain.user.dto.response.AccessTokenResponseDto;
 import com.example.p24zip.domain.user.dto.response.ChangeNicknameResponseDto;
 import com.example.p24zip.domain.user.dto.response.FindPasswordResponseDto;
+import com.example.p24zip.domain.user.dto.response.LoginResponseDto;
+import com.example.p24zip.domain.user.dto.response.OAuthSignupResponseDto;
 import com.example.p24zip.domain.user.dto.response.RedisValueResponseDto;
 import com.example.p24zip.domain.user.dto.response.VerifyEmailDataResponseDto;
-import com.example.p24zip.domain.user.dto.response.AccessTokenResponseDto;
-import com.example.p24zip.domain.user.dto.response.LoginResponseDto;
 import com.example.p24zip.domain.user.entity.Role;
 import com.example.p24zip.domain.user.entity.User;
 import com.example.p24zip.domain.user.repository.UserRepository;
@@ -28,32 +28,26 @@ import com.example.p24zip.global.exception.CustomException;
 import com.example.p24zip.global.exception.ResourceNotFoundException;
 import com.example.p24zip.global.exception.TokenException;
 import com.example.p24zip.global.security.jwt.JwtTokenProvider;
+import com.example.p24zip.global.service.AsyncService;
 import jakarta.mail.MessagingException;
-import jakarta.mail.internet.InternetAddress;
-import jakarta.mail.internet.MimeMessage;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
-
 import java.io.UnsupportedEncodingException;
 import java.time.LocalDateTime;
-
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
-import java.time.format.DateTimeFormatter;
 import java.util.Random;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -63,6 +57,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
+@Slf4j
 public class AuthService {
 
     private final UserRepository userRepository;
@@ -71,27 +66,26 @@ public class AuthService {
     private final ChatRepository chatRepository;
 
     private final PasswordEncoder passwordEncoder; // 회원가입 시 비밀번호 암호화
-    private final JavaMailSender mailSender; // 메일 보내는 객체
     private final StringRedisTemplate redisTemplate; // redis 객체
 
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
 
     private final TempUserService tempUserService;
+    private final AsyncService asyncService;
+
+    @Value("${MAIL_ADDRESS}")
+    private String mailAddress;
 
     @Value("${ORIGIN}")
     private String origin;
 
-    @Value("${MAIL_ADDRESS")
-    private String mailAddress;
-
-
     /**
      * 회원가입
-     * @param requestDto
-     *    username(email), password, nickname
+     *
+     * @param requestDto username(email), password, nickname
      * @return null
-     * **/
+     **/
     @Transactional
     public void signup(@Valid SignupRequestDto requestDto) {
         boolean checkUsername = checkExistsUsername(requestDto.getUsername());
@@ -110,20 +104,23 @@ public class AuthService {
 
     /**
      * 이메일 인증(사용자 이메일로 랜덤한 숫자 4자리 전송)
+     *
      * @param requestDto 입력한 email을 가지고 있는 DTO
      * @return 만료일 가진 responseDto
-     * **/
-    @Async
-    public CompletableFuture<VerifyEmailDataResponseDto> sendEmail(VerifyEmailRequestDto requestDto)
+     **/
+    @Transactional
+    public VerifyEmailDataResponseDto sendEmail(VerifyEmailRequestDto requestDto)
         throws UnsupportedEncodingException, MessagingException {
+
         String username = requestDto.getUsername();
+        System.out.println("현재 스레드: " + Thread.currentThread().getName());
 
-        if(redisTemplate.hasKey(username+"_mail")){
+        if (redisTemplate.hasKey(username + "_mail")) {
             LocalDateTime checkAccessTime = LocalDateTime.parse(
-            redisTemplate.opsForValue().get(username + "_mail_createdAt"));
+                redisTemplate.opsForValue().get(username + "_mail_createdAt"));
 
-            if(!checkAccessTime.plusSeconds(5).isBefore(LocalDateTime.now())){
-                throw new CustomException("TOOMANY_REQUEST","5초안에 다시 요청했습니다.");
+            if (!checkAccessTime.plusSeconds(5).isBefore(LocalDateTime.now())) {
+                throw new CustomException("TOOMANY_REQUEST", "5초안에 다시 요청했습니다.");
             }
         }
 
@@ -133,45 +130,36 @@ public class AuthService {
         }
 
         Random random = new Random();
-        int codeNum = random.nextInt(9000) +1000;
-        MimeMessage message = mailSender.createMimeMessage();
-        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-        helper.setFrom(new InternetAddress(mailAddress, "이사모음.zip")); // 메일 보낸 이 표시
-        helper.setTo(username);
-        helper.setSubject("이사모음.zip 회원가입 인증 메일입니다."); // 메일 제목
-        String text = String.format("<h1>인증 코드는 %d입니다.</h1>",codeNum);
-        helper.setText(text, true);
-        mailSender.send(message);
+        int codeNum = random.nextInt(9000) + 1000;
 
-        // redis인증 코드 저장
+        asyncService.sendSignupEmail(username, codeNum, mailAddress);
         ZonedDateTime expiredAt = saveCodeToRedis(username, codeNum);
 
-        return CompletableFuture.completedFuture(VerifyEmailDataResponseDto.from(expiredAt));
-
+        return VerifyEmailDataResponseDto.from(expiredAt);
     }
 
     /**
      * 이메일 인증 확인
+     *
      * @param requestDto 인증한 이메일, 인증한 코드(랜덤한 숫자 4자리)
      * @return null
-     * **/
+     **/
     public void checkCode(VerifyEmailRequestCodeDto requestDto) {
         String username = requestDto.getUsername();
         String code = requestDto.getCode();
 
-        if(!redisTemplate.hasKey(username+"_mail")) {
+        if (!redisTemplate.hasKey(username + "_mail")) {
             throw new CustomException("BAD_REQUEST", "인증번호가 틀렸습니다.");
         }
         // -2: 시간 만료
-        if(redisTemplate.getExpire(username+"_mail")!=-2){
-            if(!code.equals(redisTemplate.opsForValue().get(username+"_mail"))){
-               throw new CustomException("BAD_REQUEST", "인증번호가 틀렸습니다.");
-            }else{
-                redisTemplate.delete(username+"_mail");
+        if (redisTemplate.getExpire(username + "_mail") != -2) {
+            if (!code.equals(redisTemplate.opsForValue().get(username + "_mail"))) {
+                throw new CustomException("BAD_REQUEST", "인증번호가 틀렸습니다.");
+            } else {
+                redisTemplate.delete(username + "_mail");
                 redisTemplate.delete(username + "_mail_createdAt");
             }
-        }
-        else{
+        } else {
             throw new CustomException("TIME_OUT", "시간이 초과되었습니다.");
         }
 
@@ -179,16 +167,17 @@ public class AuthService {
 
     /**
      * 닉네임 확인
+     *
      * @param nickname
      * @return null
-     * **/
+     **/
     public void checkExistNickname(String nickname) {
         boolean checkExistNickname = userRepository.existsByNickname(nickname);
 
-        if(checkExistNickname) {
-            throw new CustomException("EXIST_NICKNAME","이미 사용중인 닉네임입니다.");
+        if (checkExistNickname) {
+            throw new CustomException("EXIST_NICKNAME", "이미 사용중인 닉네임입니다.");
         }
-        if(!(nickname.length()>=2 && nickname.length()<=17)){
+        if (!(nickname.length() >= 2 && nickname.length() <= 17)) {
             throw new CustomException("BAD_REQUEST", "필수값이 누락되거나 형식이 올바르지 않습니다.");
         }
     }
@@ -199,45 +188,39 @@ public class AuthService {
      * @param requestDto username:email
      * @return null
      **/
-    @Async
-    public CompletableFuture<FindPasswordResponseDto> findPassword(VerifyEmailRequestDto requestDto)
+    public FindPasswordResponseDto findPassword(VerifyEmailRequestDto requestDto)
         throws UnsupportedEncodingException, MessagingException {
         String username = requestDto.getUsername();
-        User user = userRepository.findByUsername(username).orElseThrow(()-> new CustomException("NOT_EXIST_EMAIL", "존재하지 않는 이메일입니다."));
+        User user = userRepository.findByUsername(username)
+            .orElseThrow(() -> new CustomException("NOT_EXIST_EMAIL", "존재하지 않는 이메일입니다."));
 
-        if(user.getProvider()!=null){
+        if (user.getProvider() != null) {
             throw new CustomException("SOCIAL_LOGIN", "소셜 로그인은 비밀번호 찾기를 진행할 수 없습니다.");
         }
 
-        if(redisTemplate.hasKey(username+"_tempToken")){
+        if (redisTemplate.hasKey(username + "_tempToken")) {
             ZonedDateTime checkAccessTime = ZonedDateTime.parse(
                 redisTemplate.opsForValue().get(username + "_tempToken_createdAt"));
 
-            if(!checkAccessTime.plusSeconds(5).isBefore(ZonedDateTime.now())){
-                throw new CustomException("TOOMANY_REQUEST","5초안에 다시 요청했습니다.");
+            if (!checkAccessTime.plusSeconds(5).isBefore(ZonedDateTime.now())) {
+                throw new CustomException("TOOMANY_REQUEST", "5초안에 다시 요청했습니다.");
             }
         }
 
         String tempJwt = jwtTokenProvider.accessCreateToken(user);
 
-        String key = username +"_tempToken";
-        redisTemplate.opsForValue().set(key,tempJwt, 10, TimeUnit.MINUTES);
+        String key = username + "_tempToken";
+        redisTemplate.opsForValue().set(key, tempJwt, 10, TimeUnit.MINUTES);
         String createdAt = username + "_tempToken_createdAt";
-        redisTemplate.opsForValue().set(createdAt, String.valueOf(ZonedDateTime.now()), 10, TimeUnit.MINUTES); // 생성시간
+        redisTemplate.opsForValue()
+            .set(createdAt, String.valueOf(ZonedDateTime.now()), 10, TimeUnit.MINUTES); // 생성시간
 
-        MimeMessage message = mailSender.createMimeMessage();
-        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-        helper.setFrom(new InternetAddress(mailAddress, "이사모음.zip"));
-        helper.setTo(username);
-        helper.setSubject("이사모음.zip 비밀번호 인증 메일입니다.");
-        String text = String.format("<h1>해당 링크로 접속 후 비밀번호를 변경해 주세요. 이용시간은 10분 입니다. 이용시간이 끝나거나 비밀번호 변경 후에는 해당 링크를 이용할 수 없습니다.</h1><p>%s/newpassword?query=%s</p>",origin,tempJwt);
-        helper.setText(text, true);
-        mailSender.send(message);
+        asyncService.sendFindPassword(username, tempJwt, mailAddress, origin);
 
         ZonedDateTime date = ZonedDateTime.now().plusMinutes(2);
-        String expiredAt = date.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);;
+        String expiredAt = date.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
 
-        return CompletableFuture.completedFuture(new FindPasswordResponseDto(tempJwt,expiredAt));
+        return new FindPasswordResponseDto(tempJwt, expiredAt);
     }
 
     /**
@@ -251,7 +234,7 @@ public class AuthService {
     @Transactional
     public void updatePassword(ChangePasswordRequestDto requestDto, HttpServletResponse response,
         User user) {
-        if(user==null){
+        if (user == null) {
             user = userRepository.findByUsername(requestDto.getUsername())
                 .orElseThrow(() -> new ResourceNotFoundException());
         }
@@ -261,26 +244,27 @@ public class AuthService {
         userRepository.save(user);
 
         String username = user.getUsername();
-        redisTemplate.delete(username+"_tempToken");
+        redisTemplate.delete(username + "_tempToken");
         redisTemplate.delete(username + "_tempToken_createdAt");
     }
 
     // 로그인
-    public LoginResponseDto login(LoginRequestDto requestDto, HttpServletResponse response){
+    public LoginResponseDto login(LoginRequestDto requestDto, HttpServletResponse response) {
 
         User user = userRepository.findByUsername(requestDto.getUsername())
-                .orElseThrow(() -> new ResourceNotFoundException());
+            .orElseThrow(() -> new ResourceNotFoundException());
 
         // 소셜로그인 계정은 일반 로그인 제한
-        if (user.getProvider() != null){
-            throw new CustomException("SOCIAL_LOGIN_NEEDED", "소셜 계정으로 가입된 유저입니다. 가입한 소셜 계정으로 로그인해주세요.");
+        if (user.getProvider() != null) {
+            throw new CustomException("SOCIAL_LOGIN_NEEDED",
+                "소셜 계정으로 가입된 유저입니다. 가입한 소셜 계정으로 로그인해주세요.");
         }
 
         authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        requestDto.getUsername(),
-                        requestDto.getPassword()
-                )
+            new UsernamePasswordAuthenticationToken(
+                requestDto.getUsername(),
+                requestDto.getPassword()
+            )
         );
 
         // 토큰 생성
@@ -288,7 +272,7 @@ public class AuthService {
         String refreshjwt = jwtTokenProvider.refreshCreateToken(user);
 
         // 쿠키 생성 및 refreshToken 쿠키에 넣기
-        Cookie cookie = new Cookie("refreshToken",refreshjwt);
+        Cookie cookie = new Cookie("refreshToken", refreshjwt);
         cookie.setHttpOnly(true);
         cookie.setSecure(true);
         cookie.setMaxAge(172800);
@@ -308,21 +292,20 @@ public class AuthService {
 
         // cookie에서 refresh 추출
         String refresh = findByRefreshToken(cookies);
-        if(refresh == null || !jwtTokenProvider.validateToken(refresh)) {
+        if (refresh == null || !jwtTokenProvider.validateToken(refresh)) {
             throw new TokenException();
         }
-
 
         String refreshusername = jwtTokenProvider.getUsername(refresh);
 
         String redistoken = (String) redisTemplate.opsForValue().get(refresh);
 
         User user = userRepository.findByUsername(refreshusername)
-                .orElseThrow(() -> new ResourceNotFoundException());
+            .orElseThrow(() -> new ResourceNotFoundException());
 
         String accessjwt = null;
 
-        if(refresh.equals(redistoken)) {
+        if (refresh.equals(redistoken)) {
             accessjwt = jwtTokenProvider.accessCreateToken(user);
         } else {
             throw new TokenException();
@@ -337,36 +320,35 @@ public class AuthService {
     }
 
     @Transactional
-    public ChangeNicknameResponseDto updateNickname(ChangeNicknameRequestDto requestDto, User user) {
+    public ChangeNicknameResponseDto updateNickname(ChangeNicknameRequestDto requestDto,
+        User user) {
 
         String nickname = requestDto.getNickname();
 
-        if(userRepository.existsByNickname(nickname)){
+        if (userRepository.existsByNickname(nickname)) {
             throw new CustomException("EXIST_NICKNAME", "이미 존재하는 닉네임입니다.");
         }
 
         user.setNickname(nickname);
         userRepository.save(user);
 
-        return new ChangeNicknameResponseDto(user.getId(),user.getNickname());
+        return new ChangeNicknameResponseDto(user.getId(), user.getNickname());
 
     }
 
     // 로그아웃
     public void logout(HttpServletRequest request, HttpServletResponse response) {
 
-
         Cookie[] cookies = request.getCookies();
 
         // cookie에서 refresh 추출
         String refresh = findByRefreshToken(cookies);
-        if(refresh == null) {
+        if (refresh == null) {
             throw new TokenException();
         }
 
         // redis에서 RefreshToken 삭제
         redisTemplate.delete(refresh);
-
 
         // 쿠키에서 RefreshToken 삭제
         Cookie cookie = new Cookie("refreshToken", null);
@@ -379,24 +361,25 @@ public class AuthService {
     @Transactional
     public void deleteUser(User user) {
         List<Housemate> housemateList = housemateRepository.findByUserAndIsOwnerTrue(user);
-        List<MovingPlan> movingPlanList = housemateList.stream().map(Housemate::getMovingPlan).toList();
+        List<MovingPlan> movingPlanList = housemateList.stream().map(Housemate::getMovingPlan)
+            .toList();
 
         movingPlanList.forEach(movingPlanRepository::delete);
         userRepository.delete(user);
 
     }
 
-
     ///////////////////////////////////////////////////////////////////////////////
     // 보조 메서드
-    ///////////////////////////////////////////////////////////////////////////////
+
+    /// ////////////////////////////////////////////////////////////////////////////
 
     public String findByRefreshToken(Cookie[] cookies) {
         String refresh = null;
 
         if (cookies != null) {
             for (Cookie cookie : cookies) {
-                if(cookie.getName().equals("refreshToken")) {
+                if (cookie.getName().equals("refreshToken")) {
                     refresh = cookie.getValue();
                     return refresh;
                 }
@@ -408,30 +391,34 @@ public class AuthService {
 
     /**
      * 사용 중인 username 확인
+     *
      * @param userName 입력한 email
      * @return Boolean 이메일 존재 유무
-     * **/
+     **/
     public boolean checkExistsUsername(String userName) {
         return userRepository.existsByUsername(userName);
     }
 
-  
+
     /**
      * 4자리의 랜덤 수를 redis에 저장
+     *
      * @param username 입력한 email
-     * @param codeNum     4자리의 랜덤 수
+     * @param codeNum  4자리의 랜덤 수
      * @return ZonedDateTime expiredAt
      **/
     public ZonedDateTime saveCodeToRedis(String username, int codeNum) {
 
-        String key = username+"_mail";
+        String key = username + "_mail";
         String code = String.valueOf(codeNum);
         String createdAt = username + "_mail_createdAt";
 
         redisTemplate.opsForValue().set(key, code, 3, TimeUnit.MINUTES);
-        redisTemplate.opsForValue().set(createdAt, String.valueOf(LocalDateTime.now()), 3, TimeUnit.MINUTES); // 생성시간
+        redisTemplate.opsForValue()
+            .set(createdAt, String.valueOf(LocalDateTime.now()), 3, TimeUnit.MINUTES); // 생성시간
         return ZonedDateTime.now(ZoneId.of("Asia/Seoul")).plusMinutes(3);
     }
+
 
     // 기존 사용자 확인 및 신규 사용자 처리
     @Transactional
@@ -449,7 +436,7 @@ public class AuthService {
         String providerId = tempUser.get("providerId");
 
         // 사용자가 이미 존재하는 경우 처리
-        if (userRepository.existsByUsername(username)){
+        if (userRepository.existsByUsername(username)) {
             throw new IllegalStateException("이미 가입된 사용자입니다.");
         }
 
@@ -490,7 +477,7 @@ public class AuthService {
 
     public RedisValueResponseDto getRedisValue(String key) {
         String value = redisTemplate.opsForValue().get(key);
-        if(value == null){
+        if (value == null) {
             new ResourceNotFoundException();
         }
         return new RedisValueResponseDto(value);
