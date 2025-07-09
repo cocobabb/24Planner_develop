@@ -44,7 +44,7 @@ public class HousemateService {
 
         // 알림 DTO 생성
         HousemateNotificationDto notificationDto = HousemateNotificationDto.builder()
-            .newHousemateName(invitee.getUsername())
+            .newHousemateUsername(invitee.getUsername())
             .movingPlanTitle(movingPlan.getTitle())
             .existingHousemateUsernames(existingHousemateUsernames)
             .build();
