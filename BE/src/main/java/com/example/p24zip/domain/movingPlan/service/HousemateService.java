@@ -50,7 +50,7 @@ public class HousemateService {
             .build();
 
         // 기존 Housemate들에게 알림 전송
-        notificationService.publishNotification(notificationDto);
+        notificationService.publishNotification(notificationDto, movingPlanId);
 
         Housemate housemate = Housemate.createHousemate(invitee, movingPlan);
         housemateRepository.save(housemate);

@@ -16,7 +16,6 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -27,45 +26,29 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 public class NotificationService {
 
     private static final Map<String, SseEmitter> emitters = new ConcurrentHashMap<>();
-    private static final String NOTIFICATION_CHANNEL = "moving-plan-notifications";
+
 
     private final RedisTemplate<String, Object> redisTemplate;
     private final RedisMessageListenerContainer redisMessageListenerContainer;
-    private final ChannelTopic notificationTopic;
     private final ObjectMapper objectMapper;
 
-    /**
-     * 유저별로 SSE 연결을 생성하고, 연결 종료(정상/타임아웃) 시 자동으로 정리되도록 관리하는 메서드
-     *
-     * @return SseEmitter : 생성한 emitter를 반환하여, Controller에서 클라이언트에게 SSE 연결을 반환할 수 있게 합니다
-     * @apiNote 1분(60, 000ms) 동안 아무 데이터도 전송되지 않으면 자동으로 연결이 끊어집니다(타임아웃).
-     */
-    public SseEmitter createEmitter(String username) {
-        SseEmitter emitter = new SseEmitter(60 * 1000L); // 1분 타임아웃 :
-
-        // username(유저명)을 key로, emitter를 emitters 맵에 저장합니다.
-        //emitters는 현재 SSE로 연결된 모든 유저의 연결 정보를 관리하는 Map
-        emitters.put(username, emitter);
-
-        emitter.onCompletion(() -> emitters.remove(username));
-        emitter.onTimeout(() -> emitters.remove(username));
-
-        return emitter;
-    }
 
     /**
      * 새로운 하우스메이트가 플랜에 참여하면, 기존 하우스메이트들에게 알림을 Redis에 저장하고, Pub/Sub으로 실시간 알림을 발행하는 메서드
      *
      * @param housemateNotificationDto : 새로 추가된 사용자 아이디, 이사계획 이름, 기존 Housemate 사용자 목록
+     * @param movingPlanId
      * @return void
-     * @apiNote | RedisNotificationDto : Redis에 저장될 알림 내용 데이터를 가진 dto | saveNotificationToRedis:
-     * Redis에 알림내용 저장하는 메서드 | redisTemplate.convertAndSend(topic,  Redis에 저장될 알림 내용 데이터를 가진 dto) :
-     * topic을 구독하고 있는 sub들에게 알림 내용 전송
+     * @apiNote <p> RedisNotificationDto : Redis에 저장될 알림 내용 데이터를 가진 dto </p>
+     * <p>saveNotificationToRedis : Redis에 알림내용 저장하는 메서드 </p>
+     * <p>redisTemplate.convertAndSend(topic,  Redis에 저장될 알림 내용 데이터를 가진 dto) : topic을 구독하고 있는 sub들에게
+     * 알림 내용 전송</p>
      */
-    public void publishNotification(HousemateNotificationDto housemateNotificationDto) {
-        // 기존 Housemate들에게 알림 발행
+    public void publishNotification(HousemateNotificationDto housemateNotificationDto,
+        Long movingPlanId) {
+        // 기존 Housemate들에게 알림 발행 하기 위한
+        // Redis 알림 DTO 생성
         housemateNotificationDto.getExistingHousemateUsernames().forEach(username -> {
-            // Redis 알림 DTO 생성
             RedisNotificationDto redisNotificationDto = RedisNotificationDto.builder()
                 .username(username)
                 .type("newHousemate")
@@ -74,9 +57,11 @@ public class NotificationService {
                     housemateNotificationDto.getMovingPlanTitle()))
                 .build();
 
+            // 메세지 유실 대비하여 메세지 Redis 해시에 따로 저장
             saveNotificationToRedis(redisNotificationDto);
 
-            redisTemplate.convertAndSend(NOTIFICATION_CHANNEL, redisNotificationDto);
+            // 채널 movingPlan:movingPlanId 에 pub
+            redisTemplate.convertAndSend("movingPlan:" + movingPlanId, redisNotificationDto);
         });
     }
 
@@ -237,29 +222,6 @@ public class NotificationService {
         return redisNotification;
     }
 
-    /**
-     * Redis Pub/Sub을 이용해 알림 메시지를 실시간으로 수신하고, 해당 알림을 SSE(Server-Sent Events)로 클라이언트(유저)에게 전송하는 리스너를
-     * 등록하는 메서드
-     *
-     * @return void
-     * @apiNote redisMessageListenerContainer.addMessageListener를 통해 지정한 채널(topic)
-     * "moving-plan-notifications"에 대한 메시지 리스너를 등록하여 알림 메세지가 오면 역직렬화(객체로 변환)하여 설정한 Dto 타입으로 데이터 변환하여
-     * SSE 실시간 알림 메서드로 전달
-     */
-    public void setupRedisMessageListener() {
-        redisMessageListenerContainer.addMessageListener((message, pattern) -> {
-            // redis에 저장된 직렬화 데이터를 역직렬화
-            Object obj = redisTemplate.getValueSerializer().deserialize(message.getBody());
-            // 역직렬화 된 데이터 객체를 Dto타입으로 변환
-            RedisNotificationDto notification = objectMapper.convertValue(obj,
-                RedisNotificationDto.class);
-
-            if (notification != null) {
-                // SSE로 실시간 알림 전송
-                sendNotification(notification.getUsername(), notification);
-            }
-        }, notificationTopic);
-    }
 
     /**
      * 특정 사용자(moving-plan-notifications을 구독하고 있는 사용자)에게 SSE(Server-Sent Events)로 실시간 알림을 전송하는 메서드
