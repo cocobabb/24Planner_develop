@@ -4,32 +4,24 @@ import com.example.p24zip.domain.movingPlan.dto.response.HousemateNotificationDt
 import com.example.p24zip.domain.movingPlan.dto.response.NotificationResponseDto;
 import com.example.p24zip.domain.movingPlan.dto.response.RedisNotificationDto;
 import com.example.p24zip.domain.user.entity.User;
-import com.example.p24zip.global.exception.CustomException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import java.io.IOException;
 import java.time.Duration;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.stereotype.Service;
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class NotificationService {
 
-    private static final Map<String, SseEmitter> emitters = new ConcurrentHashMap<>();
-
-
     private final RedisTemplate<String, Object> redisTemplate;
-    private final RedisMessageListenerContainer redisMessageListenerContainer;
     private final ObjectMapper objectMapper;
 
 
@@ -41,8 +33,8 @@ public class NotificationService {
      * @return void
      * @apiNote <p> RedisNotificationDto : Redis에 저장될 알림 내용 데이터를 가진 dto </p>
      * <p>saveNotificationToRedis : Redis에 알림내용 저장하는 메서드 </p>
-     * <p>redisTemplate.convertAndSend(topic,  Redis에 저장될 알림 내용 데이터를 가진 dto) : topic을 구독하고 있는 sub들에게
-     * 알림 내용 전송</p>
+     * <p>redisTemplate.convertAndSend(topic,  Redis에 저장될 알림 내용 데이터를 가진 dto) : topic을 구독하고 있는
+     * sub들에게 알림 내용 전송</p>
      */
     public void publishNotification(HousemateNotificationDto housemateNotificationDto,
         Long movingPlanId) {
@@ -94,6 +86,7 @@ public class NotificationService {
             user.getUsername());
 
         return redisNotifications.stream()
+            .sorted(Comparator.comparing(RedisNotificationDto::getTimestamp).reversed()) // 내림차순 정렬
             .map(notification -> NotificationResponseDto.builder()
                 .id(notification.getId())
                 .type(notification.getType())
@@ -116,6 +109,7 @@ public class NotificationService {
 
         return redisNotifications.stream()
             .filter(notification -> !notification.isRead())
+            .sorted(Comparator.comparing(RedisNotificationDto::getTimestamp).reversed()) // 내림차순 정렬
             .map(notification -> NotificationResponseDto.builder()
                 .id(notification.getId())
                 .type(notification.getType())
@@ -223,23 +217,4 @@ public class NotificationService {
     }
 
 
-    /**
-     * 특정 사용자(moving-plan-notifications을 구독하고 있는 사용자)에게 SSE(Server-Sent Events)로 실시간 알림을 전송하는 메서드
-     *
-     * @return void
-     * @apiNote SSE 객체가 비어있지 않으면 "newHousemate"란 이벤트 이름으로 새로운 초대자 정보 전송
-     */
-    public void sendNotification(String username, Object notification) {
-        SseEmitter emitter = emitters.get(username);
-        if (emitter != null) {
-            try {
-                emitter.send(SseEmitter.event().name("newHousemate").data(notification));
-            } catch (IOException e) {
-                emitters.remove(username);
-                log.error("sendNotification ERROR: " + e.getMessage());
-                System.out.println("알림 내용 전달 실패");
-                throw new CustomException("FAIL_SENDING_TO_SSE", "SSE에 알림 내용 전달에 실패했습니다");
-            }
-        }
-    }
 }
