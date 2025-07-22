@@ -26,7 +26,7 @@ public class NotificationController {
     private final NotificationService notificationService;
 
     // SSE 구독 엔드포인트 (기존 코드 유지)
-    @GetMapping(value = "/subscribe", produces = "text/event-stream")
+    @GetMapping(value = "/subscribe")
     public SseEmitter subscribe(@AuthenticationPrincipal User user) {
 
         return sseEmitterPool.connect(user.getUsername());
@@ -39,6 +39,7 @@ public class NotificationController {
     ) {
         List<NotificationResponseDto> notifications = notificationService.getUserNotifications(
             user);
+
         return ResponseEntity.ok(ApiResponse.ok(notifications));
     }
 
@@ -49,7 +50,20 @@ public class NotificationController {
     ) {
         List<NotificationResponseDto> unreadNotifications = notificationService.getUserUnreadNotifications(
             user);
+
         return ResponseEntity.ok(ApiResponse.ok(unreadNotifications));
+    }
+
+    // 읽지 않은 알림 조회하여 다시 알림 처리
+    @GetMapping("/sse/resend")
+    public void checkUnreadNotification(@AuthenticationPrincipal User user) {
+        // 여기서만 unread 알림을 전송
+        List<NotificationResponseDto> unreadNotifications = notificationService.getUserUnreadNotifications(
+            user).reversed();
+        for (NotificationResponseDto notification : unreadNotifications) {
+            sseEmitterPool.send(user.getUsername(), notification);
+        }
+
     }
 
     // 특정 알림 읽음 처리
@@ -59,6 +73,7 @@ public class NotificationController {
         @PathVariable String notificationId
     ) {
         notificationService.markNotificationAsRead(user, notificationId);
+
         return ResponseEntity.ok(ApiResponse.ok(null));
     }
 
@@ -68,6 +83,7 @@ public class NotificationController {
         @AuthenticationPrincipal User user
     ) {
         notificationService.markAllNotificationsAsRead(user);
+
         return ResponseEntity.ok(ApiResponse.ok(null));
     }
 
@@ -78,6 +94,7 @@ public class NotificationController {
     ) {
         List<RedisNotificationDto> notifications =
             notificationService.getUserNotificationsFromRedis(user.getUsername());
+
         return ResponseEntity.ok(ApiResponse.ok(notifications));
     }
 }

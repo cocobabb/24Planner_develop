@@ -1,7 +1,5 @@
 package com.example.p24zip.global.notification;
 
-import com.example.p24zip.global.exception.CustomException;
-import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import lombok.extern.slf4j.Slf4j;
@@ -12,7 +10,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 @Slf4j
 public class SseEmitterPool {
 
-    // userId → SseEmitter 맵 (멀티 스레드 환경 고려 ConcurrentHashMap 사용)
+    // username → SseEmitter 맵 (멀티 스레드 환경 고려 ConcurrentHashMap 사용)
     private final Map<String, SseEmitter> emitters = new ConcurrentHashMap<>();
 
 
@@ -26,7 +24,7 @@ public class SseEmitterPool {
         SseEmitter emitter = new SseEmitter(Long.MAX_VALUE);  // 타임아웃 무제한 설정
         emitters.put(username, emitter);
 
-        System.out.println(username + "님 sse 연결됨");
+        System.out.println(username + "님 sse 연결");
 
         // 연결 종료 시 맵에서 제거
         emitter.onCompletion(() -> emitters.remove(username));
@@ -43,19 +41,34 @@ public class SseEmitterPool {
      * @param data     전송할 데이터
      */
     public void send(String username, Object data) {
-        connect(username);
-        try {
-            SseEmitter emitter = emitters.get(username);
-            emitter.send(SseEmitter.event().name("newHousemate").data(data));
-            System.out.println(username + "님에게 알림 내용 전달 성공");
-        } catch (IOException e) {
-            emitters.remove(username);
-            log.error("SseEmitterPool의 send ERROR: " + e.getMessage());
-            log.error(username + "님에게 알림 내용 전달 실패");
-            System.out.println(username + "님에게 알림 내용 전달 실패");
-            throw new CustomException("FAIL_SENDING_TO_SSE", "SSE에 알림 내용 전달에 실패했습니다");
+        int retry = 3;
+        int count = 0;
+
+        while (count < retry) {
+            try {
+                SseEmitter emitter = emitters.get(username);
+                emitter.send(SseEmitter.event().name("newHousemate").data(data));
+                System.out.println(username + "님에게 알림 내용 전달 성공");
+                return; // 전송 성공했으니 종료
+            } catch (Exception e) {
+                count++;
+                log.warn("[SSE 전송 실패 - 재시도 {}/{}] 사용자: {}, 에러: {}", count, retry, username,
+                    e.getMessage());
+
+                // 마지막 시도에서도 실패한 경우
+                if (count == retry) {
+                    emitters.remove(username);
+                    log.error("[SSE 전송 실패] {}님에게 알림 전달 실패. 연결 제거됨", username);
+                }
+
+                // 짧은 대기 후 재시도
+                try {
+                    Thread.sleep(1000); // 1초 대기 후 재시도
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                }
+            }
         }
-        remove(username);
     }
 
 
@@ -64,5 +77,6 @@ public class SseEmitterPool {
      */
     public void remove(String username) {
         emitters.remove(username);
+        System.out.println(username + "님에게 sse 연결 해제");
     }
 }

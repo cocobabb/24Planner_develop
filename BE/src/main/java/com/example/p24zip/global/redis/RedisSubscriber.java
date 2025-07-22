@@ -24,11 +24,12 @@ public class RedisSubscriber implements MessageListener {
 
     @Override
     public void onMessage(Message message, byte[] pattern) {
-        String channel = new String(message.getChannel()); // ex) movingPlan:123
+        String channel = new String(message.getChannel()); // ex) movingPlan:123:uuid
         String body = new String(message.getBody());
 
         try {
             String movingPlanId = channel.split(":")[1];
+            String uuid = channel.split(":")[2];
 
             // redis 메시지 -> 객체 변환 (redis는 String key:String data 형태로 저장되어 있기 때문)
             RedisNotificationDto dto = objectMapper.readValue(body, RedisNotificationDto.class);

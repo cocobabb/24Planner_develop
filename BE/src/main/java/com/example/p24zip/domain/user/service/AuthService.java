@@ -27,6 +27,7 @@ import com.example.p24zip.domain.user.repository.UserRepository;
 import com.example.p24zip.global.exception.CustomException;
 import com.example.p24zip.global.exception.ResourceNotFoundException;
 import com.example.p24zip.global.exception.TokenException;
+import com.example.p24zip.global.notification.SseEmitterPool;
 import com.example.p24zip.global.security.jwt.JwtTokenProvider;
 import com.example.p24zip.global.service.AsyncService;
 import jakarta.mail.MessagingException;
@@ -73,6 +74,8 @@ public class AuthService {
 
     private final TempUserService tempUserService;
     private final AsyncService asyncService;
+
+    private final SseEmitterPool sseEmitterPool;
 
     @Value("${MAIL_ADDRESS}")
     private String mailAddress;
@@ -346,6 +349,10 @@ public class AuthService {
         if (refresh == null) {
             throw new TokenException();
         }
+
+        // sse 연결 해제
+        String username = jwtTokenProvider.getUsername(refresh);
+        sseEmitterPool.remove(username);
 
         // redis에서 RefreshToken 삭제
         redisTemplate.delete(refresh);

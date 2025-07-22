@@ -53,7 +53,9 @@ public class NotificationService {
             saveNotificationToRedis(redisNotificationDto);
 
             // 채널 movingPlan:movingPlanId 에 pub
-            redisTemplate.convertAndSend("movingPlan:" + movingPlanId, redisNotificationDto);
+            redisTemplate.convertAndSend(
+                "movingPlan:" + movingPlanId + ":" + redisNotificationDto.getId(),
+                redisNotificationDto);
         });
     }
 
@@ -205,7 +207,7 @@ public class NotificationService {
      * @param notificationId : Redis key 만들 때 구분 되기 위한 hash key가 될 redisKey
      * @return RedisNotificationDto : Redis에 저장된 알림 데이터 dto(알림 받을 사용자 아이디, 어떤 메서드로 저장된 데이터인지 나타낼
      * type, 알림내용, 알림이 * 발생한 시간, 알림 읽음 여부, redisKey을 가진 객체 )
-     * @apiNote 매개변수를 이용해 만든 Redis key로 데이터 가져와, RedisNotificationDto 형태로 역직렬화
+     * @apiNote 매개변수를 이용해 만든 Redis key로 데이터 가져와서 RedisNotificationDto 역직렬화
      */
     private RedisNotificationDto findNotificationInRedis(String username, String notificationId) {
         Object obj = redisTemplate.opsForHash()
