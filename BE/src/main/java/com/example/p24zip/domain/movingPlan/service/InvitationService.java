@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import com.example.p24zip.global.exception.CustomErrorCode;
 
 @Slf4j
 @Service
@@ -54,20 +55,20 @@ public class InvitationService {
         String token = redisTemplate.opsForValue().get("short_invitation:" + shortId);
 
         if (token == null) {
-            throw new CustomException("INVALID_INVITATION", "만료되었거나 유효하지 않은 초대 링크입니다.");
+            throw new CustomException(CustomErrorCode.INVALID_INVITATION);
         }
 
         if (!jwtTokenProvider.validateToken(token)) {
-            throw new CustomException("INVALID_INVITATION", "만료되었거나 유효하지 않은 초대 링크입니다.");
+            throw new CustomException(CustomErrorCode.INVALID_INVITATION);
         }
 
         Long movingPlanId = jwtTokenProvider.getMovingPlanId(token);
         Long inviterId = jwtTokenProvider.getInviterId(token);
 
         MovingPlan movingPlan = movingPlanRepository.findById(movingPlanId)
-                .orElseThrow(() -> new CustomException("INVALID_INVITATION", "만료되었거나 유효하지 않은 초대 링크입니다."));
+                .orElseThrow(() -> new CustomException(CustomErrorCode.INVALID_INVITATION));
         User inviter = userRepository.findById(inviterId)
-                .orElseThrow(() -> new CustomException("INVALID_INVITATION", "만료되었거나 유효하지 않은 초대 링크입니다."));
+                .orElseThrow(() -> new CustomException(CustomErrorCode.INVALID_INVITATION));
 
         return HousemateInvitationValidateResponseDto.from(movingPlan, inviter);
     }
