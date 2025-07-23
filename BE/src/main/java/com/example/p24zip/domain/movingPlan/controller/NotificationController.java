@@ -1,11 +1,11 @@
 package com.example.p24zip.domain.movingPlan.controller;
 
-import com.example.p24zip.domain.movingPlan.dto.response.NotificationResponseDto;
-import com.example.p24zip.domain.movingPlan.dto.response.RedisNotificationDto;
 import com.example.p24zip.domain.movingPlan.service.NotificationService;
 import com.example.p24zip.domain.user.entity.User;
+import com.example.p24zip.global.notification.NotificationResponseDto;
+import com.example.p24zip.global.notification.SseEmitterPool;
+import com.example.p24zip.global.redis.RedisNotificationDto;
 import com.example.p24zip.global.response.ApiResponse;
-import jakarta.servlet.http.HttpServletResponse;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -22,16 +22,14 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 @RequiredArgsConstructor
 public class NotificationController {
 
+    private final SseEmitterPool sseEmitterPool;
     private final NotificationService notificationService;
 
     // SSE 구독 엔드포인트 (기존 코드 유지)
-    @GetMapping(value = "/subscribe", produces = "text/event-stream")
-    public SseEmitter subscribe(@AuthenticationPrincipal User user, HttpServletResponse response) {
-        response.setHeader("Cache-Control", "no-cache");
-        response.setHeader("Connection", "keep-alive");
-        response.setHeader("Access-Control-Allow-Origin", "*");
+    @GetMapping(value = "/subscribe")
+    public SseEmitter subscribe(@AuthenticationPrincipal User user) {
 
-        return notificationService.createEmitter(user.getUsername());
+        return sseEmitterPool.connect(user.getUsername());
     }
 
     // 모든 알림 조회
@@ -41,6 +39,7 @@ public class NotificationController {
     ) {
         List<NotificationResponseDto> notifications = notificationService.getUserNotifications(
             user);
+
         return ResponseEntity.ok(ApiResponse.ok(notifications));
     }
 
@@ -51,7 +50,20 @@ public class NotificationController {
     ) {
         List<NotificationResponseDto> unreadNotifications = notificationService.getUserUnreadNotifications(
             user);
+
         return ResponseEntity.ok(ApiResponse.ok(unreadNotifications));
+    }
+
+    // 읽지 않은 알림 조회하여 다시 알림 처리
+    @GetMapping("/sse/resend")
+    public void checkUnreadNotification(@AuthenticationPrincipal User user) {
+        // 여기서만 unread 알림을 전송
+        List<NotificationResponseDto> unreadNotifications = notificationService.getUserUnreadNotifications(
+            user).reversed();
+        for (NotificationResponseDto notification : unreadNotifications) {
+            sseEmitterPool.send(user.getUsername(), notification);
+        }
+
     }
 
     // 특정 알림 읽음 처리
@@ -61,6 +73,7 @@ public class NotificationController {
         @PathVariable String notificationId
     ) {
         notificationService.markNotificationAsRead(user, notificationId);
+
         return ResponseEntity.ok(ApiResponse.ok(null));
     }
 
@@ -70,6 +83,7 @@ public class NotificationController {
         @AuthenticationPrincipal User user
     ) {
         notificationService.markAllNotificationsAsRead(user);
+
         return ResponseEntity.ok(ApiResponse.ok(null));
     }
 
@@ -80,6 +94,7 @@ public class NotificationController {
     ) {
         List<RedisNotificationDto> notifications =
             notificationService.getUserNotificationsFromRedis(user.getUsername());
+
         return ResponseEntity.ok(ApiResponse.ok(notifications));
     }
 }
