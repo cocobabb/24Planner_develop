@@ -8,6 +8,7 @@ import com.example.p24zip.domain.schedule.dto.response.MonthScheduleListResponse
 import com.example.p24zip.domain.schedule.dto.response.ScheduleResponseDto;
 import com.example.p24zip.domain.schedule.entity.Schedule;
 import com.example.p24zip.domain.schedule.repository.ScheduleRepository;
+import com.example.p24zip.global.exception.CustomErrorCode;
 import com.example.p24zip.global.exception.CustomException;
 import com.example.p24zip.global.exception.ResourceNotFoundException;
 import java.time.LocalDate;
@@ -27,7 +28,7 @@ public class ScheduleService {
 
     // 할 일 생성
     @Transactional
-    public ScheduleResponseDto createSchedule(ScheduleRequestDto requestDto, Long movingPlanId){
+    public ScheduleResponseDto createSchedule(ScheduleRequestDto requestDto, Long movingPlanId) {
 
         isDateValid(requestDto);
 
@@ -40,7 +41,7 @@ public class ScheduleService {
     }
 
     // 할 일 월별 조회
-    public MonthScheduleListResponseDto getSchedulesInMonth(Long movingPlanId, YearMonth month){
+    public MonthScheduleListResponseDto getSchedulesInMonth(Long movingPlanId, YearMonth month) {
 
         LocalDate startDate = month.atDay(1);
         LocalDate endDate = month.atEndOfMonth();
@@ -55,7 +56,7 @@ public class ScheduleService {
     }
 
     // 할 일 날짜별 조회
-    public DayScheduleListResponseDto getSchedulesInDay(Long movingPlanId, LocalDate date){
+    public DayScheduleListResponseDto getSchedulesInDay(Long movingPlanId, LocalDate date) {
 
         List<Schedule> allSchedulesInDate
             = scheduleRepository.findAllByStartDate(movingPlanId, date);
@@ -68,7 +69,8 @@ public class ScheduleService {
 
     // 할 일 수정
     @Transactional
-    public ScheduleResponseDto updateSchedule(ScheduleRequestDto requestDto, Long scheduleId, Long movingPlanId){
+    public ScheduleResponseDto updateSchedule(ScheduleRequestDto requestDto, Long scheduleId,
+        Long movingPlanId) {
 
         isDateValid(requestDto);
 
@@ -84,7 +86,7 @@ public class ScheduleService {
 
     // 할 일 삭제
     @Transactional
-    public void deleteSchedule(Long scheduleId, Long movingPlanId){
+    public void deleteSchedule(Long scheduleId, Long movingPlanId) {
 
         Schedule schedule = scheduleRepository.findById(scheduleId)
             .orElseThrow(ResourceNotFoundException::new);
@@ -95,15 +97,15 @@ public class ScheduleService {
     }
 
     // 시작 날짜가 종료 날짜 이후인 경우
-    private void isDateValid(ScheduleRequestDto requestDto){
-        if(requestDto.getStartDate().isAfter(requestDto.getEndDate())){
-            throw new CustomException("INVALID_DATE", "시작 날짜는 종료 날짜보다 이전이어야 합니다.");
+    private void isDateValid(ScheduleRequestDto requestDto) {
+        if (requestDto.getStartDate().isAfter(requestDto.getEndDate())) {
+            throw new CustomException(CustomErrorCode.INVALID_DATE);
         }
     }
 
     // 이사 플랜 아이디와 할 일의 이사 플랜 아이디 매칭 여부 검증
-    private void isMovingPlanIdMatched(Long movingPlanId, Schedule schedule){
-        if(!schedule.getMovingPlan().getId().equals(movingPlanId)){
+    private void isMovingPlanIdMatched(Long movingPlanId, Schedule schedule) {
+        if (!schedule.getMovingPlan().getId().equals(movingPlanId)) {
             throw new ResourceNotFoundException();
         }
     }

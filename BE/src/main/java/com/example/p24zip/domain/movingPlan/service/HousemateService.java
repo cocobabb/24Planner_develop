@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.example.p24zip.global.exception.CustomErrorCode;
 
 @Service
 @Transactional(readOnly = true)
@@ -29,11 +30,10 @@ public class HousemateService {
     @Transactional
     public HousemateInvitationAcceptResponseDto acceptInvitation(Long movingPlanId, User invitee) {
         MovingPlan movingPlan = movingPlanRepository.findById(movingPlanId)
-            .orElseThrow(
-                () -> new CustomException("INVALID_INVITATION", "만료되었거나 유효하지 않은 초대 링크입니다."));
+            .orElseThrow(() -> new CustomException(CustomErrorCode.INVALID_INVITATION));
 
         if (housemateRepository.existsByUserAndMovingPlan(invitee, movingPlan)) {
-            throw new CustomException("ALREADY_REGISTERED", "이미 이 플랜의 동거인으로 등록되어 있습니다.");
+            throw new CustomException(CustomErrorCode.ALREADY_REGISTERED);
         }
 
         // 기존 Housemate 목록 조회

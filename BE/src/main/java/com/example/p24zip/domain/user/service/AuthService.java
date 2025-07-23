@@ -54,6 +54,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.example.p24zip.global.exception.CustomErrorCode;
 
 @Service
 @Transactional(readOnly = true)
@@ -94,7 +95,7 @@ public class AuthService {
         boolean checkUsername = checkExistsUsername(requestDto.getUsername());
 
         if (checkUsername) {
-            throw new CustomException("EXIST_EMAIL", "이미 사용중인 이메일입니다.");
+            throw new CustomException(CustomErrorCode.EXIST_EMAIL);
         }
         checkExistNickname(requestDto.getNickname());
 
@@ -123,13 +124,13 @@ public class AuthService {
                 redisTemplate.opsForValue().get(username + "_mail_createdAt"));
 
             if (!checkAccessTime.plusSeconds(5).isBefore(LocalDateTime.now())) {
-                throw new CustomException("TOOMANY_REQUEST", "5초안에 다시 요청했습니다.");
+                throw new CustomException(CustomErrorCode.TOOMANY_REQUEST);
             }
         }
 
         boolean checkUsername = checkExistsUsername(username);
         if (checkUsername) {
-            throw new CustomException("EXIST_EMAIL", "이미 사용중인 이메일입니다.");
+            throw new CustomException(CustomErrorCode.EXIST_EMAIL);
         }
 
         Random random = new Random();
@@ -152,18 +153,18 @@ public class AuthService {
         String code = requestDto.getCode();
 
         if (!redisTemplate.hasKey(username + "_mail")) {
-            throw new CustomException("BAD_REQUEST", "인증번호가 틀렸습니다.");
+            throw new CustomException(CustomErrorCode.BAD_REQUEST);
         }
         // -2: 시간 만료
         if (redisTemplate.getExpire(username + "_mail") != -2) {
             if (!code.equals(redisTemplate.opsForValue().get(username + "_mail"))) {
-                throw new CustomException("BAD_REQUEST", "인증번호가 틀렸습니다.");
+                throw new CustomException(CustomErrorCode.BAD_REQUEST);
             } else {
                 redisTemplate.delete(username + "_mail");
                 redisTemplate.delete(username + "_mail_createdAt");
             }
         } else {
-            throw new CustomException("TIME_OUT", "시간이 초과되었습니다.");
+            throw new CustomException(CustomErrorCode.TIME_OUT);
         }
 
     }
@@ -178,10 +179,10 @@ public class AuthService {
         boolean checkExistNickname = userRepository.existsByNickname(nickname);
 
         if (checkExistNickname) {
-            throw new CustomException("EXIST_NICKNAME", "이미 사용중인 닉네임입니다.");
+            throw new CustomException(CustomErrorCode.EXIST_NICKNAME);
         }
         if (!(nickname.length() >= 2 && nickname.length() <= 17)) {
-            throw new CustomException("BAD_REQUEST", "필수값이 누락되거나 형식이 올바르지 않습니다.");
+            throw new CustomException(CustomErrorCode.BAD_REQUEST);
         }
     }
 
@@ -195,10 +196,10 @@ public class AuthService {
         throws UnsupportedEncodingException, MessagingException {
         String username = requestDto.getUsername();
         User user = userRepository.findByUsername(username)
-            .orElseThrow(() -> new CustomException("NOT_EXIST_EMAIL", "존재하지 않는 이메일입니다."));
+            .orElseThrow(() -> new CustomException(CustomErrorCode.NOT_EXIST_EMAIL));
 
         if (user.getProvider() != null) {
-            throw new CustomException("SOCIAL_LOGIN", "소셜 로그인은 비밀번호 찾기를 진행할 수 없습니다.");
+            throw new CustomException(CustomErrorCode.SOCIAL_LOGIN);
         }
 
         if (redisTemplate.hasKey(username + "_tempToken")) {
@@ -206,7 +207,7 @@ public class AuthService {
                 redisTemplate.opsForValue().get(username + "_tempToken_createdAt"));
 
             if (!checkAccessTime.plusSeconds(5).isBefore(ZonedDateTime.now())) {
-                throw new CustomException("TOOMANY_REQUEST", "5초안에 다시 요청했습니다.");
+                throw new CustomException(CustomErrorCode.TOOMANY_REQUEST);
             }
         }
 
@@ -218,7 +219,7 @@ public class AuthService {
         redisTemplate.opsForValue()
             .set(createdAt, String.valueOf(ZonedDateTime.now()), 10, TimeUnit.MINUTES); // 생성시간
 
-        asyncService.sendFindPassword(username, tempJwt, mailAddress, origin);
+        asyncService.sendFindPassword(username, tempJwt, origin, mailAddress);
 
         ZonedDateTime date = ZonedDateTime.now().plusMinutes(2);
         String expiredAt = date.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
@@ -259,8 +260,7 @@ public class AuthService {
 
         // 소셜로그인 계정은 일반 로그인 제한
         if (user.getProvider() != null) {
-            throw new CustomException("SOCIAL_LOGIN_NEEDED",
-                "소셜 계정으로 가입된 유저입니다. 가입한 소셜 계정으로 로그인해주세요.");
+            throw new CustomException(CustomErrorCode.SOCIAL_LOGIN_NEEDED);
         }
 
         authenticationManager.authenticate(
@@ -329,7 +329,7 @@ public class AuthService {
         String nickname = requestDto.getNickname();
 
         if (userRepository.existsByNickname(nickname)) {
-            throw new CustomException("EXIST_NICKNAME", "이미 존재하는 닉네임입니다.");
+            throw new CustomException(CustomErrorCode.EXIST_NICKNAME);
         }
 
         user.setNickname(nickname);
