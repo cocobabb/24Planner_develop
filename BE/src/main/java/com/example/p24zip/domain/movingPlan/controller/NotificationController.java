@@ -1,10 +1,10 @@
 package com.example.p24zip.domain.movingPlan.controller;
 
-import com.example.p24zip.domain.movingPlan.dto.response.NotificationResponseDto;
-import com.example.p24zip.domain.movingPlan.dto.response.RedisNotificationDto;
 import com.example.p24zip.domain.movingPlan.service.NotificationService;
 import com.example.p24zip.domain.user.entity.User;
+import com.example.p24zip.global.notification.NotificationResponseDto;
 import com.example.p24zip.global.notification.SseEmitterPool;
+import com.example.p24zip.global.redis.RedisNotificationDto;
 import com.example.p24zip.global.response.ApiResponse;
 import java.util.List;
 import lombok.RequiredArgsConstructor;

@@ -1,5 +1,6 @@
-package com.example.p24zip.domain.movingPlan.dto.response;
+package com.example.p24zip.global.notification;
 
+import com.example.p24zip.global.redis.RedisNotificationDto;
 import java.time.ZonedDateTime;
 import lombok.Builder;
 import lombok.Getter;

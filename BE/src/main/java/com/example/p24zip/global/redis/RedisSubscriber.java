@@ -1,6 +1,5 @@
 package com.example.p24zip.global.redis;
 
-import com.example.p24zip.domain.movingPlan.dto.response.RedisNotificationDto;
 import com.example.p24zip.domain.movingPlan.repository.HousemateRepository;
 import com.example.p24zip.domain.movingPlan.repository.MovingPlanRepository;
 import com.example.p24zip.global.notification.SseEmitterPool;

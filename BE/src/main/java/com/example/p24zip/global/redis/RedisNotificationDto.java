@@ -1,4 +1,4 @@
-package com.example.p24zip.domain.movingPlan.dto.response;
+package com.example.p24zip.global.redis;
 
 import java.io.Serializable;
 import java.time.ZonedDateTime;
@@ -15,12 +15,11 @@ public class RedisNotificationDto implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private String id;
-    private String username;
+    private String username; // 알림을 받을 사용자
     private String type;
     private String message;
     private ZonedDateTime timestamp;
     private boolean read;
-    private String redisKey;
 
     @Builder
     public RedisNotificationDto(String username, String type, String message, String redisKey) {
@@ -30,7 +29,6 @@ public class RedisNotificationDto implements Serializable {
         this.message = message;
         this.timestamp = ZonedDateTime.now();
         this.read = false;
-        this.redisKey = redisKey;
     }
 
     // 알림 읽음 처리 메서드
