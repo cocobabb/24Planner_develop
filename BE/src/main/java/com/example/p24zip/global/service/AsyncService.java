@@ -1,5 +1,6 @@
 package com.example.p24zip.global.service;
 
+import com.example.p24zip.global.exception.ConnectMailException;
 import com.example.p24zip.global.exception.CustomErrorCode;
 import com.example.p24zip.global.exception.CustomException;
 import jakarta.mail.MessagingException;
@@ -51,7 +52,7 @@ public class AsyncService {
             log.error("[메일 전송 실패] username = {}", to, e);
             System.out.println("메일 전송 실패: " + e.getMessage());
             return CompletableFuture.failedFuture(
-                new CustomException(CustomErrorCode.EMAIL_SEND_FAIL));
+                new ConnectMailException(CustomErrorCode.EMAIL_SEND_FAIL));
 
         } catch (Exception e) {
             // 그 외 예상치 못한 오류

@@ -3,7 +3,6 @@ package com.example.p24zip.global.exception;
 import com.example.p24zip.domain.chat.dto.response.ChatsErrorResponseDto;
 import com.example.p24zip.global.response.ApiResponse;
 import java.util.NoSuchElementException;
-
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,9 +15,9 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.reactive.function.client.WebClientRequestException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
-import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 
 @RestControllerAdvice
@@ -33,10 +32,11 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiResponse<Void>> MethodArgumentNotValid(MethodArgumentNotValidException ex) {
+    public ResponseEntity<ApiResponse<Void>> MethodArgumentNotValid(
+        MethodArgumentNotValidException ex) {
         return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.error("BAD_REQUEST", "필수값이 누락되거나 형식이 올바르지 않습니다."));
+            .status(HttpStatus.BAD_REQUEST)
+            .body(ApiResponse.error("BAD_REQUEST", "필수값이 누락되거나 형식이 올바르지 않습니다."));
     }
 
     //    @ExceptionHandler(Exception.class)
@@ -56,15 +56,15 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(TokenException.class)
     public ResponseEntity<ApiResponse<Void>> Token(TokenException ex) {
         return ResponseEntity
-                .status(HttpStatus.UNAUTHORIZED)
-                .body(ApiResponse.error("INVALID_TOKEN", "토큰이 유효하지 않습니다."));
+            .status(HttpStatus.UNAUTHORIZED)
+            .body(ApiResponse.error("INVALID_TOKEN", "토큰이 유효하지 않습니다."));
     }
 
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ApiResponse<Void>> BadCredentials(BadCredentialsException ex) {
         return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.error("INVALID_CREDENTIALS", "이메일 또는 비밀번호가 올바르지 않습니다."));
+            .status(HttpStatus.BAD_REQUEST)
+            .body(ApiResponse.error("INVALID_CREDENTIALS", "이메일 또는 비밀번호가 올바르지 않습니다."));
     }
 
     @ExceptionHandler(GeocoderExceptionHandler.class)
@@ -78,7 +78,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> GeocoderConnectHandler(WebClientRequestException ex) {
         return ResponseEntity
             .status(HttpStatus.INTERNAL_SERVER_ERROR)
-            .body(ApiResponse.error("GEOCODER_API_CONNECT_ERROR","좌표 변경 API에서 연결 오류가 발생했습니다."));
+            .body(ApiResponse.error("GEOCODER_API_CONNECT_ERROR", "좌표 변경 API에서 연결 오류가 발생했습니다."));
     }
 
     @ExceptionHandler(WebClientResponseException.class)
@@ -87,29 +87,33 @@ public class GlobalExceptionHandler {
             .status(HttpStatus.INTERNAL_SERVER_ERROR)
             .body(ApiResponse.error("GEOCODER_API_CONNECT_ERROR", "좌표 변경 API에서 연결 오류가 발생했습니다."));
     }
+
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<ApiResponse<Void>> HttpMessageNotReadable(HttpMessageNotReadableException ex){
+    public ResponseEntity<ApiResponse<Void>> HttpMessageNotReadable(
+        HttpMessageNotReadableException ex) {
         return ResponseEntity
             .status(HttpStatus.BAD_REQUEST)
             .body(ApiResponse.error("BAD_REQUEST", "필수값이 누락되거나 형식이 올바르지 않습니다."));
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public ResponseEntity<ApiResponse<Void>> MethodArgumentTypeMismatch (MethodArgumentTypeMismatchException  ex){
+    public ResponseEntity<ApiResponse<Void>> MethodArgumentTypeMismatch(
+        MethodArgumentTypeMismatchException ex) {
         return ResponseEntity
             .status(HttpStatus.BAD_REQUEST)
             .body(ApiResponse.error("BAD_REQUEST", "입력 형식이 올바르지 않습니다."));
     }
 
     @ExceptionHandler(MissingServletRequestParameterException.class)
-    public ResponseEntity<ApiResponse<Void>> MissingServletRequestParameter (MissingServletRequestParameterException  ex) {
+    public ResponseEntity<ApiResponse<Void>> MissingServletRequestParameter(
+        MissingServletRequestParameterException ex) {
         return ResponseEntity
             .status(HttpStatus.BAD_REQUEST)
             .body(ApiResponse.error("BAD_REQUEST", "필수값이 누락되었습니다."));
     }
 
     @ExceptionHandler(NoSuchElementException.class)
-    public ResponseEntity<ApiResponse<Void>> NoExistId_handler (NoSuchElementException ex) {
+    public ResponseEntity<ApiResponse<Void>> NoExistId_handler(NoSuchElementException ex) {
         return ResponseEntity
             .status(HttpStatus.NOT_FOUND)
             .body(ApiResponse.error("NOT_FOUND", "존재하지 않는 id입니다."));
@@ -117,8 +121,17 @@ public class GlobalExceptionHandler {
 
     @MessageExceptionHandler(StompTokenException.class)
     @SendTo("/topic/{movingPlanId}/errors")
-    public ChatsErrorResponseDto normalChatExceptionHandler(StompTokenException e,  @DestinationVariable Long movingPlanId) {
-        return new ChatsErrorResponseDto("INVALID_TOKEN","토큰이 유효하지 않습니다.", e.getMessage());
+    public ChatsErrorResponseDto normalChatExceptionHandler(StompTokenException e,
+        @DestinationVariable Long movingPlanId) {
+        return new ChatsErrorResponseDto("INVALID_TOKEN", "토큰이 유효하지 않습니다.", e.getMessage());
     }
+
+    @ExceptionHandler(ConnectMailException.class)
+    public ResponseEntity<ApiResponse<Object>> handleMailException(ConnectMailException ex) {
+        return ResponseEntity
+            .status(HttpStatus.INTERNAL_SERVER_ERROR)  // 500
+            .body(ApiResponse.error(ex.getErrorCode(), ex.getMessage()));
+    }
+
 }
 
