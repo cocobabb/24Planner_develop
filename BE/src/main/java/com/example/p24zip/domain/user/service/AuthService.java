@@ -24,6 +24,7 @@ import com.example.p24zip.domain.user.dto.response.VerifyEmailDataResponseDto;
 import com.example.p24zip.domain.user.entity.Role;
 import com.example.p24zip.domain.user.entity.User;
 import com.example.p24zip.domain.user.repository.UserRepository;
+import com.example.p24zip.global.exception.ConnectMailException;
 import com.example.p24zip.global.exception.CustomErrorCode;
 import com.example.p24zip.global.exception.CustomException;
 import com.example.p24zip.global.exception.ResourceNotFoundException;
@@ -140,8 +141,10 @@ public class AuthService {
             Throwable cause = e.getCause();
             if (cause instanceof CustomException customEx) {
                 throw customEx;
+            } else if (cause instanceof ConnectMailException connectMailEx) {
+                throw connectMailEx;
             }
-            throw new CustomException(CustomErrorCode.EMAIL_SEND_FAIL);
+
         }
 
         ZonedDateTime expiredAt = saveCodeToRedis(username, codeNum);
@@ -231,8 +234,9 @@ public class AuthService {
             Throwable cause = e.getCause();
             if (cause instanceof CustomException customEx) {
                 throw customEx;
+            } else if (cause instanceof ConnectMailException connectMailEx) {
+                throw connectMailEx;
             }
-            throw new CustomException(CustomErrorCode.EMAIL_SEND_FAIL);
         }
 
         ZonedDateTime date = ZonedDateTime.now().plusMinutes(2);
