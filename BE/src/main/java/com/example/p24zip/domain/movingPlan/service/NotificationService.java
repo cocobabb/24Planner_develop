@@ -63,8 +63,8 @@ public class NotificationService {
      * 알림을 Redis 해시에 저장
      *
      * @return void
-     * @apiNote notifications:알림 받을 사용자 아이디+HashId(UUID로 만든 String) 를 key로  알림 받을 사용자 아이디, 어떤 메서드로
-     * 저장된 데이터인지 나타낼 type, 알림내용, 알림이 발생한 시간, 알림 읽음 여부, redisKey
+     * @apiNote "notifications:알림 받을 사용자 아이디"를 Key로 "UUID로 만든 String"를 Field로 {알림 받을 사용자 아이디, 어떤
+     * 메서드로 저장된 데이터인지 나타낼 type, 알림내용, 알림이 발생한 시간, 알림 읽음 여부}를 Value로 받음
      */
     public void saveNotificationToRedis(RedisNotificationDto notification) {
 

@@ -24,18 +24,17 @@ import com.example.p24zip.domain.user.dto.response.VerifyEmailDataResponseDto;
 import com.example.p24zip.domain.user.entity.Role;
 import com.example.p24zip.domain.user.entity.User;
 import com.example.p24zip.domain.user.repository.UserRepository;
+import com.example.p24zip.global.exception.CustomErrorCode;
 import com.example.p24zip.global.exception.CustomException;
 import com.example.p24zip.global.exception.ResourceNotFoundException;
 import com.example.p24zip.global.exception.TokenException;
 import com.example.p24zip.global.notification.SseEmitterPool;
 import com.example.p24zip.global.security.jwt.JwtTokenProvider;
 import com.example.p24zip.global.service.AsyncService;
-import jakarta.mail.MessagingException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
-import java.io.UnsupportedEncodingException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -44,6 +43,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -54,7 +54,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.example.p24zip.global.exception.CustomErrorCode;
 
 @Service
 @Transactional(readOnly = true)
@@ -113,8 +112,7 @@ public class AuthService {
      * @return 만료일 가진 responseDto
      **/
     @Transactional
-    public VerifyEmailDataResponseDto sendEmail(VerifyEmailRequestDto requestDto)
-        throws UnsupportedEncodingException, MessagingException {
+    public VerifyEmailDataResponseDto sendEmail(VerifyEmailRequestDto requestDto) {
 
         String username = requestDto.getUsername();
         System.out.println("현재 스레드: " + Thread.currentThread().getName());
@@ -136,7 +134,16 @@ public class AuthService {
         Random random = new Random();
         int codeNum = random.nextInt(9000) + 1000;
 
-        asyncService.sendSignupEmail(username, codeNum, mailAddress);
+        try {
+            asyncService.sendSignupEmail(username, codeNum, mailAddress).join();
+        } catch (CompletionException e) {
+            Throwable cause = e.getCause();
+            if (cause instanceof CustomException customEx) {
+                throw customEx;
+            }
+            throw new CustomException(CustomErrorCode.EMAIL_SEND_FAIL);
+        }
+
         ZonedDateTime expiredAt = saveCodeToRedis(username, codeNum);
 
         return VerifyEmailDataResponseDto.from(expiredAt);
@@ -192,8 +199,7 @@ public class AuthService {
      * @param requestDto username:email
      * @return null
      **/
-    public FindPasswordResponseDto findPassword(VerifyEmailRequestDto requestDto)
-        throws UnsupportedEncodingException, MessagingException {
+    public FindPasswordResponseDto findPassword(VerifyEmailRequestDto requestDto) {
         String username = requestDto.getUsername();
         User user = userRepository.findByUsername(username)
             .orElseThrow(() -> new CustomException(CustomErrorCode.NOT_EXIST_EMAIL));
@@ -219,7 +225,15 @@ public class AuthService {
         redisTemplate.opsForValue()
             .set(createdAt, String.valueOf(ZonedDateTime.now()), 10, TimeUnit.MINUTES); // 생성시간
 
-        asyncService.sendFindPassword(username, tempJwt, origin, mailAddress);
+        try {
+            asyncService.sendFindPassword(username, tempJwt, origin, mailAddress).join();
+        } catch (CompletionException e) {
+            Throwable cause = e.getCause();
+            if (cause instanceof CustomException customEx) {
+                throw customEx;
+            }
+            throw new CustomException(CustomErrorCode.EMAIL_SEND_FAIL);
+        }
 
         ZonedDateTime date = ZonedDateTime.now().plusMinutes(2);
         String expiredAt = date.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
