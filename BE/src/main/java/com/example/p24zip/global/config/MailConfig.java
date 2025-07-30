@@ -1,11 +1,12 @@
 package com.example.p24zip.global.config;
 
-import org.simplejavamail.api.mailer.Mailer;
-import org.simplejavamail.api.mailer.config.TransportStrategy;
-import org.simplejavamail.mailer.MailerBuilder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.JavaMailSenderImpl;
+
+import java.util.Properties;
 
 @Configuration
 public class MailConfig {
@@ -17,12 +18,28 @@ public class MailConfig {
     private String mailpassword;
 
     @Bean
-    public Mailer mailer() {
-        return MailerBuilder
-            .withSMTPServer("smtp.gmail.com", 587, mailusername, mailpassword)
-            .withTransportStrategy(TransportStrategy.SMTP_TLS)
-            .withSessionTimeout(5000)
-            .async() // 내부 큐 사용 가능하지만, 우리는 외부에서 제어할 예정
-            .buildMailer();
+    public JavaMailSender javaMailService() {
+        JavaMailSenderImpl javaMailSender = new JavaMailSenderImpl();
+
+        javaMailSender.setHost("smtp.gmail.com");
+        javaMailSender.setUsername(mailusername);
+        javaMailSender.setPassword(mailpassword);
+
+        javaMailSender.setPort(465);
+
+        javaMailSender.setJavaMailProperties(getMailProperties());
+
+        return javaMailSender;
+    }
+
+    private Properties getMailProperties() {
+        Properties properties = new Properties();
+        properties.setProperty("mail.transport.protocol", "smtp");
+        properties.setProperty("mail.smtp.auth", "true");
+        properties.setProperty("mail.smtp.starttls.enable", "true");
+        properties.setProperty("mail.debug", "true");
+        properties.setProperty("mail.smtp.ssl.trust","smtp.gmail.com");
+        properties.setProperty("mail.smtp.ssl.enable","true");
+        return properties;
     }
 }

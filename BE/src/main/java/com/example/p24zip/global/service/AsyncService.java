@@ -3,13 +3,16 @@ package com.example.p24zip.global.service;
 import com.example.p24zip.global.exception.ConnectMailException;
 import com.example.p24zip.global.exception.CustomErrorCode;
 import com.example.p24zip.global.exception.CustomException;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.InternetAddress;
+import jakarta.mail.internet.MimeMessage;
+import java.io.UnsupportedEncodingException;
 import java.util.concurrent.CompletableFuture;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.simplejavamail.MailException;
-import org.simplejavamail.api.email.Email;
-import org.simplejavamail.api.mailer.Mailer;
-import org.simplejavamail.email.EmailBuilder;
+import org.springframework.mail.MailException;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -19,7 +22,7 @@ import org.springframework.stereotype.Service;
 
 public class AsyncService {
 
-    private final Mailer mailSender; // 메일 보내는 객체
+    private final JavaMailSender mailSender; // 메일 보내는 객체
 
     @Async("customExecutor")
     public CompletableFuture<Void> sendMail(String to, String subject, String htmlContent,
@@ -27,16 +30,22 @@ public class AsyncService {
         String mailAddress) {
 
         try {
-            Email email = EmailBuilder.startingBlank()
-                .from(fromName, mailAddress)
-                .to(to)
-                .withSubject(subject)
-                .withHTMLText(htmlContent)
-                .buildEmail();
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-            mailSender.sendMail(email);
-            log.info("[메일 발송 성공] to={}, subject={}", to, subject);
+            helper.setFrom(new InternetAddress(mailAddress, fromName));
+            helper.setTo(to);
+            helper.setSubject(subject);
+            helper.setText(htmlContent, true);
+
+            mailSender.send(message);
             return CompletableFuture.completedFuture(null);
+
+        } catch (MessagingException | UnsupportedEncodingException e) {
+            log.error("[이메일 작성 오류] username = {}", to, e);
+            System.out.println("이메일 작성 오류: " + e.getMessage());
+            return CompletableFuture.failedFuture(
+                new CustomException(CustomErrorCode.EMAIL_SEND_FAIL));
 
         } catch (MailException e) {
             // 메일 서버 오류 (SMTP 접속 실패, 인증 실패 등)

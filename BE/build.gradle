@@ -45,11 +45,9 @@ dependencies {
     // dockercompose 자동실행
     developmentOnly "org.springframework.boot:spring-boot-docker-compose"
 
-    // reuse SMTP connection
-    implementation 'org.simplejavamail:simple-java-mail:8.0.0'
-    implementation 'com.sun.mail:jakarta.mail:2.0.1'
-    implementation 'jakarta.activation:jakarta.activation-api:2.1.1'
-
+    // SMTP
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
+    implementation 'com.sun.mail:jakarta.mail:2.0.1'  // 최신 jakarta.mail 추가
 
     // WebFlux 포함 (WebClient 사용 가능)
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
