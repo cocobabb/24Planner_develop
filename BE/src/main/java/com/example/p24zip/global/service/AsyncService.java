@@ -83,7 +83,6 @@ public class AsyncService {
         });
     }
 
-    // MailConfig를 사용한 회원가입 이메일 전송
     @Qualifier("customExecutor")
     public CompletableFuture<Object> sendSignupEmail(String to, int code, String mailAddress) {
         String subject = "이사모음.zip 회원가입 인증 메일입니다.";
@@ -91,7 +90,6 @@ public class AsyncService {
         return sendEmail(to, subject, content, mailAddress);
     }
 
-    // MailConfig를 사용한 비밀번호 찾기 이메일 전송
     @Qualifier("customExecutor")
     public CompletableFuture<Object> sendFindPassword(String to, String token, String origin,
         String mailAddress) {

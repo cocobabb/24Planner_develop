@@ -28,11 +28,13 @@ public class AsyncConfig {
         };
 
         return new ThreadPoolExecutor(
-            3, 5,
-            60L, TimeUnit.SECONDS,
-            new LinkedBlockingQueue<>(100),
+            3,
+            5,
+            60L, // 스레드 keepAliveTime 60초
+            TimeUnit.SECONDS,
+            new LinkedBlockingQueue<>(100), // 최대 100개 작업 대기
             customFactory,
-            new ThreadPoolExecutor.AbortPolicy()
+            new ThreadPoolExecutor.AbortPolicy() // 초과 시 예외 발생
         );
     }
 
@@ -40,13 +42,15 @@ public class AsyncConfig {
     @Bean(name = "mailTimeoutExecutor")
     public ExecutorService mailTimeoutExecutor() {
         return new ThreadPoolExecutor(
-            0, 30,
-            60L, TimeUnit.SECONDS,
+            0,
+            30,
+            60L,
+            TimeUnit.SECONDS,
             new SynchronousQueue<>(), // 큐 없이 바로 실행 or reject
             Executors.defaultThreadFactory(),
             new ThreadPoolExecutor.AbortPolicy()
         );
     }
 
-    
+
 }
