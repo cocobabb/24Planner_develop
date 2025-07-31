@@ -22,7 +22,7 @@ public class RedisNotificationDto implements Serializable {
     private boolean read;
 
     @Builder
-    public RedisNotificationDto(String username, String type, String message, String redisKey) {
+    public RedisNotificationDto(String username, String type, String message) {
         this.id = java.util.UUID.randomUUID().toString();
         this.username = username;
         this.type = type;
