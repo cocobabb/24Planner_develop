@@ -25,7 +25,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class AsyncService {
 
-    private static final long MAIL_TIMEOUT_SECONDS = 2;
+    private static final long MAIL_TIMEOUT_SECONDS = 4;
 
     private final JavaMailSender mailSender;
 
