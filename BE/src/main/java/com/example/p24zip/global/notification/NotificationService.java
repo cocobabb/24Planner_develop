@@ -1,8 +1,7 @@
-package com.example.p24zip.domain.movingPlan.service;
+package com.example.p24zip.global.notification;
 
 import com.example.p24zip.domain.movingPlan.dto.response.HousemateNotificationDto;
 import com.example.p24zip.domain.user.entity.User;
-import com.example.p24zip.global.notification.NotificationResponseDto;
 import com.example.p24zip.global.redis.RedisNotificationDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
