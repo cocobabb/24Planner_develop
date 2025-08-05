@@ -32,17 +32,18 @@ export default function Chat() {
   const sendButtonBox =
     'cursor-pointer w-[80px] h-10 border-2 rounded-xl text-black hover:bg-white hover:text-primary px-3 ml-3';
 
-  useEffect(() => {
-    async function fetchChatList() {
-      try {
-        const response = await chatApi.chatlist(movingPlanId);
-        setMessages(response.data.data.chats);
-      } catch (error) {
-        if (error.response.data.code == 'NOT_FOUND') {
-          navigate('/not-found');
-        }
+  async function fetchChatList() {
+    try {
+      const response = await chatApi.chatlist(movingPlanId);
+      setMessages(response.data.data.chats);
+    } catch (error) {
+      if (error.response.data.code == 'NOT_FOUND') {
+        navigate('/not-found');
       }
     }
+  }
+
+  useEffect(() => {
     fetchChatList();
 
     const chaturl = import.meta.env.VITE_CHAT_URL;
@@ -87,8 +88,26 @@ export default function Chat() {
   }, []);
 
   useEffect(() => {
-    // messages가 변경될 때마다 스크롤을 맨 아래로 이동
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    console.log(messages);
+    const lastMessage = messages[messages.length - 1];
+    console.log(lastMessage);
+
+    // 마지막 읽은 메시지 저장
+    const saveLastReadMessage = async () => {
+      try {
+        await chatApi.saveLastCursor(movingPlanId, lastMessage.messageId);
+
+        // 저장이 끝나면 채팅 목록 다시 조회
+        // fetchChatList(); // 무한루프 돌음 어떻게 해야 자동으로 이 메서드를 실행할까...
+      } catch (error) {
+        console.error('마지막 읽은 메시지 저장 실패:', error);
+      }
+    };
+
+    saveLastReadMessage(lastMessage);
+
+    // 스크롤 맨 아래로
+    // messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
   const textinput = (e) => {
@@ -160,7 +179,7 @@ export default function Chat() {
                 ) : (
                   <div className="w-full flex flex-col items-center my-5">
                     <div className="">{createDay}</div>
-                    <hr className='w-1/4 mt-2 border-gray-400'/>
+                    <hr className="w-1/4 mt-2 border-gray-400" />
                   </div>
                 )}
 

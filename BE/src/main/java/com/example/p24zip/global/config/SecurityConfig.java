@@ -64,6 +64,7 @@ public class SecurityConfig {
                 .requestMatchers("/swagger-ui/**", "swagger-ui.html", "/api-docs/**").permitAll()
                 .requestMatchers("/plans/invitations/validate").permitAll()
                 .requestMatchers("/notifications/**").permitAll()
+                .requestMatchers("/chats/**").permitAll()
                 .anyRequest().authenticated()
             )
             .oauth2Login(oauth2 -> oauth2

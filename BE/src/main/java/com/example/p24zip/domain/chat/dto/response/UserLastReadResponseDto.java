@@ -1,6 +1,7 @@
 package com.example.p24zip.domain.chat.dto.response;
 
 import com.example.p24zip.domain.chat.entity.Chat;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -22,7 +23,7 @@ public class UserLastReadResponseDto {
         this.movingPlanId = chat.getMovingPlan().getId();
         this.chatMessage = chat.getText();
         this.writer = chat.getUser().getNickname();
-        this.timestamp = ZonedDateTime.from(chat.getCreatedAt());
+        this.timestamp = ZonedDateTime.from(chat.getCreatedAt().atZone(ZoneId.of("Asia/Seoul")));
         this.reader = reader;
     }
 

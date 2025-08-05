@@ -1,6 +1,8 @@
 package com.example.p24zip.global.redis;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import lombok.Builder;
 import lombok.Getter;
@@ -22,12 +24,13 @@ public class RedisChatDto implements Serializable {
 
 
     @Builder
-    public RedisChatDto(Long messageId, Long movingPlanId, String chatMessage, String writer) {
+    public RedisChatDto(Long messageId, Long movingPlanId, String chatMessage, String writer,
+        LocalDateTime timestamp) {
         this.messageId = messageId;
         this.movingPlanId = movingPlanId;
         this.chatMessage = chatMessage;
         this.writer = writer;
-        this.timestamp = ZonedDateTime.now();
+        this.timestamp = timestamp.atZone(ZoneId.of("Asia/Seoul"));
     }
 
 }

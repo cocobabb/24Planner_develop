@@ -73,6 +73,7 @@ public class ChatController {
 
         movingPlanValidator.validateMovingPlanAccess(movingPlanId, user);
 
+        System.out.println("controller - saveLastCursorToRedis: " + messageId);
         chatService.saveLastCursorToRedis(movingPlanId, user, messageId);
 
     }
