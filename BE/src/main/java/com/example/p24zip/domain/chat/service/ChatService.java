@@ -18,7 +18,6 @@ import com.example.p24zip.global.validator.MovingPlanValidator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import java.time.Duration;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.List;
@@ -73,7 +72,7 @@ public class ChatService {
             .timestamp(chat.getCreatedAt())
             .build();
         // 최근 채팅 기록은 Redis 통해 불러오기 위해 Redis 해시에 따로 저장
-        saveChatToRedis(redisChatDto);
+//        saveChatToRedis(redisChatDto);
 
         DateTimeFormatter formatterTime = DateTimeFormatter.ofPattern("HH:mm");
         String createTime = chat.getCreatedAt().format(formatterTime);
@@ -109,43 +108,49 @@ public class ChatService {
         }
 
         // Redis에 최근 3일간의 메세지 보관되어 있으면 RDB가 아닌 레디스 데이터로 가져오기
-        List<RedisChatDto> chat3daysAgo = getMessagesFromRedis(movingPlanId);
+//        List<RedisChatDto> chat3daysAgo = getMessagesFromRedis(movingPlanId);
 
         List<MessageResponseDto> chatList;
-        if (chat3daysAgo != null && !chat3daysAgo.isEmpty()) {
-            chatList =
-                chat3daysAgo.stream()
-                    .map(chat -> MessageResponseDto.from(
-                        chat.getMessageId(),
-                        chat.getChatMessage(),
-                        chat.getWriter(),
-                        chat.getTimestamp().withZoneSameInstant(ZoneId.of("Asia/Seoul"))
-                            .format(formatterTime),
-                        chat.getTimestamp().withZoneSameInstant(ZoneId.of("Asia/Seoul"))
-                            .format(formatterDay)))
-                    .toList();
-            System.out.println("Redis 데이터 출력: 3일전에 채팅방 방문");
-        } else {
-            Pageable pageable = PageRequest.of(0, size, Sort.by(Direction.DESC, "id"));
+//        if (chat3daysAgo != null && !chat3daysAgo.isEmpty()) {
+//            chatList =
+//                chat3daysAgo.stream()
+//                    .map(chat -> MessageResponseDto.from(
+//                        chat.getMessageId(),
+//                        chat.getChatMessage(),
+//                        chat.getWriter(),
+//                        chat.getTimestamp().withZoneSameInstant(ZoneId.of("Asia/Seoul"))
+//                            .format(formatterTime),
+//                        chat.getTimestamp().withZoneSameInstant(ZoneId.of("Asia/Seoul"))
+//                            .format(formatterDay)))
+//                    .toList();
+//            System.out.println("Redis 데이터 출력: 3일전에 채팅방 방문");
+//        }
+//        else {
+        Pageable pageable = PageRequest.of(0, size, Sort.by(Direction.DESC, "id"));
 
-            List<Chat> chats;
-            if (messageId == 0L) {
-                chats = chatRepository.findRecentChats(movingPlanId, pageable);
-            } else {
-                chats = chatRepository.findChatsAfterId(movingPlanId, messageId, pageable);
+        List<Chat> chats;
+        if (messageId == 0L) {
+            chats = chatRepository.findRecentChats(movingPlanId, pageable);
+        } else {
+            chats = chatRepository.findChatsAfterId(movingPlanId, messageId, pageable);
+
+            // 비어있으면 이전 메세지들 보여주기
+            if (chats.isEmpty()) {
+                chats = chatRepository.findChatsAfterId(movingPlanId, messageId - size, pageable);
             }
-            chatList =
-                chats.stream()
-                    .map(chat -> MessageResponseDto.from(
-                        chat.getId(),
-                        chat.getText(),
-                        chat.getUser().getNickname(),
-                        chat.getCreatedAt().format(formatterTime),
-                        chat.getCreatedAt().format(formatterDay)))
-                    .sorted(Comparator.comparing(MessageResponseDto::getMessageId)) // 아이디 오름차순 정렬
-                    .toList();
-            System.out.println("MySQL 데이터 출력: 3일 지난 후 채팅방 방문");
         }
+        chatList =
+            chats.stream()
+                .map(chat -> MessageResponseDto.from(
+                    chat.getId(),
+                    chat.getText(),
+                    chat.getUser().getNickname(),
+                    chat.getCreatedAt().format(formatterTime),
+                    chat.getCreatedAt().format(formatterDay)))
+                .sorted(Comparator.comparing(MessageResponseDto::getMessageId)) // 아이디 오름차순 정렬
+                .toList();
+        System.out.println("MySQL 데이터 출력: 3일 지난 후 채팅방 방문");
+//        }
         return ChatsResponseDto.from(chatList);
     }
 
