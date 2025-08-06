@@ -12,12 +12,14 @@ export default function Chat() {
   const [stompClient, setStompClient] = useState(null);
   const [messages, setMessages] = useState([]);
   const [inputmessage, setInputmessage] = useState({ text: '' });
+  const [lastReadMessageId, setLastReadMessageId] = useState(null);
 
   const messagesEndRef = useRef(null);
-  const lastSavedMessageIdRef = useRef(null);
-  const chatBoxRef = useRef(null); // chattingBox용 ref
+  // messageId별 DOM 참조를 저장
+  const messageRefs = useRef({});
 
   const navigate = useNavigate();
+
   const storeNickname = useSelector((state) => state.auth.nickname);
 
   const chattingName = 'self-start text-xl ml-2 mb-2';
@@ -37,6 +39,7 @@ export default function Chat() {
     try {
       const response = await chatApi.chatlist(movingPlanId);
       setMessages(response.data.data.chats);
+      setLastReadMessageId(response.data.data.lastReadMessageId);
     } catch (error) {
       if (error.response.data.code == 'NOT_FOUND') {
         navigate('/not-found');
@@ -88,40 +91,30 @@ export default function Chat() {
     };
   }, []);
 
-  // 스크롤하여 마지막 메세지에 근접하면 마지막 messageId 저장
   useEffect(() => {
-    const chatBox = chatBoxRef.current;
-    if (!chatBox) return;
+    console.log(messages);
+    const lastMessage = messages[messages.length - 1];
+    console.log(lastMessage);
 
-    const handleScroll = () => {
-      const { scrollTop, scrollHeight, clientHeight } = chatBox;
+    // 마지막 읽은 메시지 저장
+    const saveLastReadMessage = async () => {
+      try {
+        await chatApi.saveLastCursor(movingPlanId, lastMessage.messageId);
 
-      // 스크롤이 하단 100px 이내일 때
-      if (scrollHeight - scrollTop - clientHeight < 100) {
-        if (!messages || messages.length === 0) return;
-
-        const lastMessage = messages[messages.length - 1];
-
-        if (lastSavedMessageIdRef.current === lastMessage.messageId) return;
-
-        const saveLastReadMessage = async () => {
-          try {
-            await chatApi.saveLastCursor(movingPlanId, lastMessage.messageId);
-            lastSavedMessageIdRef.current = lastMessage.messageId;
-          } catch (error) {
-            console.error('마지막 읽은 메시지 저장 실패:', error);
-          }
-        };
-
-        saveLastReadMessage();
+        // 저장이 끝나면 채팅 목록 다시 조회
+        // fetchChatList(); // 무한루프 돌음 어떻게 해야 자동으로 이 메서드를 실행할까... => 현재 상황: 새로고침하면 다음 메세지들 보임
+      } catch (error) {
+        // console.error('마지막 읽은 메시지 저장 실패:', error);
       }
     };
 
-    chatBox.addEventListener('scroll', handleScroll);
+    saveLastReadMessage(lastMessage);
 
-    return () => {
-      chatBox.removeEventListener('scroll', handleScroll);
-    };
+    // 위치 마지막으로 읽은 메세지id 부터
+    const target = messageRefs.current[lastReadMessageId - 1];
+    if (target) {
+      target.scrollIntoView({ block: 'center' });
+    }
   }, [messages]);
 
   const textinput = (e) => {
@@ -167,65 +160,66 @@ export default function Chat() {
   };
 
   return (
-    <div className="mx-auto my-10 max-w-200">
-      <div className="flex justify-between">
-        <div className={chattingName}>채팅방</div>
-        <div className={chattingDelete} onClick={chatdelete}>
-          채팅 삭제
+    <>
+      <div className="mx-auto my-10 max-w-200">
+        <div className="flex justify-between">
+          <div className={chattingName}>채팅방</div>
+          <div className={chattingDelete} onClick={chatdelete}>
+            채팅 삭제
+          </div>
         </div>
-      </div>
+        <div className={chattingBox}>
+          {messages.map((message, index) => {
+            const { nickname, text, createTime, createDay } = message;
+            // 이전 값
+            const previousMessage = index === 0 ? '' : messages[index - 1];
 
-      {/* chatBoxRef 연결 */}
-      <div className={chattingBox} ref={chatBoxRef}>
-        {messages.map((message, index) => {
-          const { nickname, text, createTime, createDay } = message;
-          // 이전 값
-          const previousMessage = index === 0 ? '' : messages[index - 1];
-          const isOwnMessage = nickname === storeNickname;
+            const isOwnMessage = nickname === storeNickname;
 
-          return (
-            <div
-              className={`w-full mb-3 flex flex-col ${isOwnMessage ? 'items-end' : 'items-start'}`}
-              key={index}
-            >
-              {previousMessage.createDay === createDay ? (
-                <></>
-              ) : (
-                <div className="w-full flex flex-col items-center my-5">
-                  <div className="">{createDay}</div>
-                  <hr className="w-1/4 mt-2 border-gray-400" />
-                </div>
-              )}
-
-              {previousMessage.nickname === nickname &&
-              previousMessage.createTime === createTime ? (
-                <></>
-              ) : (
-                <div className={`${isOwnMessage ? 'mr-1' : 'ml-1'} mb-1`}>{nickname}</div>
-              )}
-              <div className="flex items-end">
-                {isOwnMessage ? (
-                  <>
-                    <div className={myTimeStyle}>{createTime}</div>
-                    <div className={myTextStyle}>{text}</div>
-                  </>
+            return (
+              <div
+                className={`w-full mb-3 flex flex-col ${isOwnMessage ? 'items-end' : 'items-start'}`}
+                key={index}
+                ref={(el) => (messageRefs.current[lastReadMessageId] = el)} // 각 messageId별 ref 저장
+              >
+                {previousMessage.createDay === createDay ? (
+                  <></>
                 ) : (
-                  <>
-                    <div className={otherTextStyle}>{text}</div>
-                    <div className={otherTimeStyle}>{createTime}</div>
-                  </>
+                  <div className="w-full flex flex-col items-center my-5">
+                    <div className="">{createDay}</div>
+                    <hr className="w-1/4 mt-2 border-gray-400" />
+                  </div>
                 )}
-              </div>
-            </div>
-          );
-        })}
-        <div ref={messagesEndRef} />
-      </div>
 
-      <form className="flex w-full" onSubmit={sendMessage}>
-        <input className={sendTextBox} onChange={textinput} value={inputmessage.text} />
-        <button className={sendButtonBox}>보내기</button>
-      </form>
-    </div>
+                {previousMessage.nickname === nickname &&
+                previousMessage.createTime === createTime ? (
+                  <></>
+                ) : (
+                  <div className={`${isOwnMessage ? 'mr-1' : 'ml-1'} mb-1`}>{nickname}</div>
+                )}
+                <div className="flex items-end">
+                  {isOwnMessage ? (
+                    <>
+                      <div className={myTimeStyle}>{createTime}</div>
+                      <div className={myTextStyle}>{text}</div>
+                    </>
+                  ) : (
+                    <>
+                      <div className={otherTextStyle}>{text}</div>
+                      <div className={otherTimeStyle}>{createTime}</div>
+                    </>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+          <div ref={messagesEndRef} />
+        </div>
+        <form className="flex w-full" onSubmit={sendMessage}>
+          <input className={sendTextBox} onChange={textinput} value={inputmessage.text} />
+          <button className={sendButtonBox}>보내기</button>
+        </form>
+      </div>
+    </>
   );
 }

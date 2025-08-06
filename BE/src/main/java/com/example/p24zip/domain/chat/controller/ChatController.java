@@ -69,7 +69,7 @@ public class ChatController {
     @PostMapping("/chats/{movingPlanId}/lastCursor")
     public void saveLastCursorToRedis(
         @PathVariable Long movingPlanId, @AuthenticationPrincipal User user,
-        @RequestParam Long messageId) {
+        @RequestParam(defaultValue = "0L") Long messageId) {
 
         movingPlanValidator.validateMovingPlanAccess(movingPlanId, user);
 

@@ -14,22 +14,36 @@ public interface ChatRepository extends JpaRepository<Chat, Long> {
     @Query("""
             SELECT c FROM Chat c
             WHERE c.movingPlan.id = :movingPlanId
-              AND c.id > :messageId
+              AND c.id >= :messageId
+            ORDER BY c.id ASC
         """)
     List<Chat> findChatsAfterId(
         @Param("movingPlanId") Long movingPlanId,
         @Param("messageId") Long messageId,
         Pageable pageable);
 
-    // Cursor에 messageId 없을 경우 처음 부터 size 50 만큼 채팅 데이터 가져오기
+    // Cursor messageId 기준 이전 메세지들 가져옴
     @Query("""
             SELECT c FROM Chat c
             WHERE c.movingPlan.id = :movingPlanId
-            ORDER BY c.id ASC
+              AND c.id > :firstMessageId AND c.id < :messageId
+        """)
+    List<Chat> findChatsBeforeId(
+        @Param("movingPlanId") Long movingPlanId,
+        @Param("firstMessageId") Long firstMessageId,
+        @Param("messageId") Long messageId,
+        Pageable pageable);
+
+    // messageId 없을 경우 가장 최신 메세지만 가져오기
+    @Query("""
+            SELECT c FROM Chat c
+            WHERE c.movingPlan.id = :movingPlanId
+            ORDER BY c.id DESC
         """)
     List<Chat> findRecentChats(
         @Param("movingPlanId") Long movingPlanId,
         Pageable pageable);
+
 
     @Modifying
     @Query("""
@@ -41,4 +55,10 @@ public interface ChatRepository extends JpaRepository<Chat, Long> {
 
 
     List<Chat> findByMovingPlanId(Long movingPlanId);
+
+    @Query("""
+        SELECT c FROM Chat c
+        WHERE c.id = :messageId
+        """)
+    Chat findByMessageId(@Param("messageId") Long messageId);
 }
