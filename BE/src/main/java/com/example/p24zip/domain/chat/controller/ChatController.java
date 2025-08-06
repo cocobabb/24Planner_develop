@@ -50,7 +50,7 @@ public class ChatController {
         return chatService.Chatting(movingPlanId, requestDto, tokenUsername);
     }
 
-    @GetMapping("/chats/{movingPlanId}/scroll")
+    @GetMapping("/chats/{movingPlanId}")
     public ResponseEntity<ApiResponse<ChatsResponseDto>> readChats(@PathVariable Long movingPlanId,
         @AuthenticationPrincipal User user,
         @RequestParam(required = false, defaultValue = "50") int size) {
@@ -75,7 +75,23 @@ public class ChatController {
 
         System.out.println("controller - saveLastCursorToRedis: " + messageId);
         chatService.saveLastCursorToRedis(movingPlanId, user, messageId);
+    }
 
+
+    @GetMapping("/chats/{movingPlanId}/lastCursor/scroll")
+    public ResponseEntity<ApiResponse<ChatsResponseDto>> getPreviousMessages(
+        @PathVariable Long movingPlanId, @AuthenticationPrincipal User user,
+        @RequestParam(value = "messageId") Long messageId) {
+
+        movingPlanValidator.validateMovingPlanAccess(movingPlanId, user);
+
+        System.out.println("controller - getPreviousMessages: " + messageId);
+
+        return ResponseEntity.ok(
+            ApiResponse.ok("OK",
+                "댓글 조회에 성공했습니다.",
+                chatService.getPreviousMessages(movingPlanId, user, messageId))
+        );
     }
 
     // 일종의 채팅방 폭파(모든 사용자의 채팅방에서 채팅 내용 사라짐) => 이사계획 주인만 삭제 가능하고 각 채팅 메세지 삭제는 없음

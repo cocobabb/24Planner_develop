@@ -26,11 +26,11 @@ public interface ChatRepository extends JpaRepository<Chat, Long> {
     @Query("""
             SELECT c FROM Chat c
             WHERE c.movingPlan.id = :movingPlanId
-              AND c.id > :firstMessageId AND c.id < :messageId
+              AND c.id < :messageId
+            ORDER BY c.id DESC
         """)
     List<Chat> findChatsBeforeId(
         @Param("movingPlanId") Long movingPlanId,
-        @Param("firstMessageId") Long firstMessageId,
         @Param("messageId") Long messageId,
         Pageable pageable);
 
@@ -54,11 +54,15 @@ public interface ChatRepository extends JpaRepository<Chat, Long> {
     void deleteChattingPlan(@Param("movingPlanId") Long movingPlanId);
 
 
-    List<Chat> findByMovingPlanId(Long movingPlanId);
-
     @Query("""
         SELECT c FROM Chat c
         WHERE c.id = :messageId
         """)
     Chat findByMessageId(@Param("messageId") Long messageId);
+
+    @Query("""
+        SELECT c FROM Chat c
+        WHERE c.user.nickname LIKE :writer
+        """)
+    String getNickname(@Param("writer") String writer);
 }

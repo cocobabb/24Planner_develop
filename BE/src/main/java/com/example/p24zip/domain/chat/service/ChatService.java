@@ -10,6 +10,8 @@ import com.example.p24zip.domain.movingPlan.entity.MovingPlan;
 import com.example.p24zip.domain.movingPlan.repository.MovingPlanRepository;
 import com.example.p24zip.domain.user.entity.User;
 import com.example.p24zip.domain.user.repository.UserRepository;
+import com.example.p24zip.global.exception.CustomErrorCode;
+import com.example.p24zip.global.exception.CustomException;
 import com.example.p24zip.global.exception.ResourceNotFoundException;
 import com.example.p24zip.global.redis.RedisChatDto;
 import com.example.p24zip.global.validator.MovingPlanValidator;
@@ -21,6 +23,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
@@ -68,7 +71,7 @@ public class ChatService {
             .messageId(chat.getId())
             .movingPlanId(movingPlanId)
             .chatMessage(requestDto.getText())
-            .writer(user)
+            .writer(user.getNickname())
             .timestamp(chat.getCreatedAt())
             .build();
         // 최근 채팅 기록은 Redis 통해 불러오기 위해 Redis 해시에 따로 저장
@@ -94,47 +97,50 @@ public class ChatService {
         movingPlanRepository.findById(movingPlanId)
             .orElseThrow(() -> new ResourceNotFoundException());
 
-        // 사용자가 마지막으로 읽은 messageId
-        Long lastReadMessageId = 0L;
-
         String key = String.format(REDIS_HASH_KEY_LAST_CURSOR, movingPlanId, user.getUsername());
-        UserLastReadResponseDto lastRead = readMessageCursor(key, user, lastReadMessageId);
-        // 처음 들어오는 사용자가 아닌 기존의 사용자인 경우
-        if (lastRead != null) {
-            lastReadMessageId = lastRead.getMessageId();
-        }
 
-        // Redis에 최근 3일간의 메세지 보관되어 있으면 RDB가 아닌 레디스 데이터로 가져오기
-//        List<RedisChatDto> chat3daysAgo = getMessagesFromRedis(movingPlanId);
-
-        List<MessageResponseDto> chatList;
-//        if (chat3daysAgo != null && !chat3daysAgo.isEmpty()) {
-//            chatList = changeListToMessageResponseDto(chat3daysAgo);
-//            System.out.println("Redis 데이터 출력: 3일전에 채팅방 방문");
-//        }
-//        else {
-
+        Long lastReadMessageId = 0L;
         List<Chat> chats;
-        // 메세지 보여주는 범위 설정, 후에 들어온 사람은 이전의 메세지를 볼 수 없다)
-        if (lastReadMessageId == 0L) {
-            Pageable pageable = PageRequest.of(0, 1, Sort.by(Direction.DESC, "id"));
-            chats = chatRepository.findRecentChats(movingPlanId, pageable);
-        } else {
-            Pageable pageable = PageRequest.of(0, size, Sort.by(Direction.DESC, "id"));
-            chats = chatRepository.findChatsAfterId(movingPlanId, lastReadMessageId,
-                pageable);
+        // 저장된 기록 있는 경우
+        if (redisTemplate.opsForHash().hasKey(key, user.getUsername())) {
+            ObjectMapper objectMapper = new ObjectMapper();
+            objectMapper.registerModule(new JavaTimeModule());
 
-            // 비어있으면(가장 최근의 메세지까지 봤으면) 이전 메세지들 보여주기
-            if (chats.isEmpty()) {
-                chats = chatRepository.findChatsAfterId(movingPlanId, lastReadMessageId - size,
-                    pageable);
-            }
+            UserLastReadResponseDto readChat = objectMapper.convertValue(
+                redisTemplate.opsForHash().get(key, user.getUsername()),
+                UserLastReadResponseDto.class);
+
+            lastReadMessageId = readChat.getMessageId();
         }
-        chatList = changeListToMessageResponseDto(chats);
+        // 저장된 기록 없으면(기존 사용자가 아닌 새로운 사용자) 최신 메세지 1개 보여주기
+        else {
+            Pageable pageableForNew = PageRequest.of(0, 1, Sort.by(Direction.DESC, "id"));
+            chats = chatRepository.findRecentChats(movingPlanId, pageableForNew);
+            List<MessageResponseDto> chatList = changeListToMessageResponseDto(chats);
+            System.out.println("MySQL 데이터 출력: 3일 지난 후 채팅방 방문");
+
+            return ChatsResponseDto.from(lastReadMessageId, chatList);
+        }
+
+        Pageable pageable = PageRequest.of(0, size, Sort.by(Direction.DESC, "id"));
+        chats = chatRepository.findChatsAfterId(movingPlanId, lastReadMessageId, pageable);
+
+//        // 최신 메세지까지 읽은 경우 최신 메세지 부터 이전 메세지 일부 보여줌
+//        if (chats.size() == 1) {
+//            chats = chatRepository.findChatsAfterId(movingPlanId, lastReadMessageId - size,
+//                pageable);
+//
+//            List<MessageResponseDto> chatList = changeListToMessageResponseDto(chats);
+//            System.out.println("MySQL 데이터 출력: 3일 지난 후 채팅방 방문");
+//
+//            return ChatsResponseDto.from(lastReadMessageId, chatList);
+//        } else {
+
+        List<MessageResponseDto> chatList = changeListToMessageResponseDto(chats);
         System.out.println("MySQL 데이터 출력: 3일 지난 후 채팅방 방문");
+        return ChatsResponseDto.from(lastReadMessageId, chatList);
 //        }
 
-        return ChatsResponseDto.from(lastReadMessageId, chatList);
     }
 
     @Transactional
@@ -233,11 +239,12 @@ public class ChatService {
      * @param redisKey  : 마지막으로 읽은 메세지 정보를 레디스에서 가져오기 위한 key
      * @param user      : 메세지를 읽고 있는 사용자
      * @param messageId : 마지막으로 읽은 메세지 id
-     * @return UserLastReadResponseDto : {messageId(Chat의 id), 이사계획 id, 채팅 메세지 내용, 작성자(User), 작성날짜
-     * }을 가진 객체
+     * @return UserLastReadResponseDto : {messageId(Chat의 id), 이사계획 id, 채팅 메세지 내용, 작성자id, 작성자 닉네임,
+     * 작성날짜 }을 가진 객체
      */
     public UserLastReadResponseDto readMessageCursor(String redisKey, User user, Long messageId) {
 
+        // 저장된 기록 있는 경우
         if (redisTemplate.opsForHash().hasKey(redisKey, user.getUsername())) {
             ObjectMapper objectMapper = new ObjectMapper();
             objectMapper.registerModule(new JavaTimeModule());
@@ -289,7 +296,7 @@ public class ChatService {
                     return MessageResponseDto.from(
                         redisChat.getMessageId(),
                         redisChat.getChatMessage(),
-                        redisChat.getWriter().getNickname(),
+                        chatRepository.getNickname(redisChat.getWriter()),
                         redisChat.getTimestamp()
                             .withZoneSameInstant(ZoneId.of("Asia/Seoul"))
                             .format(formatterTime),
@@ -310,8 +317,47 @@ public class ChatService {
                 }
             })
             .filter(Objects::nonNull) // null 제거
+            .sorted(Comparator.comparing(MessageResponseDto::getMessageId))
             .toList();
     }
 
 
+    public ChatsResponseDto getPreviousMessages(Long movingPlanId, User user, Long messageId) {
+
+        movingPlanRepository.findById(movingPlanId)
+            .orElseThrow(() -> new ResourceNotFoundException());
+
+        String key = String.format(REDIS_HASH_KEY_LAST_CURSOR, movingPlanId, user.getUsername());
+
+        UserLastReadResponseDto lastReadChat = readMessageCursor(key, user, messageId);
+
+        if (messageId == lastReadChat.getFirstMessageId()) {
+            new CustomException(CustomErrorCode.FIRST_CHAT_MESSAGE);
+        }
+
+        // Redis에 최근 3일간의 메세지 보관되어 있으면 RDB가 아닌 레디스 데이터로 가져오기
+//        List<RedisChatDto> chat3daysAgo = getMessagesFromRedis(movingPlanId);
+
+        List<MessageResponseDto> chatList;
+//        if (chat3daysAgo != null && !chat3daysAgo.isEmpty()) {
+//            chatList = changeListToMessageResponseDto(chat3daysAgo);
+//            System.out.println("Redis 데이터 출력: 3일전에 채팅방 방문");
+//        } else {
+
+        Pageable pageable = PageRequest.of(0, 10, Sort.by(Direction.DESC, "id"));
+        // 백엔드 서비스 로직 (단순화 예시)
+        List<Chat> chats = chatRepository.findChatsBeforeId(movingPlanId, messageId, pageable);
+
+        // Redis 커서 이하 메시지는 잘라냄 => 사용자가 처음 본 메세지까지만 볼 수 있음
+        List<Chat> filtered = chats.stream()
+            .filter(chat -> chat.getId() > lastReadChat.getFirstMessageId())
+            .collect(Collectors.toList());
+
+        chatList = changeListToMessageResponseDto(filtered);
+//        chatList = changeListToMessageResponseDto(chats);
+        System.out.println("MySQL 데이터 출력: 3일 지난 후 채팅방 방문");
+//        }
+
+        return ChatsResponseDto.from(messageId, chatList);
+    }
 }

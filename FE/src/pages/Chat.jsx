@@ -17,6 +17,7 @@ export default function Chat() {
   const messagesEndRef = useRef(null);
   // messageId별 DOM 참조를 저장
   const messageRefs = useRef({});
+  const chatBoxRef = useRef(null); // chat box 스크롤 감지용
 
   const navigate = useNavigate();
 
@@ -40,6 +41,12 @@ export default function Chat() {
       const response = await chatApi.chatlist(movingPlanId);
       setMessages(response.data.data.chats);
       setLastReadMessageId(response.data.data.lastReadMessageId);
+      // ✅ 최초 불러온 메시지 기준 oldestMessageId 설정
+      if (chatList.length > 0) {
+        setOldestMessageId(chatList[0].messageId);
+      }
+
+      console.log(messages);
     } catch (error) {
       if (error.response.data.code == 'NOT_FOUND') {
         navigate('/not-found');
@@ -47,6 +54,54 @@ export default function Chat() {
     }
   }
 
+  // 2. wheel 이벤트에서 단순히 messages[0].messageId 기준으로 호출
+  useEffect(() => {
+    const chatBox = chatBoxRef.current;
+    if (!chatBox) return;
+
+    const handleWheel = async () => {
+      if (chatBox.scrollTop === 0 && messages.length > 0) {
+        await fetchPreviousMessages(messages[0].messageId);
+      }
+    };
+
+    chatBox.addEventListener('wheel', handleWheel);
+    return () => chatBox.removeEventListener('wheel', handleWheel);
+  }, [messages]);
+
+  // 3. fetchPreviousMessages 내부에서는 중복 메시지만 걸러서 상태만 갱신
+  const fetchPreviousMessages = async (beforeMessageId) => {
+    const chatBox = chatBoxRef.current;
+    if (!chatBox) return;
+
+    const previousScrollHeight = chatBox.scrollHeight;
+    const previousScrollTop = chatBox.scrollTop;
+
+    try {
+      const response = await chatApi.previousChatList(movingPlanId, beforeMessageId);
+      const newMessages = response.data.data.chats;
+
+      if (newMessages.length === 0) return;
+
+      setMessages((prevMessages) => {
+        const existingIds = new Set(prevMessages.map((msg) => msg.messageId));
+        const filteredNewMessages = newMessages.filter((msg) => !existingIds.has(msg.messageId));
+        const updatedMessages = [...filteredNewMessages, ...prevMessages];
+
+        requestAnimationFrame(() => {
+          const newScrollHeight = chatBox.scrollHeight;
+          const scrollOffset = newScrollHeight - previousScrollHeight;
+          chatBox.scrollTop = previousScrollTop + scrollOffset;
+        });
+
+        return updatedMessages;
+      });
+    } catch (error) {
+      console.error('이전 메시지 로딩 실패:', error);
+    }
+  };
+
+  // 초기 로딩 및 WebSocket 연결
   useEffect(() => {
     fetchChatList();
 
@@ -91,25 +146,20 @@ export default function Chat() {
     };
   }, []);
 
+  // 읽은 메시지 저장 및 읽음 표시 스크롤
   useEffect(() => {
-    console.log(messages);
     const lastMessage = messages[messages.length - 1];
-    console.log(lastMessage);
+    if (!lastMessage) return;
 
-    // 마지막 읽은 메시지 저장
     const saveLastReadMessage = async () => {
       try {
         await chatApi.saveLastCursor(movingPlanId, lastMessage.messageId);
-
-        // 저장이 끝나면 채팅 목록 다시 조회
-        // fetchChatList(); // 무한루프 돌음 어떻게 해야 자동으로 이 메서드를 실행할까... => 현재 상황: 새로고침하면 다음 메세지들 보임
       } catch (error) {
-        // console.error('마지막 읽은 메시지 저장 실패:', error);
+        // 에러 무시
       }
     };
 
-    saveLastReadMessage(lastMessage);
-
+    saveLastReadMessage();
     // 위치 마지막으로 읽은 메세지id 부터
     const target = messageRefs.current[lastReadMessageId - 1];
     if (target) {
@@ -124,9 +174,7 @@ export default function Chat() {
   const sendMessage = (e) => {
     e.preventDefault();
 
-    if (inputmessage.text.trim() === '') {
-      return;
-    }
+    if (inputmessage.text.trim() === '') return;
 
     if (stompClient && stompClient.connected) {
       const accessToken = localStorage.getItem('accessToken');
@@ -144,7 +192,7 @@ export default function Chat() {
     setInputmessage({ text: '' });
   };
 
-  const chatdelete = async (e) => {
+  const chatdelete = async () => {
     const isConfirmed = window.confirm('채팅을 삭제하시겠습니까?');
 
     if (isConfirmed) {
@@ -160,66 +208,60 @@ export default function Chat() {
   };
 
   return (
-    <>
-      <div className="mx-auto my-10 max-w-200">
-        <div className="flex justify-between">
-          <div className={chattingName}>채팅방</div>
-          <div className={chattingDelete} onClick={chatdelete}>
-            채팅 삭제
-          </div>
+    <div className="mx-auto my-10 max-w-200">
+      <div className="flex justify-between">
+        <div className={chattingName}>채팅방</div>
+        <div className={chattingDelete} onClick={chatdelete}>
+          채팅 삭제
         </div>
-        <div className={chattingBox}>
-          {messages.map((message, index) => {
-            const { nickname, text, createTime, createDay } = message;
-            // 이전 값
-            const previousMessage = index === 0 ? '' : messages[index - 1];
-
-            const isOwnMessage = nickname === storeNickname;
-
-            return (
-              <div
-                className={`w-full mb-3 flex flex-col ${isOwnMessage ? 'items-end' : 'items-start'}`}
-                key={index}
-                ref={(el) => (messageRefs.current[lastReadMessageId] = el)} // 각 messageId별 ref 저장
-              >
-                {previousMessage.createDay === createDay ? (
-                  <></>
-                ) : (
-                  <div className="w-full flex flex-col items-center my-5">
-                    <div className="">{createDay}</div>
-                    <hr className="w-1/4 mt-2 border-gray-400" />
-                  </div>
-                )}
-
-                {previousMessage.nickname === nickname &&
-                previousMessage.createTime === createTime ? (
-                  <></>
-                ) : (
-                  <div className={`${isOwnMessage ? 'mr-1' : 'ml-1'} mb-1`}>{nickname}</div>
-                )}
-                <div className="flex items-end">
-                  {isOwnMessage ? (
-                    <>
-                      <div className={myTimeStyle}>{createTime}</div>
-                      <div className={myTextStyle}>{text}</div>
-                    </>
-                  ) : (
-                    <>
-                      <div className={otherTextStyle}>{text}</div>
-                      <div className={otherTimeStyle}>{createTime}</div>
-                    </>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-          <div ref={messagesEndRef} />
-        </div>
-        <form className="flex w-full" onSubmit={sendMessage}>
-          <input className={sendTextBox} onChange={textinput} value={inputmessage.text} />
-          <button className={sendButtonBox}>보내기</button>
-        </form>
       </div>
-    </>
+      <div className={chattingBox} ref={chatBoxRef}>
+        {messages.map((message, index) => {
+          const { messageId, nickname, text, createTime, createDay } = message;
+          const previousMessage = index === 0 ? null : messages[index - 1];
+          const isOwnMessage = nickname === storeNickname;
+
+          return (
+            <div
+              className={`w-full mb-3 flex flex-col ${isOwnMessage ? 'items-end' : 'items-start'}`}
+              key={messageId}
+              ref={(el) => {
+                if (el) messageRefs.current[messageId] = el;
+              }}
+            >
+              {(!previousMessage || previousMessage.createDay !== createDay) && (
+                <div className="w-full flex flex-col items-center my-5">
+                  <div>{createDay}</div>
+                  <hr className="w-1/4 mt-2 border-gray-400" />
+                </div>
+              )}
+              {(!previousMessage ||
+                previousMessage.nickname !== nickname ||
+                previousMessage.createTime !== createTime) && (
+                <div className={`${isOwnMessage ? 'mr-1' : 'ml-1'} mb-1`}>{nickname}</div>
+              )}
+              <div className="flex items-end">
+                {isOwnMessage ? (
+                  <>
+                    <div className={myTimeStyle}>{createTime}</div>
+                    <div className={myTextStyle}>{text}</div>
+                  </>
+                ) : (
+                  <>
+                    <div className={otherTextStyle}>{text}</div>
+                    <div className={otherTimeStyle}>{createTime}</div>
+                  </>
+                )}
+              </div>
+            </div>
+          );
+        })}
+        <div ref={messagesEndRef} />
+      </div>
+      <form className="flex w-full" onSubmit={sendMessage}>
+        <input className={sendTextBox} onChange={textinput} value={inputmessage.text} />
+        <button className={sendButtonBox}>보내기</button>
+      </form>
+    </div>
   );
 }
