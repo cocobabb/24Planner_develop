@@ -54,7 +54,7 @@ export default function Chat() {
     }
   }
 
-  // 2. wheel 이벤트에서 단순히 messages[0].messageId 기준으로 호출
+  // wheel 이벤트에서 단순히 messages[0].messageId 기준으로 호출
   useEffect(() => {
     const chatBox = chatBoxRef.current;
     if (!chatBox) return;
@@ -69,7 +69,7 @@ export default function Chat() {
     return () => chatBox.removeEventListener('wheel', handleWheel);
   }, [messages]);
 
-  // 3. fetchPreviousMessages 내부에서는 중복 메시지만 걸러서 상태만 갱신
+  // fetchPreviousMessages 내부에서는 중복 메시지만 걸러서 상태만 갱신
   const fetchPreviousMessages = async (beforeMessageId) => {
     const chatBox = chatBoxRef.current;
     if (!chatBox) return;
