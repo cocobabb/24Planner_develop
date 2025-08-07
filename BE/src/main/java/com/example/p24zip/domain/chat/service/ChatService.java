@@ -41,7 +41,7 @@ import org.springframework.web.util.HtmlUtils;
 @Slf4j
 public class ChatService {
 
-    private static final String REDIS_HASH_KEY_FORMAT = "chat:%d"; // 기본 포맷 chat:{movingPlanId}
+    private static final String REDIS_HASH_KEY_FORMAT = "chat:%d"; // Redis에 저장된 만료일3일 메세지들 chat:{movingPlanId}
     private static final String REDIS_HASH_KEY_LAST_CURSOR = "chat:%d:read:messageId:%s"; // 마지막으로 읽은 메세지 저장 chat:{movingPlanId}:read:{username}
     final MovingPlanValidator movingPlanValidator;
     private final MovingPlanRepository movingPlanRepository;
@@ -99,7 +99,7 @@ public class ChatService {
 
         String key = String.format(REDIS_HASH_KEY_LAST_CURSOR, movingPlanId, user.getUsername());
 
-        Long lastReadMessageId = 0L;
+        Long lastReadMessageId;
         List<Chat> chats;
         // 저장된 기록 있는 경우
         if (redisTemplate.opsForHash().hasKey(key, user.getUsername())) {
@@ -114,6 +114,7 @@ public class ChatService {
         }
         // 저장된 기록 없으면(기존 사용자가 아닌 새로운 사용자) 최신 메세지 1개 보여주기
         else {
+            lastReadMessageId = 0L;
             Pageable pageableForNew = PageRequest.of(0, 1, Sort.by(Direction.DESC, "id"));
             chats = chatRepository.findRecentChats(movingPlanId, pageableForNew);
             List<MessageResponseDto> chatList = changeListToMessageResponseDto(chats);
@@ -122,11 +123,26 @@ public class ChatService {
             return ChatsResponseDto.from(lastReadMessageId, chatList);
         }
 
-        Pageable pageable = PageRequest.of(0, size, Sort.by(Direction.DESC, "id"));
-        chats = chatRepository.findChatsAfterId(movingPlanId, lastReadMessageId, pageable);
+        // Redis에 최근 3일간의 메세지 보관되어 있으면 RDB가 아닌 레디스 데이터로 가져오기
+        List<RedisChatDto> chat3daysAgo = getMessagesFromRedis(movingPlanId);
 
-        List<MessageResponseDto> chatList = changeListToMessageResponseDto(chats);
-        System.out.println("MySQL 데이터 출력: 3일 지난 후 채팅방 방문");
+        boolean existsInRedis = chat3daysAgo.stream()
+            .anyMatch(chat -> chat.getMessageId().equals(lastReadMessageId + 1));
+
+        // Redis에 해당하는 messageId가 있다면 레디스에서 가져오고 없으면 MySQL에서 메세지들 가져옴
+        List<MessageResponseDto> chatList;
+        if (existsInRedis) {
+            chatList = changeListToMessageResponseDto(chat3daysAgo);
+            System.out.println("다음 메세지 Redis 데이터 출력: 3일전에 채팅방 방문");
+
+        } else {
+            Pageable pageable = PageRequest.of(0, size, Sort.by(Direction.DESC, "id"));
+            chats = chatRepository.findChatsAfterId(movingPlanId, lastReadMessageId, pageable);
+
+            chatList = changeListToMessageResponseDto(chats);
+            System.out.println("다음 메세지 MySQL 데이터 출력: 3일 지난 후 채팅방 방문");
+        }
+
         return ChatsResponseDto.from(lastReadMessageId, chatList);
 
     }
@@ -341,7 +357,7 @@ public class ChatService {
         if (existsInRedis) {
 
             chatList = changeListToMessageResponseDto(chat3daysAgo);
-            System.out.println("Redis 데이터 출력: 3일전에 채팅방 방문");
+            System.out.println("이전 메세지 Redis 데이터 출력: 3일전에 채팅방 방문");
 
         } else {
 
@@ -355,7 +371,7 @@ public class ChatService {
                 .collect(Collectors.toList());
 
             chatList = changeListToMessageResponseDto(filtered);
-            System.out.println("MySQL 데이터 출력: 3일 지난 후 채팅방 방문");
+            System.out.println("이전 메세지 MySQL 데이터 출력: 3일 지난 후 채팅방 방문");
         }
 
         return ChatsResponseDto.from(messageId, chatList);
