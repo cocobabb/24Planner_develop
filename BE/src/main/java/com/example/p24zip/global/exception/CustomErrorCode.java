@@ -15,7 +15,9 @@ public enum CustomErrorCode {
     ALREADY_REGISTERED("ALREADY_REGISTERED", "이미 이 플랜의 동거인으로 등록되어 있습니다."),
     INVALID_DATE("INVALID_DATE", "시작 날짜는 종료 날짜보다 이전이어야 합니다."),
     NOT_EXIST_EMAIL("NOT_EXIST_EMAIL", "존재하지 않는 이메일입니다."),
-    SOCIAL_LOGIN_NEEDED("SOCIAL_LOGIN_NEEDED", "소셜 로그인 회원입니다. 비밀번호 찾기를 진행할 수 없습니다.");
+    SOCIAL_LOGIN_NEEDED("SOCIAL_LOGIN_NEEDED", "소셜 로그인 회원입니다. 비밀번호 찾기를 진행할 수 없습니다."),
+    NOT_SEARCH_CHAT_MESSAGE("NOT_SEARCH_CHAT_MESSAGE", "메시지를 찾을 수 없습니다."),
+    FIRST_CHAT_MESSAGE("FIRST_CHAT_MESSAGE", "이전 메세지가 없습니다.");
 
     private final String code;
     private final String message;

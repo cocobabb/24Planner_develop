@@ -8,17 +8,20 @@ import lombok.Getter;
 @Builder
 public class MessageResponseDto {
 
+    private final Long messageId;
     private final String text;
     private final String nickname;
     private final String createTime;
     private final String createDay;
 
-    public static MessageResponseDto from(String text, String nickname, String createTime, String createDay) {
+    public static MessageResponseDto from(Long messageId, String text, String nickname,
+        String createTime, String createDay) {
         return MessageResponseDto.builder()
-                .text(text)
-                .nickname(nickname)
-                .createTime(createTime)
-                .createDay(createDay)
-                .build();
+            .messageId(messageId)
+            .text(text)
+            .nickname(nickname)
+            .createTime(createTime)
+            .createDay(createDay)
+            .build();
     }
 }

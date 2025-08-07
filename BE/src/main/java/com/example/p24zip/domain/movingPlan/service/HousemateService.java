@@ -8,14 +8,15 @@ import com.example.p24zip.domain.movingPlan.repository.HousemateRepository;
 import com.example.p24zip.domain.movingPlan.repository.MovingPlanRepository;
 import com.example.p24zip.domain.user.entity.User;
 import com.example.p24zip.domain.user.repository.UserRepository;
+import com.example.p24zip.global.exception.CustomErrorCode;
 import com.example.p24zip.global.exception.CustomException;
 import com.example.p24zip.global.exception.ResourceNotFoundException;
+import com.example.p24zip.global.notification.NotificationService;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.example.p24zip.global.exception.CustomErrorCode;
 
 @Service
 @Transactional(readOnly = true)

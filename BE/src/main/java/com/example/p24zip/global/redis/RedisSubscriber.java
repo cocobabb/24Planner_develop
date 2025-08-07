@@ -1,7 +1,5 @@
 package com.example.p24zip.global.redis;
 
-import com.example.p24zip.domain.movingPlan.repository.HousemateRepository;
-import com.example.p24zip.domain.movingPlan.repository.MovingPlanRepository;
 import com.example.p24zip.global.notification.SseEmitterPool;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -16,14 +14,13 @@ import org.springframework.stereotype.Component;
 public class RedisSubscriber implements MessageListener {
 
     private final ObjectMapper objectMapper;
-    private final SseEmitterPool emitterPool;
-    private final HousemateRepository housemateRepository;
-    private final MovingPlanRepository movingPlanRepository;
+    private final SseEmitterPool emitterPool; // 알림 객체
 
 
     @Override
     public void onMessage(Message message, byte[] pattern) {
-        String channel = new String(message.getChannel()); // ex) movingPlan:123:uuid
+        String channel = new String(
+            message.getChannel()); // ex) 알림: movingPlan:123:알림uuid
         String body = new String(message.getBody());
 
         try {
@@ -38,7 +35,6 @@ public class RedisSubscriber implements MessageListener {
 
 
         } catch (Exception e) {
-            System.out.println(e.getMessage());
             log.error("RedisSubscriber의 onMessage메서드 ERROR: ", e.getMessage());
         }
     }
