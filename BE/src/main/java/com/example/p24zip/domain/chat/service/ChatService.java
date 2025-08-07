@@ -42,7 +42,7 @@ import org.springframework.web.util.HtmlUtils;
 public class ChatService {
 
     private static final String REDIS_HASH_KEY_FORMAT = "chat:%d"; // Redis에 저장된 만료일3일 메세지들 chat:{movingPlanId}
-    private static final String REDIS_HASH_KEY_LAST_CURSOR = "chat:%d:read:messageId:%s"; // 마지막으로 읽은 메세지 저장 chat:{movingPlanId}:read:{username}
+    private static final String REDIS_HASH_KEY_LAST_CURSOR = "chat:%d:read:messageId:%s"; // 마지막으로 읽은 메세지 저장 chat:{movingPlanId}:read:messageId:{username}
     final MovingPlanValidator movingPlanValidator;
     private final MovingPlanRepository movingPlanRepository;
     private final ChatRepository chatRepository;
@@ -91,7 +91,25 @@ public class ChatService {
     }
 
 
-    // 메세지 아이디 기준 다음 메세지들 가져오기
+    /**
+     * 사용자가 읽은 마지막 messageId 기준으로 다음 메세지들을 보여주는 메서드
+     *
+     * @param movingPlanId : 이사계획id
+     * @param user         : 로그인하여 이용 중인 사용자
+     * @param size         : 메세지들 받아올 size(개수)
+     * @return ChatsResponseDto : 채팅에 전달될 데이터 형식 dto(마지막으로 읽은 메세지, 채팅dto List를 포함하고 있다)
+     * @apiNote <p>[3일간 Redis에 저장되는 메세지]</p>
+     * <p>Key : "chat:{이사계획 id}" </p>
+     * <p>Field : "{채팅 메세지 id}" </p>
+     * <p>Value : {message-id, 이사계획 id, 채팅 메세지 내용, 메시지
+     * 작성자(닉네임), 채팅 작성된 시간}</p>
+     * <p></p>
+     * <p>[사용자가 마지막으로 읽은 messageId]</p>
+     * <p>Key : "chat:{이사계획 id}:read:messageId:{사용자 아이디(username)}" </p>
+     * <p>Field : "{채팅 메세지 id}" </p>
+     * <p>Value : {message-id, 이사계획 id, 채팅 메세지 내용, 메시지
+     * 작성자 id, 작성자 닉네임, 채팅 작성된 시간}</p>
+     */
     public ChatsResponseDto readChats(Long movingPlanId, User user, int size) {
 
         movingPlanRepository.findById(movingPlanId)
@@ -219,9 +237,9 @@ public class ChatService {
      * @param messageId    : 마지막으로 읽은 메세지 id
      * @return void
      * @apiNote <p> "chat:{movingPlanId}:read:messageId:사용자 아이디" 란 Key로 Redis Hash에 저장 </p>
-     * <p>Redis Hash Field : 사용자 아이디</p>
+     * <p>Redis Hash Field : 사용자 아이디(username)</p>
      * <p>Redis Hash Value : UserLastReadResponseDto
-     * : {messageId(Chat의 id), 이사계획 id, 채팅 메세지 내용, 작성자 닉네임, 작성날짜, 읽은 사용자 닉네임}을 가진 객체</p>
+     * : {messageId(Chat의 id), 이사계획 id, 채팅 메세지 내용, 작성자 id,작성자 닉네임, 작성날짜}을 가진 객체</p>
      */
     public void saveLastCursorToRedis(Long movingPlanId, User user, Long messageId) {
 
@@ -243,7 +261,7 @@ public class ChatService {
 
 
     /**
-     * 특정 사용자가 읽은 메세지id를 가진 객체 읽은 사용자 필드를 가진 객체로 변환
+     * Redis에서 특정 사용자가 읽은 메세지id를 가진 데이터 가져와서 dto로 변환
      *
      * @param redisKey  : 마지막으로 읽은 메세지 정보를 레디스에서 가져오기 위한 key
      * @param user      : 메세지를 읽고 있는 사용자
@@ -270,10 +288,6 @@ public class ChatService {
         } else {
             Chat chat = chatRepository.findByMessageId(messageId);
 
-            System.out.println("---readMessageCursor---");
-            System.out.println(messageId);
-            System.out.println(chat.getId());
-
             if (chat != null) {
                 // 처음 메세지 저장하는 경우 firsMessageId 0L로 되어 있음
                 return UserLastReadResponseDto.builder()
@@ -288,7 +302,7 @@ public class ChatService {
 
 
     /**
-     * 특정 사용자가 읽은 메세지id를 가진 객체 읽은 사용자 필드를 가진 객체로 변환
+     * dto List 받아서 채팅에 쓰이는 형태의 dto List로 변환하여 반환
      *
      * @param chats : List<MessageResponseDto>로 변환할 리스트 객체
      * @return UserLastReadResponseDto : {messageId(Chat의 id), 채팅 메세지 내용, 작성자(닉네임), 작성시간, 작성 날짜 }을
@@ -330,7 +344,15 @@ public class ChatService {
             .toList();
     }
 
-
+    /**
+     * Client에서 보내온 messageId 기준으로 이전 메세지들 가져오는 메서드 (Redis에 있는 메세지 id이면 Redis에서 가져오고 없으면 MySQL에서
+     * 메세지들을 가져온다)
+     *
+     * @param movingPlanId : 이사계획 id
+     * @param user         : 로그인한 사용자
+     * @param messageId    : 이전 메세지들 불러올 기준 messageId
+     * @return ChatsResponseDto : 채팅에 전달될 데이터 형식 dto(마지막으로 읽은 메세지, 채팅dto List를 포함하고 있다)
+     */
     public ChatsResponseDto getPreviousMessages(Long movingPlanId, User user, Long messageId) {
 
         movingPlanRepository.findById(movingPlanId)
@@ -347,7 +369,7 @@ public class ChatService {
             throw new CustomException(CustomErrorCode.FIRST_CHAT_MESSAGE);
         }
 
-        // Redis에 최근 3일간의 메세지 보관되어 있으면 RDB가 아닌 레디스 데이터로 가져오기
+        // Redis에 메세지 보관되어 있으면 MySQL가 아닌 Redis 데이터로 가져오기
         List<RedisChatDto> chat3daysAgo = getMessagesFromRedis(movingPlanId);
 
         boolean existsInRedis = chat3daysAgo.stream()
@@ -360,9 +382,8 @@ public class ChatService {
             System.out.println("이전 메세지 Redis 데이터 출력: 3일전에 채팅방 방문");
 
         } else {
-
             Pageable pageable = PageRequest.of(0, 10, Sort.by(Direction.DESC, "id"));
-            // 백엔드 서비스 로직 (단순화 예시)
+
             List<Chat> chats = chatRepository.findChatsBeforeId(movingPlanId, messageId, pageable);
 
             // Redis 커서 이하 메시지는 잘라냄 => 사용자가 처음 본 메세지까지만 볼 수 있음
