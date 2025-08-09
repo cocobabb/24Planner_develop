@@ -71,6 +71,7 @@ public class ChatService {
             .messageId(chat.getId())
             .movingPlanId(movingPlanId)
             .chatMessage(requestDto.getText())
+            .writerId(user.getId())
             .writer(user.getNickname())
             .timestamp(chat.getCreatedAt())
             .build();
@@ -86,7 +87,8 @@ public class ChatService {
 
         String text = HtmlUtils.htmlEscape(chat.getText());
 
-        return MessageResponseDto.from(chat.getId(), text, user.getNickname(), createTime,
+        return MessageResponseDto.from(chat.getId(), text, user.getId(), user.getNickname(),
+            createTime,
             createDay);
     }
 
@@ -119,7 +121,7 @@ public class ChatService {
 
         Long lastReadMessageId;
         List<Chat> chats;
-        // 저장된 기록 있는 경우
+        // lastReadMessageId 저장된 기록 있는 경우
         if (redisTemplate.opsForHash().hasKey(key, user.getUsername())) {
             ObjectMapper objectMapper = new ObjectMapper();
             objectMapper.registerModule(new JavaTimeModule());
@@ -129,12 +131,13 @@ public class ChatService {
                 UserLastReadResponseDto.class);
 
             lastReadMessageId = readChat.getMessageId();
+            System.out.println("readChats-lastReadMessageId: " + lastReadMessageId);
         }
-        // 저장된 기록 없으면(기존 사용자가 아닌 새로운 사용자) 최신 메세지 1개 보여주기
+        // lastReadMessageId 저장된 기록 없으면(기존 사용자가 아닌 새로운 사용자) 최신 메세지 1개 보여주기
         else {
             lastReadMessageId = 0L;
             Pageable pageableForNew = PageRequest.of(0, 1, Sort.by(Direction.DESC, "id"));
-            chats = chatRepository.findRecentChats(movingPlanId, pageableForNew);
+            chats = chatRepository.findByMovingPlan_IdOrderByIdDesc(movingPlanId, pageableForNew);
             List<MessageResponseDto> chatList = changeListToMessageResponseDto(chats);
             System.out.println("MySQL 데이터 출력: 3일 지난 후 채팅방 방문");
 
@@ -145,7 +148,7 @@ public class ChatService {
         List<RedisChatDto> chat3daysAgo = getMessagesFromRedis(movingPlanId);
 
         boolean existsInRedis = chat3daysAgo.stream()
-            .anyMatch(chat -> chat.getMessageId().equals(lastReadMessageId + 1));
+            .anyMatch(chat -> chat.getMessageId().equals(lastReadMessageId));
 
         // Redis에 해당하는 messageId가 있다면 레디스에서 가져오고 없으면 MySQL에서 메세지들 가져옴
         List<MessageResponseDto> chatList;
@@ -155,8 +158,15 @@ public class ChatService {
 
         } else {
             Pageable pageable = PageRequest.of(0, size, Sort.by(Direction.DESC, "id"));
-            chats = chatRepository.findChatsAfterId(movingPlanId, lastReadMessageId, pageable);
+            chats = chatRepository.findByMovingPlan_IdAndIdGreaterThanEqualOrderByIdAsc(
+                movingPlanId, lastReadMessageId, pageable);
 
+            if (chats.size() == 1) {
+                chats = chatRepository.findByMovingPlan_IdAndIdGreaterThanEqualOrderByIdAsc(
+                    movingPlanId, lastReadMessageId - size,
+                    pageable);
+
+            }
             chatList = changeListToMessageResponseDto(chats);
             System.out.println("다음 메세지 MySQL 데이터 출력: 3일 지난 후 채팅방 방문");
         }
@@ -171,7 +181,7 @@ public class ChatService {
         movingPlanRepository.findById(movingPlanId)
             .orElseThrow(() -> new ResourceNotFoundException());
 
-        chatRepository.deleteChattingPlan(movingPlanId);
+        chatRepository.deleteByMovingPlan_Id(movingPlanId);
     }
 
     /**
@@ -218,12 +228,6 @@ public class ChatService {
                     return objectMapper.convertValue(obj, RedisChatDto.class);
                 }
             })
-            .map(redisChatDto -> {
-                userRepository.findByNickname(redisChatDto.getWriter())
-                    .map(User::getNickname)
-                    .ifPresent(nickname -> redisChatDto.changeWriter(nickname));
-                return redisChatDto;
-            })
             .sorted(Comparator.comparing(RedisChatDto::getMessageId))
             .toList();
     }
@@ -242,6 +246,7 @@ public class ChatService {
      * : {messageId(Chat의 id), 이사계획 id, 채팅 메세지 내용, 작성자 id,작성자 닉네임, 작성날짜}을 가진 객체</p>
      */
     public void saveLastCursorToRedis(Long movingPlanId, User user, Long messageId) {
+        System.out.println("saveLastCursorToRedis-messageId: " + messageId);
 
         String key = String.format(REDIS_HASH_KEY_LAST_CURSOR, movingPlanId, user.getUsername());
 
@@ -286,7 +291,8 @@ public class ChatService {
             return readChat;
 
         } else {
-            Chat chat = chatRepository.findByMessageId(messageId);
+            Chat chat = chatRepository.findById(messageId)
+                .orElseThrow(() -> new ResourceNotFoundException());
 
             if (chat != null) {
                 // 처음 메세지 저장하는 경우 firsMessageId 0L로 되어 있음
@@ -319,6 +325,7 @@ public class ChatService {
                     return MessageResponseDto.from(
                         redisChat.getMessageId(),
                         redisChat.getChatMessage(),
+                        redisChat.getWriterId(),
                         redisChat.getWriter(),
                         redisChat.getTimestamp()
                             .withZoneSameInstant(ZoneId.of("Asia/Seoul"))
@@ -331,6 +338,7 @@ public class ChatService {
                     return MessageResponseDto.from(
                         entityChat.getId(),
                         entityChat.getText(),
+                        entityChat.getUser().getId(),
                         entityChat.getUser().getNickname(),
                         entityChat.getCreatedAt().format(formatterTime),
                         entityChat.getCreatedAt().format(formatterDay)
@@ -384,7 +392,8 @@ public class ChatService {
         } else {
             Pageable pageable = PageRequest.of(0, 10, Sort.by(Direction.DESC, "id"));
 
-            List<Chat> chats = chatRepository.findChatsBeforeId(movingPlanId, messageId, pageable);
+            List<Chat> chats = chatRepository.findByMovingPlan_IdAndIdLessThanOrderByIdDesc(
+                movingPlanId, messageId, pageable);
 
             // Redis 커서 이하 메시지는 잘라냄 => 사용자가 처음 본 메세지까지만 볼 수 있음
             List<Chat> filtered = chats.stream()

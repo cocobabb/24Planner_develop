@@ -217,7 +217,7 @@ export default function Chat() {
       </div>
       <div className={chattingBox} ref={chatBoxRef}>
         {messages.map((message, index) => {
-          const { messageId, nickname, text, createTime, createDay } = message;
+          const { messageId, writerId, nickname, text, createTime, createDay } = message;
           const previousMessage = index === 0 ? null : messages[index - 1];
           const isOwnMessage = nickname === storeNickname;
 

@@ -1,7 +1,9 @@
 package com.example.p24zip.domain.user.service;
 
 
+import com.example.p24zip.domain.chat.entity.Chat;
 import com.example.p24zip.domain.chat.repository.ChatRepository;
+import com.example.p24zip.domain.chat.service.ChatService;
 import com.example.p24zip.domain.house.dto.response.ShowNicknameResponseDto;
 import com.example.p24zip.domain.movingPlan.entity.Housemate;
 import com.example.p24zip.domain.movingPlan.entity.MovingPlan;
@@ -30,8 +32,11 @@ import com.example.p24zip.global.exception.CustomException;
 import com.example.p24zip.global.exception.ResourceNotFoundException;
 import com.example.p24zip.global.exception.TokenException;
 import com.example.p24zip.global.notification.SseEmitterPool;
+import com.example.p24zip.global.redis.RedisChatDto;
 import com.example.p24zip.global.security.jwt.JwtTokenProvider;
 import com.example.p24zip.global.service.AsyncService;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -40,6 +45,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -49,6 +55,7 @@ import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -62,25 +69,22 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 public class AuthService {
 
+    private static final String REDIS_HASH_KEY_FORMAT = "chat:%d"; // Redis에 저장된 만료일3일 메세지들 chat:{movingPlanId}
     private final UserRepository userRepository;
     private final HousemateRepository housemateRepository;
     private final MovingPlanRepository movingPlanRepository;
     private final ChatRepository chatRepository;
-
     private final PasswordEncoder passwordEncoder; // 회원가입 시 비밀번호 암호화
-    private final StringRedisTemplate redisTemplate; // redis 객체
-
+    private final StringRedisTemplate stringRedisTemplate; // String redis 객체
+    private final RedisTemplate<String, Object> redisTemplate; // Object redis 객체
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
-
     private final TempUserService tempUserService;
     private final AsyncService asyncService;
-
+    private final ChatService chatService;
     private final SseEmitterPool sseEmitterPool;
-
     @Value("${MAIL_ADDRESS}")
     private String mailAddress;
-
     @Value("${ORIGIN}")
     private String origin;
 
@@ -118,9 +122,9 @@ public class AuthService {
         String username = requestDto.getUsername();
         System.out.println("현재 스레드: " + Thread.currentThread().getName());
 
-        if (redisTemplate.hasKey(username + "_mail")) {
+        if (stringRedisTemplate.hasKey(username + "_mail")) {
             LocalDateTime checkAccessTime = LocalDateTime.parse(
-                redisTemplate.opsForValue().get(username + "_mail_createdAt"));
+                stringRedisTemplate.opsForValue().get(username + "_mail_createdAt"));
 
             if (!checkAccessTime.plusSeconds(5).isBefore(LocalDateTime.now())) {
                 throw new CustomException(CustomErrorCode.TOOMANY_REQUEST);
@@ -162,16 +166,16 @@ public class AuthService {
         String username = requestDto.getUsername();
         String code = requestDto.getCode();
 
-        if (!redisTemplate.hasKey(username + "_mail")) {
+        if (!stringRedisTemplate.hasKey(username + "_mail")) {
             throw new CustomException(CustomErrorCode.BAD_REQUEST);
         }
         // -2: 시간 만료
-        if (redisTemplate.getExpire(username + "_mail") != -2) {
-            if (!code.equals(redisTemplate.opsForValue().get(username + "_mail"))) {
+        if (stringRedisTemplate.getExpire(username + "_mail") != -2) {
+            if (!code.equals(stringRedisTemplate.opsForValue().get(username + "_mail"))) {
                 throw new CustomException(CustomErrorCode.BAD_REQUEST);
             } else {
-                redisTemplate.delete(username + "_mail");
-                redisTemplate.delete(username + "_mail_createdAt");
+                stringRedisTemplate.delete(username + "_mail");
+                stringRedisTemplate.delete(username + "_mail_createdAt");
             }
         } else {
             throw new CustomException(CustomErrorCode.TIME_OUT);
@@ -211,9 +215,9 @@ public class AuthService {
             throw new CustomException(CustomErrorCode.SOCIAL_LOGIN);
         }
 
-        if (redisTemplate.hasKey(username + "_tempToken")) {
+        if (stringRedisTemplate.hasKey(username + "_tempToken")) {
             ZonedDateTime checkAccessTime = ZonedDateTime.parse(
-                redisTemplate.opsForValue().get(username + "_tempToken_createdAt"));
+                stringRedisTemplate.opsForValue().get(username + "_tempToken_createdAt"));
 
             if (!checkAccessTime.plusSeconds(5).isBefore(ZonedDateTime.now())) {
                 throw new CustomException(CustomErrorCode.TOOMANY_REQUEST);
@@ -223,9 +227,9 @@ public class AuthService {
         String tempJwt = jwtTokenProvider.accessCreateToken(user);
 
         String key = username + "_tempToken";
-        redisTemplate.opsForValue().set(key, tempJwt, 10, TimeUnit.MINUTES);
+        stringRedisTemplate.opsForValue().set(key, tempJwt, 10, TimeUnit.MINUTES);
         String createdAt = username + "_tempToken_createdAt";
-        redisTemplate.opsForValue()
+        stringRedisTemplate.opsForValue()
             .set(createdAt, String.valueOf(ZonedDateTime.now()), 10, TimeUnit.MINUTES); // 생성시간
 
         try {
@@ -266,8 +270,8 @@ public class AuthService {
         userRepository.save(user);
 
         String username = user.getUsername();
-        redisTemplate.delete(username + "_tempToken");
-        redisTemplate.delete(username + "_tempToken_createdAt");
+        stringRedisTemplate.delete(username + "_tempToken");
+        stringRedisTemplate.delete(username + "_tempToken_createdAt");
     }
 
     // 로그인
@@ -301,7 +305,7 @@ public class AuthService {
         response.addCookie(cookie);
 
         // refreshToken redis 넣기
-        redisTemplate.opsForValue().set(refreshjwt, refreshjwt, 2, TimeUnit.DAYS);
+        stringRedisTemplate.opsForValue().set(refreshjwt, refreshjwt, 2, TimeUnit.DAYS);
 
         return new LoginResponseDto(accessjwt, user.getNickname());
     }
@@ -319,7 +323,7 @@ public class AuthService {
 
         String refreshusername = jwtTokenProvider.getUsername(refresh);
 
-        String redistoken = (String) redisTemplate.opsForValue().get(refresh);
+        String redistoken = (String) stringRedisTemplate.opsForValue().get(refresh);
 
         User user = userRepository.findByUsername(refreshusername)
             .orElseThrow(() -> new ResourceNotFoundException());
@@ -353,9 +357,56 @@ public class AuthService {
         user.setNickname(nickname);
         userRepository.save(user);
 
+        changeChatInRedis(user);
+
         return new ChangeNicknameResponseDto(user.getId(), user.getNickname());
 
     }
+
+    private void changeChatInRedis(User user) {
+        List<Chat> chats = chatRepository.findByUser(user);
+        List<MovingPlan> movingPlans = chats.stream()
+            .map(chat -> chat.getMovingPlan())
+            .toList();
+
+        List<List<RedisChatDto>> allRedisChatDtoList = movingPlans.stream()
+            .map(movingPlan -> {
+                String key = String.format(REDIS_HASH_KEY_FORMAT, movingPlan.getId());
+                ObjectMapper objectMapper = new ObjectMapper();
+                objectMapper.registerModule(new JavaTimeModule());
+
+                return redisTemplate.opsForHash()
+                    .values(key)
+                    .stream()
+                    .map(obj -> {
+                        if (obj instanceof RedisChatDto) {
+                            return (RedisChatDto) obj;
+                        } else {
+                            return objectMapper.convertValue(obj, RedisChatDto.class);
+                        }
+                    })
+                    .filter(redisChatDto -> redisChatDto.getWriterId() == user.getId())
+                    .sorted(Comparator.comparing(RedisChatDto::getMessageId))
+                    .toList();
+            })
+            .toList();
+
+        for (List<RedisChatDto> redisChatDtoList : allRedisChatDtoList) {
+            for (RedisChatDto redisChatDto : redisChatDtoList) {
+                String key = String.format(REDIS_HASH_KEY_FORMAT, redisChatDto.getMovingPlanId());
+                redisChatDto.changeWriter(user.getNickname());
+
+                redisTemplate.opsForHash().put(
+                    key,
+                    redisChatDto.getMessageId(),
+                    redisChatDto
+                );
+            }
+        }
+
+
+    }
+
 
     // 로그아웃
     public void logout(HttpServletRequest request, HttpServletResponse response) {
@@ -373,7 +424,7 @@ public class AuthService {
         sseEmitterPool.remove(username);
 
         // redis에서 RefreshToken 삭제
-        redisTemplate.delete(refresh);
+        stringRedisTemplate.delete(refresh);
 
         // 쿠키에서 RefreshToken 삭제
         Cookie cookie = new Cookie("refreshToken", null);
@@ -438,8 +489,8 @@ public class AuthService {
         String code = String.valueOf(codeNum);
         String createdAt = username + "_mail_createdAt";
 
-        redisTemplate.opsForValue().set(key, code, 3, TimeUnit.MINUTES);
-        redisTemplate.opsForValue()
+        stringRedisTemplate.opsForValue().set(key, code, 3, TimeUnit.MINUTES);
+        stringRedisTemplate.opsForValue()
             .set(createdAt, String.valueOf(LocalDateTime.now()), 3, TimeUnit.MINUTES); // 생성시간
         return ZonedDateTime.now(ZoneId.of("Asia/Seoul")).plusMinutes(3);
     }
@@ -501,7 +552,7 @@ public class AuthService {
     }
 
     public RedisValueResponseDto getRedisValue(String key) {
-        String value = redisTemplate.opsForValue().get(key);
+        String value = stringRedisTemplate.opsForValue().get(key);
         if (value == null) {
             new ResourceNotFoundException();
         }

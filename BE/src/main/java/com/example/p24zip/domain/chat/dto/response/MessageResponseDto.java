@@ -10,15 +10,18 @@ public class MessageResponseDto {
 
     private final Long messageId;
     private final String text;
+    private final Long writerId;
     private final String nickname;
     private final String createTime;
     private final String createDay;
 
-    public static MessageResponseDto from(Long messageId, String text, String nickname,
+    public static MessageResponseDto from(Long messageId, String text, Long writerId,
+        String nickname,
         String createTime, String createDay) {
         return MessageResponseDto.builder()
             .messageId(messageId)
             .text(text)
+            .writerId(writerId)
             .nickname(nickname)
             .createTime(createTime)
             .createDay(createDay)
