@@ -19,16 +19,19 @@ public class RedisChatDto implements Serializable {
     private Long messageId; // Chat의 id
     private Long movingPlanId;
     private String chatMessage;
+    private Long writerId; // 작성자 id
     private String writer; // 작성자 닉네임
     private ZonedDateTime timestamp;
 
 
     @Builder
-    public RedisChatDto(Long messageId, Long movingPlanId, String chatMessage, String writer,
+    public RedisChatDto(Long messageId, Long movingPlanId, String chatMessage, Long writerId,
+        String writer,
         LocalDateTime timestamp) {
         this.messageId = messageId;
         this.movingPlanId = movingPlanId;
         this.chatMessage = chatMessage;
+        this.writerId = writerId;
         this.writer = writer;
         this.timestamp = timestamp.atZone(ZoneId.of("Asia/Seoul"));
     }
