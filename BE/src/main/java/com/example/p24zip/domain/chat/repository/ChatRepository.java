@@ -8,6 +8,7 @@ import java.util.Optional;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
 
 public interface ChatRepository extends JpaRepository<Chat, Long> {
 
@@ -16,6 +17,19 @@ public interface ChatRepository extends JpaRepository<Chat, Long> {
         @Param("movingPlanId") Long movingPlanId,
         @Param("messageId") Long messageId,
         Pageable pageable);
+
+    // Cursor messageId 기준 이전 메세지들 가져옴
+    @Query("""
+            SELECT c FROM Chat c
+            WHERE c.movingPlan.id = :movingPlanId
+              AND c.id < :messageId
+            ORDER BY c.id DESC
+        """)
+    List<Chat> findChatsBeforeId(
+        @Param("movingPlanId") Long movingPlanId,
+        @Param("messageId") Long messageId,
+        Pageable pageable);
+
 
     // Cursor messageId 기준 이전 메세지들 가져옴
     List<Chat> findByMovingPlan_IdAndIdLessThanOrderByIdDesc(

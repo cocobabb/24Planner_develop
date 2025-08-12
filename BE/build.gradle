@@ -2,6 +2,8 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.4.3'
     id 'io.spring.dependency-management' version '1.1.7'
+
+    id 'me.champeau.jmh' version '0.6.6' // JMH Gradle 플러그인
 }
 
 group = 'com.example'
@@ -61,8 +63,14 @@ dependencies {
 
     // Jackson(ObjectMapper)이 ZonedDateTime(Java 8 날짜/시간 타입)을 기본적으로 지원하지 않음
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+    
 }
 
 tasks.named('test') {
     useJUnitPlatform()
+}
+
+// JMH
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
 }
