@@ -158,11 +158,11 @@ public class ChatService {
 
         } else {
             Pageable pageable = PageRequest.of(0, size, Sort.by(Direction.DESC, "id"));
-            chats = chatRepository.findByMovingPlan_IdAndIdGreaterThanEqualOrderByIdAsc(
+            chats = chatRepository.findChatsAfterId(
                 movingPlanId, lastReadMessageId, pageable);
 
             if (chats.size() == 1) {
-                chats = chatRepository.findByMovingPlan_IdAndIdGreaterThanEqualOrderByIdAsc(
+                chats = chatRepository.findChatsAfterId(
                     movingPlanId, lastReadMessageId - size,
                     pageable);
 
@@ -392,7 +392,7 @@ public class ChatService {
         } else {
             Pageable pageable = PageRequest.of(0, 10, Sort.by(Direction.DESC, "id"));
 
-            List<Chat> chats = chatRepository.findByMovingPlan_IdAndIdLessThanOrderByIdDesc(
+            List<Chat> chats = chatRepository.findChatsBeforeId(
                 movingPlanId, messageId, pageable);
 
             // Redis 커서 이하 메시지는 잘라냄 => 사용자가 처음 본 메세지까지만 볼 수 있음

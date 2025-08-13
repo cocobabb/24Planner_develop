@@ -18,21 +18,20 @@ import org.openjdk.jmh.annotations.Warmup;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.redis.core.RedisTemplate;
 
-@BenchmarkMode(Mode.AverageTime)
-@OutputTimeUnit(TimeUnit.MILLISECONDS)
-@Warmup(iterations = 1)       // 워밍업 1회
-@Measurement(iterations = 5)  // 측정 3회
 @State(Scope.Benchmark)
-public class ChatLoadBenchmark {
+@BenchmarkMode({Mode.AverageTime, Mode.Throughput}) // 평균 실행 시간 측정, 단위 시간당 작업 처리량
+@OutputTimeUnit(TimeUnit.MILLISECONDS) // 결과 단위: ms
+@Warmup(iterations = 3, time = 1, timeUnit = TimeUnit.SECONDS) // 워밍업 3회
+@Measurement(iterations = 10, time = 1, timeUnit = TimeUnit.SECONDS) // 측정 10회
+public class ChatLoadBenchmark_JPA {
 
     private static ConfigurableApplicationContext context;
     private final Long movingPlanId = 1L;
-    private final Long messageId = 300L;
-    private final PageRequest pageable = PageRequest.of(0, 10);
+    private final Long messageId = 683L;
+    private final PageRequest pageable = PageRequest.of(0, 49);
     private ChatRepository chatRepository;
-    private RedisTemplate<String, Object> redisTemplate;
+
 
     @Setup(Level.Trial)
     public void setup() {
@@ -40,7 +39,6 @@ public class ChatLoadBenchmark {
             context = SpringApplication.run(BenchmarkApplication.class);
         }
         chatRepository = context.getBean(ChatRepository.class);
-        redisTemplate = context.getBean("redisTemplate", RedisTemplate.class);
     }
 
     @TearDown(Level.Trial)
@@ -52,18 +50,13 @@ public class ChatLoadBenchmark {
     }
 
     @Benchmark
-    public List<Object> loadFromRedis() {
-        return redisTemplate.opsForList().range("chat:1", 0, 9);
-    }
-
-    @Benchmark
-    public List<Chat> loadFromMySQL_QueryMethod() {
-        return chatRepository.findByMovingPlan_IdAndIdGreaterThanEqualOrderByIdAsc(
+    public List<Chat> loadFromMySQL_previousMessage_QueryMethod() {
+        return chatRepository.findByMovingPlan_IdAndIdLessThanOrderByIdDesc(
             movingPlanId, messageId, pageable);
     }
 
     @Benchmark
-    public List<Chat> loadFromMySQL_JPQL() {
+    public List<Chat> loadFromMySQL_previousMessage_JPQL() {
         return chatRepository.findChatsBeforeId(movingPlanId, messageId, pageable);
     }
 }
