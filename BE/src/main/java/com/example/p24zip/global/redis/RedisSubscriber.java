@@ -1,6 +1,6 @@
 package com.example.p24zip.global.redis;
 
-import com.example.p24zip.global.notification.SseEmitterPool;
+import com.example.p24zip.global.notification.sse.SseEmitterPool;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

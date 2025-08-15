@@ -1,4 +1,4 @@
-package com.example.p24zip.global.notification;
+package com.example.p24zip.global.notification.sse;
 
 import com.example.p24zip.global.redis.RedisNotificationDto;
 import java.time.ZonedDateTime;

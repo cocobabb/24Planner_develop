@@ -1,4 +1,4 @@
-package com.example.p24zip.global.notification;
+package com.example.p24zip.global.notification.sse;
 
 import com.example.p24zip.domain.movingPlan.dto.response.HousemateNotificationDto;
 import com.example.p24zip.domain.user.entity.User;
