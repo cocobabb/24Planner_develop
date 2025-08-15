@@ -7,6 +7,7 @@ import com.example.p24zip.domain.taskGroup.dto.response.TaskGroupMemoUpdateRespo
 import com.example.p24zip.domain.taskGroup.dto.response.TaskGroupResponseDto;
 import com.example.p24zip.domain.taskGroup.service.TaskGroupService;
 import com.example.p24zip.domain.user.entity.User;
+import com.example.p24zip.global.exception.CustomCode;
 import com.example.p24zip.global.response.ApiResponse;
 import com.example.p24zip.global.validator.MovingPlanValidator;
 import jakarta.validation.Valid;
@@ -36,14 +37,16 @@ public class TaskGroupController {
         @Valid @RequestBody TaskGroupRequestDto requestDto,
         @PathVariable Long movingPlanId,
         @AuthenticationPrincipal User user
-    ){
+    ) {
         movingPlanValidator.validateMovingPlanAccess(movingPlanId, user);
 
-        return ResponseEntity.ok(ApiResponse.ok(
-            "CREATED",
-            "체크 그룹 생성에 성공했습니다.",
-            taskGroupService.createTaskGroup(requestDto, movingPlanId)
-        ));
+        return ResponseEntity.ok(
+            ApiResponse.ok(
+                CustomCode.TASK_GROUP_CREATE_SUCCESS.getCode(),
+                CustomCode.TASK_GROUP_CREATE_SUCCESS.getMessage(),
+                taskGroupService.createTaskGroup(requestDto, movingPlanId)
+            )
+        );
     }
 
     // 체크 그룹 전체 조회
@@ -51,14 +54,16 @@ public class TaskGroupController {
     public ResponseEntity<ApiResponse<TaskGroupListResponseDto>> getTaskGroups(
         @PathVariable Long movingPlanId,
         @AuthenticationPrincipal User user
-    ){
+    ) {
         movingPlanValidator.validateMovingPlanAccess(movingPlanId, user);
 
-        return ResponseEntity.ok(ApiResponse.ok(
-            "OK",
-            "체크 그룹 리스트 조회에 성공했습니다.",
-            taskGroupService.getTaskGroups(movingPlanId)
-        ));
+        return ResponseEntity.ok(
+            ApiResponse.ok(
+                CustomCode.TASK_GROUP_COLLECTION_LOAD_SUCCESS.getCode(),
+                CustomCode.TASK_GROUP_COLLECTION_LOAD_SUCCESS.getMessage(),
+                taskGroupService.getTaskGroups(movingPlanId)
+            )
+        );
     }
 
     // 체크 그룹 제목 수정
@@ -68,14 +73,16 @@ public class TaskGroupController {
         @PathVariable Long taskGroupId,
         @PathVariable Long movingPlanId,
         @AuthenticationPrincipal User user
-    ){
+    ) {
         movingPlanValidator.validateMovingPlanAccess(movingPlanId, user);
 
-        return ResponseEntity.ok(ApiResponse.ok(
-            "UPDATED",
-            "체크 그룹 제목 수정에 성공했습니다.",
-            taskGroupService.updateTaskGroupTitle(requestDto, taskGroupId, movingPlanId)
-        ));
+        return ResponseEntity.ok(
+            ApiResponse.ok(
+                CustomCode.TASK_GROUP_TITLE_UPDATE_SUCCESS.getCode(),
+                CustomCode.TASK_GROUP_TITLE_UPDATE_SUCCESS.getMessage(),
+                taskGroupService.updateTaskGroupTitle(requestDto, taskGroupId, movingPlanId)
+            )
+        );
     }
 
     // 체크 그룹 메모 수정
@@ -85,14 +92,16 @@ public class TaskGroupController {
         @PathVariable Long taskGroupId,
         @PathVariable Long movingPlanId,
         @AuthenticationPrincipal User user
-    ){
+    ) {
         movingPlanValidator.validateMovingPlanAccess(movingPlanId, user);
 
-        return ResponseEntity.ok(ApiResponse.ok(
-            "UPDATED",
-            "체크 그룹 메모 수정에 성공했습니다.",
-            taskGroupService.updateTaskGroupMemo(requestDto, taskGroupId, movingPlanId)
-        ));
+        return ResponseEntity.ok(
+            ApiResponse.ok(
+                CustomCode.TASK_GROUP_CONTENT_UPDATE_SUCCESS.getCode(),
+                CustomCode.TASK_GROUP_CONTENT_UPDATE_SUCCESS.getMessage(),
+                taskGroupService.updateTaskGroupMemo(requestDto, taskGroupId, movingPlanId)
+            )
+        );
     }
 
     // 체크 그룹 삭제
@@ -101,14 +110,16 @@ public class TaskGroupController {
         @PathVariable Long taskGroupId,
         @PathVariable Long movingPlanId,
         @AuthenticationPrincipal User user
-    ){
+    ) {
         movingPlanValidator.validateMovingPlanAccess(movingPlanId, user);
 
         taskGroupService.deleteTaskGroup(taskGroupId, movingPlanId);
-        return ResponseEntity.ok(ApiResponse.ok(
-            "DELETED",
-            "체크 그룹 삭제에 성공했습니다.",
-            null
-        ));
+        return ResponseEntity.ok(
+            ApiResponse.ok(
+                CustomCode.TASK_GROUP_DELETE_SUCCESS.getCode(),
+                CustomCode.TASK_GROUP_DELETE_SUCCESS.getMessage(),
+                null
+            )
+        );
     }
 }

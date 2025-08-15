@@ -7,6 +7,7 @@ import com.example.p24zip.domain.user.dto.response.ChangeNicknameResponseDto;
 import com.example.p24zip.domain.user.dto.response.RedisValueResponseDto;
 import com.example.p24zip.domain.user.entity.User;
 import com.example.p24zip.domain.user.service.AuthService;
+import com.example.p24zip.global.exception.CustomCode;
 import com.example.p24zip.global.response.ApiResponse;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -30,48 +31,62 @@ public class UserController {
 
 
     @PatchMapping("/password")
-    public ResponseEntity<ApiResponse<Void>> updatePassword(@RequestBody @Valid ChangePasswordRequestDto requestDto,
-        HttpServletResponse response ,@AuthenticationPrincipal User user) {
+    public ResponseEntity<ApiResponse<Void>> updatePassword(
+        @RequestBody @Valid ChangePasswordRequestDto requestDto,
+        HttpServletResponse response, @AuthenticationPrincipal User user) {
         authService.updatePassword(requestDto, response, user);
 
         return ResponseEntity.ok(
-            ApiResponse.ok("UPDATED","비밀번호 수정에 성공했습니다.", null)
+            ApiResponse.ok(
+                CustomCode.PASSWORD_RESET_SUCCESS.getCode(),
+                CustomCode.PASSWORD_RESET_SUCCESS.getMessage(),
+                null
+            )
         );
     }
 
     @GetMapping("/nickname")
-    public ResponseEntity<ApiResponse<ShowNicknameResponseDto>> getNickname(@AuthenticationPrincipal User user){
+    public ResponseEntity<ApiResponse<ShowNicknameResponseDto>> getNickname(
+        @AuthenticationPrincipal User user) {
 
-        return ResponseEntity.ok(ApiResponse.ok(
-                "OK",
-                "닉네임 조회에 성공했습니다.",
+        return ResponseEntity.ok(
+            ApiResponse.ok(
+                CustomCode.USER_NICKNAME_LOAD_SUCCESS.getCode(),
+                CustomCode.USER_NICKNAME_LOAD_SUCCESS.getMessage(),
                 authService.getNickname(user)
             )
         );
     }
 
     @PatchMapping("/nickname")
-    public ResponseEntity<ApiResponse<ChangeNicknameResponseDto>> updateNickname(@RequestBody @Valid ChangeNicknameRequestDto requestDto, @AuthenticationPrincipal User user){
+    public ResponseEntity<ApiResponse<ChangeNicknameResponseDto>> updateNickname(
+        @RequestBody @Valid ChangeNicknameRequestDto requestDto,
+        @AuthenticationPrincipal User user) {
 
-        return ResponseEntity.ok(ApiResponse.ok(
-            "UPDATED",
-            "닉네임 수정에 성공했습니다.",
-            authService.updateNickname(requestDto, user)
-        ));
+        return ResponseEntity.ok(
+            ApiResponse.ok(
+                CustomCode.USER_NICKNAME_UPDATE_SUCCESS.getCode(),
+                CustomCode.USER_NICKNAME_UPDATE_SUCCESS.getMessage(),
+                authService.updateNickname(requestDto, user)
+            )
+        );
     }
 
     @GetMapping("/redis/{key}")
-    public ResponseEntity<ApiResponse<RedisValueResponseDto>> getRedisValue(@PathVariable String key){
+    public ResponseEntity<ApiResponse<RedisValueResponseDto>> getRedisValue(
+        @PathVariable String key) {
 
-        return ResponseEntity.ok(ApiResponse.ok(
-            "OK",
-            "redis 접근에 성공했습니다.",
-            authService.getRedisValue(key)
-        ));
+        return ResponseEntity.ok(
+            ApiResponse.ok(
+                CustomCode.USER_REDIS_ACCESS_SUCCESS.getCode(),
+                CustomCode.USER_REDIS_ACCESS_SUCCESS.getMessage(),
+                authService.getRedisValue(key)
+            )
+        );
     }
 
     @DeleteMapping("/delete")
-    public void  deleteUser(@AuthenticationPrincipal User user) {
+    public void deleteUser(@AuthenticationPrincipal User user) {
         authService.deleteUser(user);
     }
 }

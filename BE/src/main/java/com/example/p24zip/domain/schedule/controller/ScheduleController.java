@@ -6,6 +6,7 @@ import com.example.p24zip.domain.schedule.dto.response.MonthScheduleListResponse
 import com.example.p24zip.domain.schedule.dto.response.ScheduleResponseDto;
 import com.example.p24zip.domain.schedule.service.ScheduleService;
 import com.example.p24zip.domain.user.entity.User;
+import com.example.p24zip.global.exception.CustomCode;
 import com.example.p24zip.global.response.ApiResponse;
 import com.example.p24zip.global.validator.MovingPlanValidator;
 import jakarta.validation.Valid;
@@ -29,8 +30,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/plans/{movingPlanId}/schedules")
 public class ScheduleController {
 
-    private final ScheduleService scheduleService;
     final MovingPlanValidator movingPlanValidator;
+    private final ScheduleService scheduleService;
 
     // 할 일 생성
     @PostMapping
@@ -38,14 +39,16 @@ public class ScheduleController {
         @RequestBody @Valid ScheduleRequestDto requestDto,
         @PathVariable Long movingPlanId,
         @AuthenticationPrincipal User user
-    ){
+    ) {
         movingPlanValidator.validateMovingPlanAccess(movingPlanId, user);
 
-        return ResponseEntity.ok(ApiResponse.ok(
-            "CREATED",
-            "할 일 생성에 성공했습니다.",
-            scheduleService.createSchedule(requestDto, movingPlanId)
-        ));
+        return ResponseEntity.ok(
+            ApiResponse.ok(
+                CustomCode.SCHEDULE_CREATE_SUCCESS.getCode(),
+                CustomCode.SCHEDULE_CREATE_SUCCESS.getMessage(),
+                scheduleService.createSchedule(requestDto, movingPlanId)
+            )
+        );
     }
 
     // 할 일 월별 조회
@@ -54,14 +57,16 @@ public class ScheduleController {
         @PathVariable Long movingPlanId,
         @RequestParam YearMonth month,
         @AuthenticationPrincipal User user
-    ){
+    ) {
         movingPlanValidator.validateMovingPlanAccess(movingPlanId, user);
 
-        return ResponseEntity.ok(ApiResponse.ok(
-            "OK",
-            "할 일 월별 목록 조회에 성공했습니다.",
-            scheduleService.getSchedulesInMonth(movingPlanId, month)
-        ));
+        return ResponseEntity.ok(
+            ApiResponse.ok(
+                CustomCode.SCHEDULE_MONTH_LOAD_SUCCESS.getCode(),
+                CustomCode.SCHEDULE_MONTH_LOAD_SUCCESS.getMessage(),
+                scheduleService.getSchedulesInMonth(movingPlanId, month)
+            )
+        );
     }
 
     // 할 일 날짜별 조회
@@ -70,14 +75,16 @@ public class ScheduleController {
         @PathVariable Long movingPlanId,
         @RequestParam LocalDate date,
         @AuthenticationPrincipal User user
-    ){
+    ) {
         movingPlanValidator.validateMovingPlanAccess(movingPlanId, user);
 
-        return ResponseEntity.ok(ApiResponse.ok(
-            "OK",
-            "할 일 날짜별 목록 조회에 성공했습니다.",
-            scheduleService.getSchedulesInDay(movingPlanId, date)
-        ));
+        return ResponseEntity.ok(
+            ApiResponse.ok(
+                CustomCode.SCHEDULE_DAY_LOAD_SUCCESS.getCode(),
+                CustomCode.SCHEDULE_DAY_LOAD_SUCCESS.getMessage(),
+                scheduleService.getSchedulesInDay(movingPlanId, date)
+            )
+        );
     }
 
     // 할 일 수정
@@ -87,14 +94,16 @@ public class ScheduleController {
         @PathVariable Long scheduleId,
         @PathVariable Long movingPlanId,
         @AuthenticationPrincipal User user
-        ){
+    ) {
         movingPlanValidator.validateMovingPlanAccess(movingPlanId, user);
 
-        return ResponseEntity.ok(ApiResponse.ok(
-            "UPDATED",
-            "할 일 수정에 성공했습니다.",
-            scheduleService.updateSchedule(requestDto, scheduleId, movingPlanId)
-        ));
+        return ResponseEntity.ok(
+            ApiResponse.ok(
+                CustomCode.SCHEDULE_UPDATE_SUCCESS.getCode(),
+                CustomCode.SCHEDULE_UPDATE_SUCCESS.getMessage(),
+                scheduleService.updateSchedule(requestDto, scheduleId, movingPlanId)
+            )
+        );
     }
 
     // 할 일 삭제
@@ -103,15 +112,17 @@ public class ScheduleController {
         @PathVariable Long scheduleId,
         @PathVariable Long movingPlanId,
         @AuthenticationPrincipal User user
-    ){
+    ) {
         movingPlanValidator.validateMovingPlanAccess(movingPlanId, user);
 
         scheduleService.deleteSchedule(scheduleId, movingPlanId);
-        return ResponseEntity.ok(ApiResponse.ok(
-            "DELETED",
-            "할 일 삭제에 성공했습니다.",
-            null
-        ));
+        return ResponseEntity.ok(
+            ApiResponse.ok(
+                CustomCode.SCHEDULE_DELETE_SUCCESS.getCode(),
+                CustomCode.SCHEDULE_DELETE_SUCCESS.getMessage(),
+                null
+            )
+        );
     }
 
 }

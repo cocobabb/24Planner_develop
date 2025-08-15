@@ -8,10 +8,10 @@ import com.example.p24zip.domain.movingPlan.repository.HousemateRepository;
 import com.example.p24zip.domain.movingPlan.repository.MovingPlanRepository;
 import com.example.p24zip.domain.user.entity.User;
 import com.example.p24zip.domain.user.repository.UserRepository;
-import com.example.p24zip.global.exception.CustomErrorCode;
+import com.example.p24zip.global.exception.CustomCode;
 import com.example.p24zip.global.exception.CustomException;
 import com.example.p24zip.global.exception.ResourceNotFoundException;
-import com.example.p24zip.global.notification.NotificationService;
+import com.example.p24zip.global.notification.sse.NotificationService;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -31,10 +31,10 @@ public class HousemateService {
     @Transactional
     public HousemateInvitationAcceptResponseDto acceptInvitation(Long movingPlanId, User invitee) {
         MovingPlan movingPlan = movingPlanRepository.findById(movingPlanId)
-            .orElseThrow(() -> new CustomException(CustomErrorCode.INVALID_INVITATION));
+            .orElseThrow(() -> new CustomException(CustomCode.INVALID_INVITATION));
 
         if (housemateRepository.existsByUserAndMovingPlan(invitee, movingPlan)) {
-            throw new CustomException(CustomErrorCode.ALREADY_REGISTERED);
+            throw new CustomException(CustomCode.ALREADY_REGISTERED);
         }
 
         // 기존 Housemate 목록 조회

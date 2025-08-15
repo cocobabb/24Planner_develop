@@ -8,7 +8,7 @@ public class ConnectMailException extends MailException {
 
     private final String errorCode;
 
-    public ConnectMailException(CustomErrorCode errorCode) {
+    public ConnectMailException(CustomCode errorCode) {
         super(errorCode.getMessage());
         this.errorCode = errorCode.getCode();
     }

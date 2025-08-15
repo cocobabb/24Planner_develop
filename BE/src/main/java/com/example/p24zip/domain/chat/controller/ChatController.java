@@ -6,6 +6,7 @@ import com.example.p24zip.domain.chat.dto.response.ChatsResponseDto;
 import com.example.p24zip.domain.chat.dto.response.MessageResponseDto;
 import com.example.p24zip.domain.chat.service.ChatService;
 import com.example.p24zip.domain.user.entity.User;
+import com.example.p24zip.global.exception.CustomCode;
 import com.example.p24zip.global.exception.StompTokenException;
 import com.example.p24zip.global.response.ApiResponse;
 import com.example.p24zip.global.security.jwt.JwtTokenProvider;
@@ -59,9 +60,11 @@ public class ChatController {
         movingPlanValidator.validateMovingPlanAccess(movingPlanId, user);
 
         return ResponseEntity.ok(
-            ApiResponse.ok("OK",
-                "댓글 조회에 성공했습니다.",
-                chatService.readChats(movingPlanId, user, size)
+            ApiResponse.ok(
+                CustomCode.CHAT_MESSAGE_LOAD_SUCCESS.getCode(),
+                CustomCode.CHAT_MESSAGE_LOAD_SUCCESS.getCode(),
+                chatService.readChats(movingPlanId, user, size
+                )
             )
         );
     }
@@ -89,9 +92,11 @@ public class ChatController {
         System.out.println("controller - getPreviousMessages: " + messageId);
 
         return ResponseEntity.ok(
-            ApiResponse.ok("OK",
-                "댓글 조회에 성공했습니다.",
-                chatService.getPreviousMessages(movingPlanId, user, messageId))
+            ApiResponse.ok(
+                CustomCode.CHAT_MESSAGE_LOAD_SUCCESS.getCode(),
+                CustomCode.CHAT_MESSAGE_LOAD_SUCCESS.getCode(),
+                chatService.getPreviousMessages(movingPlanId, user, messageId)
+            )
         );
     }
 
@@ -105,7 +110,11 @@ public class ChatController {
         chatService.deleteChats(movingPlanId);
 
         return ResponseEntity.ok(
-            ApiResponse.ok("DELETED", "댓글을 삭제했습니다.", null)
+            ApiResponse.ok(
+                CustomCode.CHAT_MESSAGE_DELETE_SUCCESS.getCode(),
+                CustomCode.CHAT_MESSAGE_DELETE_SUCCESS.getMessage(),
+                null
+            )
         );
     }
 }

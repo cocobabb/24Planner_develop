@@ -26,7 +26,7 @@ public class FcmController {
         throws IOException {
 
         fcmService.saveFcmDeviceToken(requestDTO, user);
-        return ApiResponse.ok(CustomCode.CREATE_FCM_TOKEN);
+        return ApiResponse.ok(CustomCode.FCM_TOKEN_CREATE);
     }
 
 }
