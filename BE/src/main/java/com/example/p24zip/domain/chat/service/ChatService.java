@@ -10,13 +10,15 @@ import com.example.p24zip.domain.movingPlan.entity.MovingPlan;
 import com.example.p24zip.domain.movingPlan.repository.MovingPlanRepository;
 import com.example.p24zip.domain.user.entity.User;
 import com.example.p24zip.domain.user.repository.UserRepository;
-import com.example.p24zip.global.exception.CustomErrorCode;
+import com.example.p24zip.global.exception.CustomCode;
 import com.example.p24zip.global.exception.CustomException;
 import com.example.p24zip.global.exception.ResourceNotFoundException;
+import com.example.p24zip.global.notification.fcm.FcmService;
 import com.example.p24zip.global.redis.RedisChatDto;
 import com.example.p24zip.global.validator.MovingPlanValidator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import java.io.IOException;
 import java.time.Duration;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -31,6 +33,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.util.HtmlUtils;
@@ -43,18 +46,25 @@ public class ChatService {
 
     private static final String REDIS_HASH_KEY_FORMAT = "chat:%d"; // Redis에 저장된 만료일3일 메세지들 chat:{movingPlanId}
     private static final String REDIS_HASH_KEY_LAST_CURSOR = "chat:%d:read:messageId:%s"; // 마지막으로 읽은 메세지 저장 chat:{movingPlanId}:read:messageId:{username}
+
     final MovingPlanValidator movingPlanValidator;
+
     private final MovingPlanRepository movingPlanRepository;
     private final ChatRepository chatRepository;
     private final UserRepository userRepository;
+
+    private final StringRedisTemplate stringRedisTemplate;
     private final RedisTemplate<String, Object> redisTemplate;
+
+    private final FcmService fcmService;
+
 
     @Transactional
     public MessageResponseDto Chatting(
         Long movingPlanId,
         MessageRequestDto requestDto,
         String tokenUsername
-    ) {
+    ) throws IOException {
 
         MovingPlan movingPlan = movingPlanRepository.findById(movingPlanId)
             .orElseThrow(() -> new ResourceNotFoundException());
@@ -65,6 +75,11 @@ public class ChatService {
         movingPlanValidator.validateMovingPlanAccess(movingPlanId, user);
 
         Chat chat = chatRepository.save(requestDto.toEntity(movingPlan, user));
+
+        // FCM
+        String deviceToken = stringRedisTemplate.opsForValue()
+            .get(user.getUsername() + ":deviceToken:web");
+        fcmService.sendMessageTo(deviceToken, "채팅 새메세지", requestDto.getText());
 
         // Redis에 저장할 채팅 정보 가진 DTO 생성
         RedisChatDto redisChatDto = RedisChatDto.builder()
@@ -374,7 +389,7 @@ public class ChatService {
         System.out.println("받아온 메세지 아이디: " + messageId);
 
         if (messageId == lastReadChat.getFirstMessageId()) {
-            throw new CustomException(CustomErrorCode.FIRST_CHAT_MESSAGE);
+            throw new CustomException(CustomCode.FIRST_CHAT_MESSAGE);
         }
 
         // Redis에 메세지 보관되어 있으면 MySQL가 아닌 Redis 데이터로 가져오기

@@ -65,6 +65,7 @@ public class SecurityConfig {
                 .requestMatchers("/plans/invitations/validate").permitAll()
                 .requestMatchers("/notifications/**").permitAll()
                 .requestMatchers("/chats/**").permitAll()
+                .requestMatchers("/fcm/**").permitAll()
                 .anyRequest().authenticated()
             )
             .oauth2Login(oauth2 -> oauth2

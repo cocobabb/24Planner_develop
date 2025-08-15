@@ -63,7 +63,11 @@ dependencies {
 
     // Jackson(ObjectMapper)이 ZonedDateTime(Java 8 날짜/시간 타입)을 기본적으로 지원하지 않음
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
-    
+
+    // FCM
+    implementation 'com.google.firebase:firebase-admin:9.2.0' // 최신 버전 예시
+    implementation 'com.squareup.okhttp3:okhttp:4.12.0'       // 최신 OkHttp
+
 }
 
 tasks.named('test') {

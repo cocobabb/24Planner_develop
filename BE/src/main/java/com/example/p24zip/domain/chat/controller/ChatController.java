@@ -10,6 +10,7 @@ import com.example.p24zip.global.exception.StompTokenException;
 import com.example.p24zip.global.response.ApiResponse;
 import com.example.p24zip.global.security.jwt.JwtTokenProvider;
 import com.example.p24zip.global.validator.MovingPlanValidator;
+import java.io.IOException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -39,7 +40,7 @@ public class ChatController {
     public MessageResponseDto chatting(
         StompHeaderAccessor headerAccessor,
         @DestinationVariable Long movingPlanId,
-        MessageRequestDto requestDto) {
+        MessageRequestDto requestDto) throws IOException {
 
         String token = headerAccessor.getFirstNativeHeader("Authorization");
         if (token == null || !jwtTokenProvider.validateToken(token)) {
