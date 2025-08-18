@@ -8,11 +8,12 @@ public enum CustomCode {
     // ASYNC
     EMAIL_SEND_FAIL("EMAIL_SEND_FAIL", "메일 전송 중 오류가 발생했습니다."),
 
-
-    // CHAT
+    // FCM
     FCM_TOKEN_CREATE("FCM_TOKEN_CREATE", "FCM 토큰을 생성하였습니다."),
+    FCM_SERVER_ERROR("FCM_SERVER_ERROR", "Firebase Key 불러오기 실패 "),
     GOOGLE_REQUEST_TOKEN_ERROR("GOOGLE_REQUEST_TOKEN_ERROR", "FCM 토큰이 유효하지 않습니다."),
 
+    // CHAT
 
     FIRST_CHAT_MESSAGE("FIRST_CHAT_MESSAGE", "이전 메세지가 없습니다."),
     CHAT_MESSAGE_LOAD_SUCCESS("OK", "채팅 메시지 조회에 성공했습니다."),

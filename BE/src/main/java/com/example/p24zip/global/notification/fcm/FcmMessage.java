@@ -26,8 +26,8 @@ public class FcmMessage {
     public static class Notification {
 
         private String title;
-        private String text;
-        private String image; // 다른 알림에서 쓰일 때를 대비하여 확장성 있게 이미지도 설정
+        private String body;
+        private String image; // 알림창에 보일 이미지 설정 관련
     }
 
 }

@@ -6,6 +6,7 @@ import com.example.p24zip.domain.chat.dto.response.MessageResponseDto;
 import com.example.p24zip.domain.chat.dto.response.UserLastReadResponseDto;
 import com.example.p24zip.domain.chat.entity.Chat;
 import com.example.p24zip.domain.chat.repository.ChatRepository;
+import com.example.p24zip.domain.movingPlan.entity.Housemate;
 import com.example.p24zip.domain.movingPlan.entity.MovingPlan;
 import com.example.p24zip.domain.movingPlan.repository.MovingPlanRepository;
 import com.example.p24zip.domain.user.entity.User;
@@ -18,13 +19,16 @@ import com.example.p24zip.global.redis.RedisChatDto;
 import com.example.p24zip.global.validator.MovingPlanValidator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.nimbusds.oauth2.sdk.GeneralException;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -44,8 +48,10 @@ import org.springframework.web.util.HtmlUtils;
 @Slf4j
 public class ChatService {
 
-    private static final String REDIS_HASH_KEY_FORMAT = "chat:%d"; // Redis에 저장된 만료일3일 메세지들 chat:{movingPlanId}
-    private static final String REDIS_HASH_KEY_LAST_CURSOR = "chat:%d:read:messageId:%s"; // 마지막으로 읽은 메세지 저장 chat:{movingPlanId}:read:messageId:{username}
+    private static final String CHAT_MESSAGES_REDIS_HASH_KEY = "chat:%d"; // Redis에 저장된 만료일3일 메세지들 chat:{movingPlanId}
+    private static final String CHAT_LAST_CURSOR_REDIS_HASH_KEY = "chat:%d:read:messageId:%s"; // 마지막으로 읽은 메세지 저장 chat:{movingPlanId}:read:messageId:{username}
+    private static final String FCM_TOKEN_REDIS_SET_KEY = "%s:deviceTokens";
+    private static final String FCM_RECEIVER_REDIS_SET_KEY = "chat:%d:connected";
 
     final MovingPlanValidator movingPlanValidator;
 
@@ -58,13 +64,12 @@ public class ChatService {
 
     private final FcmService fcmService;
 
-
     @Transactional
     public MessageResponseDto Chatting(
         Long movingPlanId,
         MessageRequestDto requestDto,
         String tokenUsername
-    ) throws IOException {
+    ) throws IOException, GeneralException {
 
         MovingPlan movingPlan = movingPlanRepository.findById(movingPlanId)
             .orElseThrow(() -> new ResourceNotFoundException());
@@ -77,9 +82,35 @@ public class ChatService {
         Chat chat = chatRepository.save(requestDto.toEntity(movingPlan, user));
 
         // FCM
-        String deviceToken = stringRedisTemplate.opsForValue()
-            .get(user.getUsername() + ":deviceToken:web");
-        fcmService.sendMessageTo(deviceToken, "채팅 새메세지", requestDto.getText());
+        // 🔹 1. 채팅방 참여자 조회
+        List<Housemate> participants = movingPlan.getHousemates();
+
+        // 🔹 2. 현재 채팅방 접속자 목록 (Redis/WebSocket 세션 기반)
+        List<String> connectedUsernames = getConnectedUsersFromRedis(movingPlanId);
+
+        // 🔹 3. FCM 알림 발송 (채팅방에 없는 사람만)
+        for (Housemate participant : participants) {
+            if (participant.getId().equals(user.getId())) {
+                continue; // 자기 자신 제외
+            }
+            if (connectedUsernames.contains(participant.getUser().getUsername())) {
+                continue; // 접속 중이면 제외
+            }
+
+            String key = String.format(FCM_TOKEN_REDIS_SET_KEY,
+                participant.getUser().getUsername());
+
+            Set<String> deviceTokens = stringRedisTemplate.opsForSet()
+                .members(key);
+
+            System.out.println("chatting deviceToken: " + deviceTokens);
+
+            if (deviceTokens != null) {
+                for (String token : deviceTokens) {
+                    fcmService.sendMessageTo(token, "새 메세지", requestDto.getText());
+                }
+            }
+        }
 
         // Redis에 저장할 채팅 정보 가진 DTO 생성
         RedisChatDto redisChatDto = RedisChatDto.builder()
@@ -107,6 +138,11 @@ public class ChatService {
             createDay);
     }
 
+    public List<String> getConnectedUsersFromRedis(Long movingPlanId) {
+        String key = String.format(FCM_RECEIVER_REDIS_SET_KEY, movingPlanId);
+        return new ArrayList<>(stringRedisTemplate.opsForSet().members(key));
+    }
+
 
     /**
      * 사용자가 읽은 마지막 messageId 기준으로 다음 메세지들을 보여주는 메서드
@@ -132,7 +168,8 @@ public class ChatService {
         movingPlanRepository.findById(movingPlanId)
             .orElseThrow(() -> new ResourceNotFoundException());
 
-        String key = String.format(REDIS_HASH_KEY_LAST_CURSOR, movingPlanId, user.getUsername());
+        String key = String.format(CHAT_LAST_CURSOR_REDIS_HASH_KEY, movingPlanId,
+            user.getUsername());
 
         Long lastReadMessageId;
         List<Chat> chats;
@@ -209,7 +246,7 @@ public class ChatService {
      * 작성자(닉네임), 채팅 작성된 시간}</p>
      */
     public void saveChatToRedis(RedisChatDto chatInfo) {
-        String key = String.format(REDIS_HASH_KEY_FORMAT, chatInfo.getMovingPlanId());
+        String key = String.format(CHAT_MESSAGES_REDIS_HASH_KEY, chatInfo.getMovingPlanId());
 
         redisTemplate.opsForHash().put(
             key,
@@ -229,7 +266,7 @@ public class ChatService {
      * @apiNote <p>레디스에 저장된 채팅들을 RedisChatDto 리스트로 가져오는 메서드</p>
      */
     public List<RedisChatDto> getMessagesFromRedis(Long movingPlanId) {
-        String key = String.format(REDIS_HASH_KEY_FORMAT, movingPlanId);
+        String key = String.format(CHAT_MESSAGES_REDIS_HASH_KEY, movingPlanId);
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
 
@@ -263,7 +300,8 @@ public class ChatService {
     public void saveLastCursorToRedis(Long movingPlanId, User user, Long messageId) {
         System.out.println("saveLastCursorToRedis-messageId: " + messageId);
 
-        String key = String.format(REDIS_HASH_KEY_LAST_CURSOR, movingPlanId, user.getUsername());
+        String key = String.format(CHAT_LAST_CURSOR_REDIS_HASH_KEY, movingPlanId,
+            user.getUsername());
 
         // MySQL 에서 해당 메세지 데이터 읽어와서 UserLastReadResponseDto로 변환
         UserLastReadResponseDto readChat = readMessageCursor(key, user, messageId);
@@ -381,7 +419,8 @@ public class ChatService {
         movingPlanRepository.findById(movingPlanId)
             .orElseThrow(() -> new ResourceNotFoundException());
 
-        String key = String.format(REDIS_HASH_KEY_LAST_CURSOR, movingPlanId, user.getUsername());
+        String key = String.format(CHAT_LAST_CURSOR_REDIS_HASH_KEY, movingPlanId,
+            user.getUsername());
 
         UserLastReadResponseDto lastReadChat = readMessageCursor(key, user, messageId);
 

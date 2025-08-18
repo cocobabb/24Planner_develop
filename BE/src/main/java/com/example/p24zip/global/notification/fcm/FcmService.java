@@ -8,6 +8,7 @@ import com.google.common.net.HttpHeaders;
 import com.nimbusds.oauth2.sdk.GeneralException;
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.MediaType;
@@ -25,26 +26,43 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class FcmService {
 
+    private static final String FCM_TOKEN_REDIS_SET_KEY = "%s:deviceTokens";
+
     private final ObjectMapper objectMapper;
     private final StringRedisTemplate stringRedisTemplate;
+
+    private final OkHttpClient okHttpClient = new OkHttpClient(); // 싱글턴 재사용
     private String FIREBASE_CONFIG_PATH = "firebase/firebase_service_key.json";
+
     @Value("${FCM_PROJECT_ID}")
-    private String fcm_project_id;
-    private String API_URL =
-        "https://fcm.googleapis.com/v1/projects/" + fcm_project_id + "/messages:send";
+    private String fcmProjectId;
+
+    private String getApiUrl() {
+        return "https://fcm.googleapis.com/v1/projects/" + fcmProjectId + "/messages:send";
+    }
+
 
     // FCM Web SDK의 vapidKey을 통해 브라우저 또는 앱이 FCM 서버와 직접 통신하여 토큰을 생성 후 레디스에 저장
     public void saveFcmDeviceToken(FcmCreateTokenRequestDto requestDTO, User user)
         throws IOException {
 
-        stringRedisTemplate.opsForValue()
-            .set(user.getUsername() + ":deviceToken:web", requestDTO.getDeviceToken());
+        System.out.println("deviceToken: " + requestDTO.getDeviceToken());
+        System.out.println("username: " + user.getUsername());
+        String key = String.format(FCM_TOKEN_REDIS_SET_KEY, user.getUsername());
+
+        stringRedisTemplate.opsForSet()
+            .add(key, requestDTO.getDeviceToken());
+
+        stringRedisTemplate.expire(key, 3, TimeUnit.DAYS);
     }
 
     // FCM deviceToken, 알림 내용을 전달받아 FCM 서버로 알림 전송
-    public void sendMessageTo(String deviceToken, String title, String body) throws IOException {
+    public void sendMessageTo(String deviceToken, String title, String body)
+        throws IOException, GeneralException {
 
         String message = makeMessage(deviceToken, title, body);
+
+        System.out.println("sendMessageTo의 메세지: " + message);
 
         OkHttpClient client = new OkHttpClient();
         RequestBody requestBody = RequestBody.create(
@@ -52,11 +70,14 @@ public class FcmService {
             MediaType.get("application/json; charset=utf-8")
         );
 
+        System.out.println("FCM-sendMessageTo의 requestBody: " + requestBody);
+
         // FCM 서버로 알림 넘겨줌 -> 토큰으로 구분하여 FCM 서버에서 알림 전송
         Request request = null;
+        System.out.println("FCM-sendMessageTo의 getAccessToken: " + getAccessToken());
         try {
             request = new Request.Builder()
-                .url(API_URL)
+                .url(getApiUrl())
                 .post(requestBody)
                 .addHeader(HttpHeaders.AUTHORIZATION, "Bearer " + getAccessToken()) // header에 포함
                 .addHeader(HttpHeaders.CONTENT_TYPE, "application/json; UTF-8")
@@ -78,7 +99,7 @@ public class FcmService {
                 .token(targetToken)
                 .notification(FcmMessage.Notification.builder()
                     .title(title)
-                    .text(body)
+                    .body(body)
                     .image(null)
                     .build()
                 ).build()
@@ -99,7 +120,7 @@ public class FcmService {
             return googleCredentials.getAccessToken().getTokenValue();
 
         } catch (IOException e) {
-            throw new GeneralException(String.valueOf(CustomCode.GOOGLE_REQUEST_TOKEN_ERROR));
+            throw new GeneralException(String.valueOf(CustomCode.FCM_SERVER_ERROR));
         }
     }
 

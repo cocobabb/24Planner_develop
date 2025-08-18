@@ -11,12 +11,17 @@ import com.example.p24zip.global.exception.StompTokenException;
 import com.example.p24zip.global.response.ApiResponse;
 import com.example.p24zip.global.security.jwt.JwtTokenProvider;
 import com.example.p24zip.global.validator.MovingPlanValidator;
+import com.nimbusds.oauth2.sdk.GeneralException;
 import java.io.IOException;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
+import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -35,13 +40,15 @@ public class ChatController {
     final MovingPlanValidator movingPlanValidator;
     private final ChatService chatService;
     private final JwtTokenProvider jwtTokenProvider;
+    private final StringRedisTemplate redisTemplate;
+
 
     @MessageMapping("/chat/{movingPlanId}")
     @SendTo("/topic/{movingPlanId}")
     public MessageResponseDto chatting(
         StompHeaderAccessor headerAccessor,
         @DestinationVariable Long movingPlanId,
-        MessageRequestDto requestDto) throws IOException {
+        MessageRequestDto requestDto) throws IOException, GeneralException {
 
         String token = headerAccessor.getFirstNativeHeader("Authorization");
         if (token == null || !jwtTokenProvider.validateToken(token)) {
@@ -51,6 +58,30 @@ public class ChatController {
 
         return chatService.Chatting(movingPlanId, requestDto, tokenUsername);
     }
+
+
+    @MessageMapping("/chat/{roomId}/enter")
+    public void enter(@DestinationVariable String roomId,
+        @Header("Authorization") String token,
+        @Payload Map<String, String> payload) {
+        String username = jwtTokenProvider.getUsername(token);
+        String key = "chat:" + roomId + ":connected";
+        redisTemplate.opsForSet().add(key, username);
+
+        System.out.println("✅ Entered room " + roomId + " / user " + username);
+    }
+
+    @MessageMapping("/chat/{roomId}/leave")
+    public void leave(@DestinationVariable String roomId,
+        @Header("Authorization") String token,
+        @Payload Map<String, String> payload) {
+        String username = jwtTokenProvider.getUsername(token);
+        String key = "chat:" + roomId + ":connected";
+        redisTemplate.opsForSet().remove(key, username);
+
+        System.out.println("❌ Left room " + roomId + " / user " + username);
+    }
+
 
     @GetMapping("/chats/{movingPlanId}")
     public ResponseEntity<ApiResponse<ChatsResponseDto>> readChats(@PathVariable Long movingPlanId,
