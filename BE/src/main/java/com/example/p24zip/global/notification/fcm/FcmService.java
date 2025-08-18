@@ -1,13 +1,11 @@
 package com.example.p24zip.global.notification.fcm;
 
 import com.example.p24zip.domain.user.entity.User;
-import com.example.p24zip.global.exception.CustomCode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.net.HttpHeaders;
 import com.nimbusds.oauth2.sdk.GeneralException;
 import java.io.IOException;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,7 +15,6 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -31,8 +28,9 @@ public class FcmService {
     private final ObjectMapper objectMapper;
     private final StringRedisTemplate stringRedisTemplate;
 
-    private final OkHttpClient okHttpClient = new OkHttpClient(); // 싱글턴 재사용
-    private String FIREBASE_CONFIG_PATH = "firebase/firebase_service_key.json";
+    private final OkHttpClient okHttpClient = new OkHttpClient();
+    private final GoogleCredentials googleCredentials;
+
 
     @Value("${FCM_PROJECT_ID}")
     private String fcmProjectId;
@@ -60,11 +58,14 @@ public class FcmService {
     public void sendMessageTo(String deviceToken, String title, String body)
         throws IOException, GeneralException {
 
-        String message = makeMessage(deviceToken, title, body);
+        // 자격 증명이 만료되면 자동 갱신
+        googleCredentials.refreshIfExpired();
 
+        // 인증•인가된 googleCredentials 객체로 토큰 가져와 firebase 서버에 데이터 전송
+        String accessToken = googleCredentials.getAccessToken().getTokenValue();
+        String message = makeMessage(deviceToken, title, body);
         System.out.println("sendMessageTo의 메세지: " + message);
 
-        OkHttpClient client = new OkHttpClient();
         RequestBody requestBody = RequestBody.create(
             message, // 만든 message body에 넣기
             MediaType.get("application/json; charset=utf-8")
@@ -74,18 +75,14 @@ public class FcmService {
 
         // FCM 서버로 알림 넘겨줌 -> 토큰으로 구분하여 FCM 서버에서 알림 전송
         Request request = null;
-        System.out.println("FCM-sendMessageTo의 getAccessToken: " + getAccessToken());
-        try {
-            request = new Request.Builder()
-                .url(getApiUrl())
-                .post(requestBody)
-                .addHeader(HttpHeaders.AUTHORIZATION, "Bearer " + getAccessToken()) // header에 포함
-                .addHeader(HttpHeaders.CONTENT_TYPE, "application/json; UTF-8")
-                .build();
-        } catch (GeneralException e) {
-            throw new RuntimeException(e);
-        }
-        Response response = client.newCall(request).execute(); // 요청 보냄
+        System.out.println("FCM-sendMessageTo의 accessToken: " + accessToken);
+        request = new Request.Builder()
+            .url(getApiUrl())
+            .post(requestBody)
+            .addHeader(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken) // header에 포함
+            .addHeader(HttpHeaders.CONTENT_TYPE, "application/json; UTF-8")
+            .build();
+        Response response = okHttpClient.newCall(request).execute(); // 요청 보냄
 
         System.out.println(response.body().string());
     }
@@ -105,23 +102,6 @@ public class FcmService {
                 ).build()
             ).build();
         return objectMapper.writeValueAsString(fcmMessage);
-    }
-
-    // Firebase Admin SDK의 비공개 키를 참조하여 Bearer 토큰을 발급 받는다.(Firebase와의 Authentication)
-    private String getAccessToken() throws GeneralException {
-
-        try {
-            final GoogleCredentials googleCredentials = GoogleCredentials
-                .fromStream(new ClassPathResource(FIREBASE_CONFIG_PATH).getInputStream())
-                .createScoped(List.of("https://www.googleapis.com/auth/cloud-platform"));
-
-            googleCredentials.refreshIfExpired();
-            log.info("access token: {}", googleCredentials.getAccessToken());
-            return googleCredentials.getAccessToken().getTokenValue();
-
-        } catch (IOException e) {
-            throw new GeneralException(String.valueOf(CustomCode.FCM_SERVER_ERROR));
-        }
     }
 
 
