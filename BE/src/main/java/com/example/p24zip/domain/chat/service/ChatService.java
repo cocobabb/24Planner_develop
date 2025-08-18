@@ -52,6 +52,7 @@ public class ChatService {
     private static final String CHAT_LAST_CURSOR_REDIS_HASH_KEY = "chat:%d:read:messageId:%s"; // 마지막으로 읽은 메세지 저장 chat:{movingPlanId}:read:messageId:{username}
     private static final String FCM_TOKEN_REDIS_SET_KEY = "%s:deviceTokens";
     private static final String FCM_RECEIVER_REDIS_SET_KEY = "chat:%d:connected";
+    private static final String FCM_NOTIFICATION_TITLE = "[%s]의 새 메세지";
 
     final MovingPlanValidator movingPlanValidator;
 
@@ -81,14 +82,14 @@ public class ChatService {
 
         Chat chat = chatRepository.save(requestDto.toEntity(movingPlan, user));
 
-        // FCM
-        // 🔹 1. 채팅방 참여자 조회
+        ////// FCM //////
+        // 채팅방 참여자 조회
         List<Housemate> participants = movingPlan.getHousemates();
 
-        // 🔹 2. 현재 채팅방 접속자 목록 (Redis/WebSocket 세션 기반)
+        // 현재 채팅방 접속자 목록 (Redis/WebSocket 세션 기반)
         List<String> connectedUsernames = getConnectedUsersFromRedis(movingPlanId);
 
-        // 🔹 3. FCM 알림 발송 (채팅방에 없는 사람만)
+        // FCM 알림 발송 (채팅방에 없는 사람만)
         for (Housemate participant : participants) {
             if (participant.getId().equals(user.getId())) {
                 continue; // 자기 자신 제외
@@ -105,9 +106,10 @@ public class ChatService {
 
             System.out.println("chatting deviceToken: " + deviceTokens);
 
+            String title = String.format(FCM_NOTIFICATION_TITLE, movingPlan.getTitle());
             if (deviceTokens != null) {
                 for (String token : deviceTokens) {
-                    fcmService.sendMessageTo(token, "새 메세지", requestDto.getText());
+                    fcmService.sendMessageTo(token, title, requestDto.getText());
                 }
             }
         }
