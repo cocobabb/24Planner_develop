@@ -3,7 +3,6 @@ package com.example.p24zip.domain.user.service;
 
 import com.example.p24zip.domain.chat.entity.Chat;
 import com.example.p24zip.domain.chat.repository.ChatRepository;
-import com.example.p24zip.domain.chat.service.ChatService;
 import com.example.p24zip.domain.house.dto.response.ShowNicknameResponseDto;
 import com.example.p24zip.domain.movingPlan.entity.Housemate;
 import com.example.p24zip.domain.movingPlan.entity.MovingPlan;
@@ -27,11 +26,11 @@ import com.example.p24zip.domain.user.entity.Role;
 import com.example.p24zip.domain.user.entity.User;
 import com.example.p24zip.domain.user.repository.UserRepository;
 import com.example.p24zip.global.exception.ConnectMailException;
-import com.example.p24zip.global.exception.CustomErrorCode;
+import com.example.p24zip.global.exception.CustomCode;
 import com.example.p24zip.global.exception.CustomException;
 import com.example.p24zip.global.exception.ResourceNotFoundException;
 import com.example.p24zip.global.exception.TokenException;
-import com.example.p24zip.global.notification.SseEmitterPool;
+import com.example.p24zip.global.notification.sse.SseEmitterPool;
 import com.example.p24zip.global.redis.RedisChatDto;
 import com.example.p24zip.global.security.jwt.JwtTokenProvider;
 import com.example.p24zip.global.service.AsyncService;
@@ -70,19 +69,25 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuthService {
 
     private static final String REDIS_HASH_KEY_FORMAT = "chat:%d"; // Redis에 저장된 만료일3일 메세지들 chat:{movingPlanId}
+
     private final UserRepository userRepository;
     private final HousemateRepository housemateRepository;
     private final MovingPlanRepository movingPlanRepository;
     private final ChatRepository chatRepository;
+
     private final PasswordEncoder passwordEncoder; // 회원가입 시 비밀번호 암호화
+
     private final StringRedisTemplate stringRedisTemplate; // String redis 객체
     private final RedisTemplate<String, Object> redisTemplate; // Object redis 객체
+
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
+
     private final TempUserService tempUserService;
     private final AsyncService asyncService;
-    private final ChatService chatService;
+
     private final SseEmitterPool sseEmitterPool;
+
     @Value("${MAIL_ADDRESS}")
     private String mailAddress;
     @Value("${ORIGIN}")
@@ -99,7 +104,7 @@ public class AuthService {
         boolean checkUsername = checkExistsUsername(requestDto.getUsername());
 
         if (checkUsername) {
-            throw new CustomException(CustomErrorCode.EXIST_EMAIL);
+            throw new CustomException(CustomCode.EXIST_EMAIL);
         }
         checkExistNickname(requestDto.getNickname());
 
@@ -127,13 +132,13 @@ public class AuthService {
                 stringRedisTemplate.opsForValue().get(username + "_mail_createdAt"));
 
             if (!checkAccessTime.plusSeconds(5).isBefore(LocalDateTime.now())) {
-                throw new CustomException(CustomErrorCode.TOOMANY_REQUEST);
+                throw new CustomException(CustomCode.TOOMANY_REQUEST);
             }
         }
 
         boolean checkUsername = checkExistsUsername(username);
         if (checkUsername) {
-            throw new CustomException(CustomErrorCode.EXIST_EMAIL);
+            throw new CustomException(CustomCode.EXIST_EMAIL);
         }
 
         Random random = new Random();
@@ -167,18 +172,18 @@ public class AuthService {
         String code = requestDto.getCode();
 
         if (!stringRedisTemplate.hasKey(username + "_mail")) {
-            throw new CustomException(CustomErrorCode.BAD_REQUEST);
+            throw new CustomException(CustomCode.BAD_REQUEST);
         }
         // -2: 시간 만료
         if (stringRedisTemplate.getExpire(username + "_mail") != -2) {
             if (!code.equals(stringRedisTemplate.opsForValue().get(username + "_mail"))) {
-                throw new CustomException(CustomErrorCode.BAD_REQUEST);
+                throw new CustomException(CustomCode.BAD_REQUEST);
             } else {
                 stringRedisTemplate.delete(username + "_mail");
                 stringRedisTemplate.delete(username + "_mail_createdAt");
             }
         } else {
-            throw new CustomException(CustomErrorCode.TIME_OUT);
+            throw new CustomException(CustomCode.TIME_OUT);
         }
 
     }
@@ -193,10 +198,10 @@ public class AuthService {
         boolean checkExistNickname = userRepository.existsByNickname(nickname);
 
         if (checkExistNickname) {
-            throw new CustomException(CustomErrorCode.EXIST_NICKNAME);
+            throw new CustomException(CustomCode.EXIST_NICKNAME);
         }
         if (!(nickname.length() >= 2 && nickname.length() <= 17)) {
-            throw new CustomException(CustomErrorCode.BAD_REQUEST);
+            throw new CustomException(CustomCode.BAD_REQUEST);
         }
     }
 
@@ -209,10 +214,10 @@ public class AuthService {
     public FindPasswordResponseDto findPassword(VerifyEmailRequestDto requestDto) {
         String username = requestDto.getUsername();
         User user = userRepository.findByUsername(username)
-            .orElseThrow(() -> new CustomException(CustomErrorCode.NOT_EXIST_EMAIL));
+            .orElseThrow(() -> new CustomException(CustomCode.NOT_EXIST_EMAIL));
 
         if (user.getProvider() != null) {
-            throw new CustomException(CustomErrorCode.SOCIAL_LOGIN);
+            throw new CustomException(CustomCode.SOCIAL_LOGIN);
         }
 
         if (stringRedisTemplate.hasKey(username + "_tempToken")) {
@@ -220,7 +225,7 @@ public class AuthService {
                 stringRedisTemplate.opsForValue().get(username + "_tempToken_createdAt"));
 
             if (!checkAccessTime.plusSeconds(5).isBefore(ZonedDateTime.now())) {
-                throw new CustomException(CustomErrorCode.TOOMANY_REQUEST);
+                throw new CustomException(CustomCode.TOOMANY_REQUEST);
             }
         }
 
@@ -282,7 +287,7 @@ public class AuthService {
 
         // 소셜로그인 계정은 일반 로그인 제한
         if (user.getProvider() != null) {
-            throw new CustomException(CustomErrorCode.SOCIAL_LOGIN_NEEDED);
+            throw new CustomException(CustomCode.SOCIAL_LOGIN_NEEDED);
         }
 
         authenticationManager.authenticate(
@@ -351,7 +356,7 @@ public class AuthService {
         String nickname = requestDto.getNickname();
 
         if (userRepository.existsByNickname(nickname)) {
-            throw new CustomException(CustomErrorCode.EXIST_NICKNAME);
+            throw new CustomException(CustomCode.EXIST_NICKNAME);
         }
 
         user.setNickname(nickname);

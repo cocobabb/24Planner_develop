@@ -1,7 +1,7 @@
 package com.example.p24zip.global.service;
 
 import com.example.p24zip.global.exception.ConnectMailException;
-import com.example.p24zip.global.exception.CustomErrorCode;
+import com.example.p24zip.global.exception.CustomCode;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
@@ -56,7 +56,7 @@ public class AsyncService {
 
                 } catch (MessagingException | MailException | UnsupportedEncodingException e) {
                     log.error("[메일 전송 실패] to = {}", to, e);
-                    throw new ConnectMailException(CustomErrorCode.EMAIL_SEND_FAIL);
+                    throw new ConnectMailException(CustomCode.EMAIL_SEND_FAIL);
                 }
             });
 
@@ -66,17 +66,17 @@ public class AsyncService {
             } catch (TimeoutException e) {
                 future.cancel(true); // 타임아웃 시 강제 인터럽트
                 log.error("[메일 전송 타임아웃] {}초 초과: {}", MAIL_TIMEOUT_SECONDS, to);
-                throw new ConnectMailException(CustomErrorCode.EMAIL_SEND_FAIL);
+                throw new ConnectMailException(CustomCode.EMAIL_SEND_FAIL);
             } catch (ExecutionException e) {
                 if (e.getCause() instanceof ConnectMailException ce) {
                     throw ce;
                 }
                 log.error("[메일 전송 중 예외 발생] username = {}", to, e);
-                throw new ConnectMailException(CustomErrorCode.EMAIL_SEND_FAIL);
+                throw new ConnectMailException(CustomCode.EMAIL_SEND_FAIL);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 log.error("[메일 전송 인터럽트] {}", to, e);
-                throw new ConnectMailException(CustomErrorCode.EMAIL_SEND_FAIL);
+                throw new ConnectMailException(CustomCode.EMAIL_SEND_FAIL);
             }
 
             return null;

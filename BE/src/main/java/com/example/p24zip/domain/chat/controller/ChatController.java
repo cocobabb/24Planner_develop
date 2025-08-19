@@ -6,15 +6,22 @@ import com.example.p24zip.domain.chat.dto.response.ChatsResponseDto;
 import com.example.p24zip.domain.chat.dto.response.MessageResponseDto;
 import com.example.p24zip.domain.chat.service.ChatService;
 import com.example.p24zip.domain.user.entity.User;
+import com.example.p24zip.global.exception.CustomCode;
 import com.example.p24zip.global.exception.StompTokenException;
 import com.example.p24zip.global.response.ApiResponse;
 import com.example.p24zip.global.security.jwt.JwtTokenProvider;
 import com.example.p24zip.global.validator.MovingPlanValidator;
+import com.nimbusds.oauth2.sdk.GeneralException;
+import java.io.IOException;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
+import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -33,13 +40,15 @@ public class ChatController {
     final MovingPlanValidator movingPlanValidator;
     private final ChatService chatService;
     private final JwtTokenProvider jwtTokenProvider;
+    private final StringRedisTemplate redisTemplate;
+
 
     @MessageMapping("/chat/{movingPlanId}")
     @SendTo("/topic/{movingPlanId}")
     public MessageResponseDto chatting(
         StompHeaderAccessor headerAccessor,
         @DestinationVariable Long movingPlanId,
-        MessageRequestDto requestDto) {
+        MessageRequestDto requestDto) throws IOException, GeneralException {
 
         String token = headerAccessor.getFirstNativeHeader("Authorization");
         if (token == null || !jwtTokenProvider.validateToken(token)) {
@@ -50,6 +59,31 @@ public class ChatController {
         return chatService.Chatting(movingPlanId, requestDto, tokenUsername);
     }
 
+    // 채팅방에 들어온 사용자 Redis Set에 저장
+    @MessageMapping("/chat/{roomId}/enter")
+    public void enter(@DestinationVariable String roomId,
+        @Header("Authorization") String token,
+        @Payload Map<String, String> payload) {
+        String username = jwtTokenProvider.getUsername(token);
+        String key = "chat:" + roomId + ":connected";
+        redisTemplate.opsForSet().add(key, username);
+
+        log.info("✅ Entered room {} user-{}", roomId, username);
+    }
+
+    // 채팅방 나간 사용자 Redis Set에서 삭제
+    @MessageMapping("/chat/{roomId}/leave")
+    public void leave(@DestinationVariable String roomId,
+        @Header("Authorization") String token,
+        @Payload Map<String, String> payload) {
+        String username = jwtTokenProvider.getUsername(token);
+        String key = "chat:" + roomId + ":connected";
+        redisTemplate.opsForSet().remove(key, username);
+
+        log.info("❌ Left room {}  user-{}", roomId, username);
+    }
+
+
     @GetMapping("/chats/{movingPlanId}")
     public ResponseEntity<ApiResponse<ChatsResponseDto>> readChats(@PathVariable Long movingPlanId,
         @AuthenticationPrincipal User user,
@@ -58,9 +92,11 @@ public class ChatController {
         movingPlanValidator.validateMovingPlanAccess(movingPlanId, user);
 
         return ResponseEntity.ok(
-            ApiResponse.ok("OK",
-                "댓글 조회에 성공했습니다.",
-                chatService.readChats(movingPlanId, user, size)
+            ApiResponse.ok(
+                CustomCode.CHAT_MESSAGE_LOAD_SUCCESS.getCode(),
+                CustomCode.CHAT_MESSAGE_LOAD_SUCCESS.getCode(),
+                chatService.readChats(movingPlanId, user, size
+                )
             )
         );
     }
@@ -88,9 +124,11 @@ public class ChatController {
         System.out.println("controller - getPreviousMessages: " + messageId);
 
         return ResponseEntity.ok(
-            ApiResponse.ok("OK",
-                "댓글 조회에 성공했습니다.",
-                chatService.getPreviousMessages(movingPlanId, user, messageId))
+            ApiResponse.ok(
+                CustomCode.CHAT_MESSAGE_LOAD_SUCCESS.getCode(),
+                CustomCode.CHAT_MESSAGE_LOAD_SUCCESS.getCode(),
+                chatService.getPreviousMessages(movingPlanId, user, messageId)
+            )
         );
     }
 
@@ -104,7 +142,11 @@ public class ChatController {
         chatService.deleteChats(movingPlanId);
 
         return ResponseEntity.ok(
-            ApiResponse.ok("DELETED", "댓글을 삭제했습니다.", null)
+            ApiResponse.ok(
+                CustomCode.CHAT_MESSAGE_DELETE_SUCCESS.getCode(),
+                CustomCode.CHAT_MESSAGE_DELETE_SUCCESS.getMessage(),
+                null
+            )
         );
     }
 }

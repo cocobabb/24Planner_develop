@@ -363,3 +363,7 @@ target/
 
 # local 저장 파일
 dump.rdb
+
+# Firebase
+firebase*.json
+

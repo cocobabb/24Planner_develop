@@ -136,12 +136,29 @@ export default function Chat() {
         }
       });
 
+      // ✅ 접속 알림 (채팅방 입장)
+      const accessToken = localStorage.getItem('accessToken');
+      stomp.publish({
+        destination: `/app/chat/${movingPlanId}/enter`,
+        headers: { Authorization: `${accessToken}` },
+        body: JSON.stringify({ nickname: storeNickname }),
+      });
+
       setStompClient(stomp);
     };
 
     stomp.activate(); // WebSocket 활성화
 
     return () => {
+      if (stomp.connected) {
+        // ✅ 퇴장 알림 (채팅방 나가기)
+        const accessToken = localStorage.getItem('accessToken');
+        stomp.publish({
+          destination: `/app/chat/${movingPlanId}/leave`,
+          headers: { Authorization: `${accessToken}` },
+          body: JSON.stringify({ nickname: storeNickname }),
+        });
+      }
       stomp.deactivate(); // 컴포넌트 언마운트 시 연결 해제
     };
   }, []);

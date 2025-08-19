@@ -7,18 +7,21 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "predev": "node scripts/generate-firebase-config.js",
+    "prebuild": "node scripts/generate-firebase-config.js"
   },
   "dependencies": {
     "@fullcalendar/core": "^6.1.15",
     "@fullcalendar/daygrid": "^6.1.15",
     "@fullcalendar/interaction": "^6.1.15",
     "@fullcalendar/react": "^6.1.15",
-    "@reduxjs/toolkit": "^2.6.1",
+    "@reduxjs/toolkit": "^2.8.2",
     "@stomp/stompjs": "^7.1.0",
     "@tailwindcss/vite": "^4.0.14",
     "@tanstack/react-query": "^5.71.3",
     "axios": "^1.8.3",
+    "firebase": "^12.1.0",
     "jwt-decode": "^4.0.0",
     "react": "^19.0.0",
     "react-datepicker": "^8.2.1",
@@ -26,6 +29,7 @@
     "react-dom": "^19.0.0",
     "react-redux": "^9.2.0",
     "react-router-dom": "^7.3.0",
+    "react-toastify": "^11.0.5",
     "sockjs-client": "^1.6.1",
     "tailwindcss": "^4.0.14",
     "websocket": "^1.0.35"

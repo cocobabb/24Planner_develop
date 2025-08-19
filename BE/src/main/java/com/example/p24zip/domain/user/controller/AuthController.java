@@ -11,6 +11,7 @@ import com.example.p24zip.domain.user.dto.response.LoginResponseDto;
 import com.example.p24zip.domain.user.dto.response.OAuthSignupResponseDto;
 import com.example.p24zip.domain.user.dto.response.VerifyEmailDataResponseDto;
 import com.example.p24zip.domain.user.service.AuthService;
+import com.example.p24zip.global.exception.CustomCode;
 import com.example.p24zip.global.response.ApiResponse;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -41,7 +42,11 @@ public class AuthController {
         authService.signup(requestDto);
 
         return ResponseEntity.ok(
-            ApiResponse.ok("CREATED", "회원가입을 성공했습니다.", null)
+            ApiResponse.ok(
+                CustomCode.SIGNUP_SUCCESS.getCode(),
+                CustomCode.SIGNUP_SUCCESS.getMessage(),
+                null
+            )
         );
     }
 
@@ -51,7 +56,11 @@ public class AuthController {
         throws MessagingException, UnsupportedEncodingException {
 
         return ResponseEntity.ok(
-            ApiResponse.ok("OK", "인증 번호를 전송했습니다.", authService.sendEmail(requestDto))
+            ApiResponse.ok(
+                CustomCode.SIGNUP_SEND_CODE_SUCCESS.getCode(),
+                CustomCode.SIGNUP_SEND_CODE_SUCCESS.getMessage(),
+                authService.sendEmail(requestDto)
+            )
         );
     }
 
@@ -61,7 +70,11 @@ public class AuthController {
         authService.checkCode(requestDto);
 
         return ResponseEntity.ok(
-            ApiResponse.ok("OK", "인증에 성공했습니다.", null)
+            ApiResponse.ok(
+                CustomCode.SIGNUP_VERIFY_CODE_SUCCESS.getCode(),
+                CustomCode.SIGNUP_VERIFY_CODE_SUCCESS.getMessage(),
+                null
+            )
         );
     }
 
@@ -70,7 +83,11 @@ public class AuthController {
         authService.checkExistNickname(nickname);
 
         return ResponseEntity.ok(
-            ApiResponse.ok("OK", "사용 가능한 닉네임입니다.", null)
+            ApiResponse.ok(
+                CustomCode.SIGNUP_AVAILABLE_NICKNAME_SUCCESS.getCode(),
+                CustomCode.SIGNUP_AVAILABLE_NICKNAME_SUCCESS.getMessage(),
+                null
+            )
         );
     }
 
@@ -80,27 +97,35 @@ public class AuthController {
         throws MessagingException, UnsupportedEncodingException {
 
         return ResponseEntity.ok(
-            ApiResponse.ok("OK", "인증 링크를 전송했습니다.", authService.findPassword(requestDto))
+            ApiResponse.ok(
+                CustomCode.SIGNUP_SEND_LINK_SUCCESS.getCode(),
+                CustomCode.SIGNUP_SEND_LINK_SUCCESS.getMessage(),
+                authService.findPassword(requestDto)
+            )
         );
     }
 
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<LoginResponseDto>> login(
         @Valid @RequestBody LoginRequestDto requestDto, HttpServletResponse response) {
-        return ResponseEntity.ok(ApiResponse.ok(
-            "OK",
-            "로그인이 성공했습니다.",
-            authService.login(requestDto, response)
-        ));
+        return ResponseEntity.ok(
+            ApiResponse.ok(
+                CustomCode.LOGIN_SUCCESS.getCode(),
+                CustomCode.LOGIN_SUCCESS.getMessage(),
+                authService.login(requestDto, response)
+            )
+        );
     }
 
     @GetMapping("/reissue")
     public ResponseEntity<ApiResponse<AccessTokenResponseDto>> reissue(HttpServletRequest request) {
-        return ResponseEntity.ok(ApiResponse.ok(
-            "OK",
-            "accessToken 재발급을 성공했습니다.",
-            authService.reissue(request)
-        ));
+        return ResponseEntity.ok(
+            ApiResponse.ok(
+                CustomCode.LOGIN_REISSUE_SUCCESS.getCode(),
+                CustomCode.LOGIN_REISSUE_SUCCESS.getMessage(),
+                authService.reissue(request)
+            )
+        );
     }
 
     @DeleteMapping("/logout")
@@ -108,11 +133,13 @@ public class AuthController {
         HttpServletResponse response) {
         authService.logout(request, response);
 
-        return ResponseEntity.ok(ApiResponse.ok(
-            "OK",
-            "로그아웃을 성공했습니다.",
-            null
-        ));
+        return ResponseEntity.ok(
+            ApiResponse.ok(
+                CustomCode.LOGOUT_SUCCESS.getCode(),
+                CustomCode.LOGOUT_SUCCESS.getMessage(),
+                null
+            )
+        );
     }
 
     @GetMapping("/verify")
@@ -126,10 +153,12 @@ public class AuthController {
         HttpServletResponse response,
         @RequestBody OAuthSignupRequestDto requestDto
     ) {
-        return ResponseEntity.ok(ApiResponse.ok(
-            "CREATED",
-            "회원가입 후 로그인에 성공했습니다.",
-            authService.completeSignup(request, response, requestDto)
-        ));
+        return ResponseEntity.ok(
+            ApiResponse.ok(
+                CustomCode.SOCIAL_LOGIN_SUCCESS.getCode(),
+                CustomCode.SOCIAL_LOGIN_SUCCESS.getMessage(),
+                authService.completeSignup(request, response, requestDto)
+            )
+        );
     }
 }

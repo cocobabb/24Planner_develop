@@ -8,7 +8,7 @@ import com.example.p24zip.domain.schedule.dto.response.MonthScheduleListResponse
 import com.example.p24zip.domain.schedule.dto.response.ScheduleResponseDto;
 import com.example.p24zip.domain.schedule.entity.Schedule;
 import com.example.p24zip.domain.schedule.repository.ScheduleRepository;
-import com.example.p24zip.global.exception.CustomErrorCode;
+import com.example.p24zip.global.exception.CustomCode;
 import com.example.p24zip.global.exception.CustomException;
 import com.example.p24zip.global.exception.ResourceNotFoundException;
 import java.time.LocalDate;
@@ -99,7 +99,7 @@ public class ScheduleService {
     // 시작 날짜가 종료 날짜 이후인 경우
     private void isDateValid(ScheduleRequestDto requestDto) {
         if (requestDto.getStartDate().isAfter(requestDto.getEndDate())) {
-            throw new CustomException(CustomErrorCode.INVALID_DATE);
+            throw new CustomException(CustomCode.INVALID_DATE);
         }
     }
 

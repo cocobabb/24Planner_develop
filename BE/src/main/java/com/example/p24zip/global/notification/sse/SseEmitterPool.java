@@ -1,4 +1,4 @@
-package com.example.p24zip.global.notification;
+package com.example.p24zip.global.notification.sse;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

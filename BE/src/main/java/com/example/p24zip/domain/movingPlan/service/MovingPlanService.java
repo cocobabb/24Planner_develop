@@ -1,6 +1,5 @@
 package com.example.p24zip.domain.movingPlan.service;
 
-import com.example.p24zip.domain.movingPlan.controller.NotificationController;
 import com.example.p24zip.domain.movingPlan.dto.request.MovingPlanRequestDto;
 import com.example.p24zip.domain.movingPlan.dto.response.MovingPlanHousemateResponseDto;
 import com.example.p24zip.domain.movingPlan.dto.response.MovingPlanOwnerResponseDto;
@@ -11,7 +10,8 @@ import com.example.p24zip.domain.movingPlan.repository.HousemateRepository;
 import com.example.p24zip.domain.movingPlan.repository.MovingPlanRepository;
 import com.example.p24zip.domain.user.entity.User;
 import com.example.p24zip.global.exception.ResourceNotFoundException;
-import com.example.p24zip.global.notification.SseEmitterPool;
+import com.example.p24zip.global.notification.sse.NotificationController;
+import com.example.p24zip.global.notification.sse.SseEmitterPool;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

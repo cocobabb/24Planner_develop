@@ -4,12 +4,17 @@ import com.example.p24zip.domain.movingPlan.dto.response.HousemateInvitationResp
 import com.example.p24zip.domain.movingPlan.service.HousemateService;
 import com.example.p24zip.domain.movingPlan.service.InvitationService;
 import com.example.p24zip.domain.user.entity.User;
+import com.example.p24zip.global.exception.CustomCode;
 import com.example.p24zip.global.response.ApiResponse;
 import com.example.p24zip.global.validator.MovingPlanValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
@@ -22,32 +27,32 @@ public class HousemateController {
 
     @PostMapping("/invite")
     public ResponseEntity<ApiResponse<HousemateInvitationResponseDto>> createHouseMateInvitation(
-            @PathVariable Long movingPlanId,
-            @AuthenticationPrincipal User user) {
+        @PathVariable Long movingPlanId,
+        @AuthenticationPrincipal User user) {
 
         movingPlanValidator.validateMovingPlanOwnership(movingPlanId, user);
 
         return ResponseEntity.ok(ApiResponse.ok(
-                "CREATED",
-                "동거인 초대 링크 생성에 성공했습니다.",
-                invitationService.createHouseMateInvitation(movingPlanId, user)
+            CustomCode.HOUSEMATE_CREATE_SUCCESS.getCode(),
+            CustomCode.HOUSEMATE_CREATE_SUCCESS.getMessage(),
+            invitationService.createHouseMateInvitation(movingPlanId, user)
         ));
     }
 
     @DeleteMapping("/{housemateId}")
     public ResponseEntity<ApiResponse<Object>> deleteHousemate(
-            @PathVariable Long movingPlanId,
-            @PathVariable Long housemateId,
-            @AuthenticationPrincipal User user) {
+        @PathVariable Long movingPlanId,
+        @PathVariable Long housemateId,
+        @AuthenticationPrincipal User user) {
 
         movingPlanValidator.validateMovingPlanAccess(movingPlanId, user);
 
         housemateService.deleteHousemate(housemateId);
 
         return ResponseEntity.ok(ApiResponse.ok(
-                "DELETED",
-                "동거인 삭제에 성공했습니다.",
-                null
+            CustomCode.HOUSEMATE_DELETE_SUCCESS.getCode(),
+            CustomCode.HOUSEMATE_DELETE_SUCCESS.getMessage(),
+            null
         ));
     }
 }
