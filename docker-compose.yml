@@ -24,7 +24,6 @@ services:
       retries: 3
       start_period: 30s
 
-
   # redis
   redis:
     container_name: db-24zip-redis-container
@@ -41,7 +40,6 @@ services:
       timeout: 5s
       retries: 3
       start_period: 30s
-    
 
   # # backend(api)
   # # # 컨테이너명, Dockerfile 경로, 이미지명, 포트(선택), 네트워크, 환경변수파일, 의존관계
@@ -78,6 +76,7 @@ services:
       args:
         - VITE_KAKAO_JAVASCRIPT_KEY=${VITE_KAKAO_JAVASCRIPT_KEY}
         - VITE_CHAT_URL=${VITE_CHAT_URL}
+        - VITE_FIREBASE_VAPID_KEY=${VITE_FIREBASE_VAPID_KEY}
     image: ${DOCKER_USERNAME}/24zip-client-image:latest
     ports:
       - "80:80"
