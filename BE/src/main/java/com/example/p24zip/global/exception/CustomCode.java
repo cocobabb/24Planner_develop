@@ -89,8 +89,8 @@ public enum CustomCode {
     SOCIAL_LOGIN_SUCCESS("CREATED", "회원가입 후 로그인에 성공했습니다."),
 
     PASSWORD_RESET_SUCCESS("UPDATED", "비밀번호 재설정에 성공했습니다."),
-    USER_NICKNAME_LOAD_SUCCESS("UPDATE", "닉네임 수정에 성공했습니다."),
-    USER_NICKNAME_UPDATE_SUCCESS("UPDATE", "닉네임 수정에 성공했습니다."),
+    USER_NICKNAME_LOAD_SUCCESS("OK", "닉네임 조회에 성공했습니다."),
+    USER_NICKNAME_UPDATE_SUCCESS("UPDATED", "닉네임 수정에 성공했습니다."),
     USER_REDIS_ACCESS_SUCCESS("OK", "redis 접근에 성공했습니다."),
     EXIST_EMAIL("EXIST_EMAIL", "이미 사용중인 이메일입니다."),
     TOOMANY_REQUEST("TOOMANY_REQUEST", "5초안에 다시 요청했습니다."),
