@@ -19,7 +19,6 @@ import com.example.p24zip.global.redis.RedisChatDto;
 import com.example.p24zip.global.validator.MovingPlanValidator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.nimbusds.oauth2.sdk.GeneralException;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.ZoneId;
@@ -50,9 +49,11 @@ public class ChatService {
 
     private static final String CHAT_MESSAGES_REDIS_HASH_KEY = "chat:%d"; // Redis에 저장된 만료일3일 메세지들 chat:{movingPlanId}
     private static final String CHAT_LAST_CURSOR_REDIS_HASH_KEY = "chat:%d:read:messageId:%s"; // 마지막으로 읽은 메세지 저장 chat:{movingPlanId}:read:messageId:{username}
-    private static final String FCM_TOKEN_REDIS_SET_KEY = "%s:deviceTokens";
-    private static final String FCM_RECEIVER_REDIS_SET_KEY = "chat:%d:connected";
-    private static final String FCM_NOTIFICATION_TITLE = "[%s]의 새 메세지";
+    private static final String FCM_TOKEN_REDIS_SET_KEY = "%s:deviceTokens"; // Redis Set 객체에 저장될 {username}:deviceTokens 형태의 redis key
+    private static final String FCM_RECEIVER_REDIS_SET_KEY = "chat:%d:connected"; // Redis Set 객체에 저장될 채팅방에 참여한 사용자들 목록. chat:{movingPlanId}:connected 형태의 redis key
+
+    private static final String FCM_NOTIFICATION_TITLE = "[%s]의 새 메세지"; // FCM 알림에 표시될 제목. "[이사계획 제목]의 새 메세지"
+    private static final String FCM_NOTIFICATION_BODY = "%s: %s"; // FCM 알림에 표시될 내용. "{user nickname}: {채팅 메세지 내용}
 
     final MovingPlanValidator movingPlanValidator;
 
@@ -65,12 +66,16 @@ public class ChatService {
 
     private final FcmService fcmService;
 
+
+    /**
+     * WebSocket으로 실시간 채팅 및 FCM 알림 처리
+     **/
     @Transactional
     public MessageResponseDto Chatting(
         Long movingPlanId,
         MessageRequestDto requestDto,
         String tokenUsername
-    ) throws IOException, GeneralException {
+    ) throws IOException {
 
         MovingPlan movingPlan = movingPlanRepository.findById(movingPlanId)
             .orElseThrow(() -> new ResourceNotFoundException());
@@ -107,9 +112,11 @@ public class ChatService {
             System.out.println("chatting deviceToken: " + deviceTokens);
 
             String title = String.format(FCM_NOTIFICATION_TITLE, movingPlan.getTitle());
+            String body = String.format(FCM_NOTIFICATION_BODY, user.getNickname(),
+                requestDto.getText());
             if (deviceTokens != null) {
                 for (String token : deviceTokens) {
-                    fcmService.sendMessageTo(token, title, requestDto.getText());
+                    fcmService.sendMessageTo(token, title, body);
                 }
             }
         }

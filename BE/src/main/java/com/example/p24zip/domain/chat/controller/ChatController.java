@@ -59,7 +59,7 @@ public class ChatController {
         return chatService.Chatting(movingPlanId, requestDto, tokenUsername);
     }
 
-
+    // 채팅방에 들어온 사용자 Redis Set에 저장
     @MessageMapping("/chat/{roomId}/enter")
     public void enter(@DestinationVariable String roomId,
         @Header("Authorization") String token,
@@ -68,9 +68,10 @@ public class ChatController {
         String key = "chat:" + roomId + ":connected";
         redisTemplate.opsForSet().add(key, username);
 
-        System.out.println("✅ Entered room " + roomId + " / user " + username);
+        log.info("✅ Entered room {} user-{}", roomId, username);
     }
 
+    // 채팅방 나간 사용자 Redis Set에서 삭제
     @MessageMapping("/chat/{roomId}/leave")
     public void leave(@DestinationVariable String roomId,
         @Header("Authorization") String token,
@@ -79,7 +80,7 @@ public class ChatController {
         String key = "chat:" + roomId + ":connected";
         redisTemplate.opsForSet().remove(key, username);
 
-        System.out.println("❌ Left room " + roomId + " / user " + username);
+        log.info("❌ Left room {}  user-{}", roomId, username);
     }
 
 

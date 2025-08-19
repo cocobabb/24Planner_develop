@@ -11,7 +11,9 @@ import org.springframework.core.io.ClassPathResource;
 @Configuration
 public class GoogleCredentialsConfig {
 
-    // Firebase Admin SDK(json file)의 비공개 키를 참조하여 Firebase와의 Authentication & Authorization
+    /**
+     * Firebase Admin SDK(json file)의 비공개 키를 참조하여 Firebase와의 Authentication & Authorization
+     **/
     @Bean
     public GoogleCredentials googleCredentials() throws IOException {
         return GoogleCredentials
