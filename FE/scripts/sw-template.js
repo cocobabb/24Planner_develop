@@ -1,5 +1,8 @@
 import fs from 'fs';
 import path from 'path';
+import dotenv from 'dotenv';
+
+dotenv.config(); // .env 불러오기
 
 const templatePath = path.resolve('public/firebase-messaging-sw.js.template');
 const outputPath = path.resolve('public/firebase-messaging-sw.js');
@@ -9,7 +12,7 @@ let content = fs.readFileSync(templatePath, 'utf-8');
 Object.keys(process.env).forEach((key) => {
   if (key.startsWith('VITE_FIREBASE_')) {
     const regex = new RegExp(`{{${key}}}`, 'g');
-    content = content.replace(regex, process.env[key]);
+    content = content.replace(regex, process.env[key] ?? '');
   }
 });
 
