@@ -1,20 +1,23 @@
 import fs from 'fs';
 import path from 'path';
-import dotenv from 'dotenv';
+import { loadEnv } from 'vite';
 
-dotenv.config(); // .env 불러오기
+const generateSW = () => {
+  const mode = process.env.NODE_ENV || 'development';
+  const env = loadEnv(mode, process.cwd(), 'VITE_FIREBASE_');
 
-const templatePath = path.resolve('public/firebase-messaging-sw.js.template');
-const outputPath = path.resolve('public/firebase-messaging-sw.js');
+  const templatePath = path.resolve('public/firebase-messaging-sw.js.template');
+  const outputPath = path.resolve('public/firebase-messaging-sw.js');
 
-let content = fs.readFileSync(templatePath, 'utf-8');
+  let content = fs.readFileSync(templatePath, 'utf-8');
 
-Object.keys(process.env).forEach((key) => {
-  if (key.startsWith('VITE_FIREBASE_')) {
+  Object.keys(env).forEach((key) => {
     const regex = new RegExp(`{{${key}}}`, 'g');
-    content = content.replace(regex, process.env[key] ?? '');
-  }
-});
+    content = content.replace(regex, env[key]);
+  });
 
-fs.writeFileSync(outputPath, content, 'utf-8');
-console.log('✅ firebase-messaging-sw.js 생성 완료');
+  fs.writeFileSync(outputPath, content, 'utf-8');
+  console.log(`✅ firebase-messaging-sw.js 생성 완료 (${mode} 모드)`);
+};
+
+generateSW();
