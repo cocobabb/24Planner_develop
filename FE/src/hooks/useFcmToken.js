@@ -12,7 +12,7 @@ export default function useFcmToken() {
         // 알림 권한 요청
         const permission = await Notification.requestPermission();
         if (permission !== 'granted') {
-          console.warn('❌ 알림 권한 거부됨');
+          console.warn('알림 권한 거부됨');
           return;
         }
 
@@ -27,17 +27,17 @@ export default function useFcmToken() {
 
         if (token) {
           currentToken = token;
-          console.log('✅ FCM Device Token:', token);
+          console.log('FCM Device Token:', token);
           await registerFcmToken(token); // 서버에 등록
         }
       } catch (err) {
-        console.error('❌ FCM 토큰 발급 실패:', err);
+        console.error('FCM 토큰 발급 실패:', err);
       }
     }
 
     initToken();
 
-    // 3️⃣ 토큰 갱신 주기적 확인 (1시간마다)
+    // 토큰 갱신 주기적 확인 (1시간마다)
     const interval = setInterval(async () => {
       if (!currentToken) return;
       try {
@@ -51,11 +51,11 @@ export default function useFcmToken() {
 
         if (newToken && newToken !== currentToken) {
           currentToken = newToken;
-          console.log('🔄 FCM Token 갱신됨:', newToken);
+          console.log('FCM Token 갱신됨:', newToken);
           await registerFcmToken(newToken);
         }
       } catch (err) {
-        console.error('❌ 토큰 갱신 확인 실패:', err);
+        console.error('토큰 갱신 확인 실패:', err);
       }
     }, 60 * 60 * 1000); // 1시간마다 체크
 
