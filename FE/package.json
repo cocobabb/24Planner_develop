@@ -8,8 +8,8 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "predev": "node scripts/generate-firebase-config.js",
-    "prebuild": "node scripts/generate-firebase-config.js"
+    "predev": "node scripts/sw-template.js",
+    "prebuild": "node scripts/sw-template.js"
   },
   "dependencies": {
     "@fullcalendar/core": "^6.1.15",
