@@ -33,9 +33,11 @@
 </br>
 
 ## 📖 프로젝트 개요
-- 프로젝트 주소: https://24zip.com
-- 프로젝트 기간: 2025.03.10 ~ 2025.04.03
-- 프로젝트 참여인원: 5명
+### 1차(팀)
+https://github.com/Planner24/24planner.zip
+### 2차(개인)
+- 프로젝트 주소: https://3.34.177.78.sslip.io/
+- 프로젝트 기간: 2025.06.28 ~
 </br>
 
 ## 🛠️ 기술스택
@@ -125,12 +127,3 @@ https://github.com/user-attachments/assets/b7293141-2453-433e-8d71-a794a5c931fe
 </br></br> **채팅 및 동거인 나가기**
 
 https://github.com/user-attachments/assets/0c0f51a0-ab0f-4518-86d9-a36c2240fd49
-
-
-</br>
-
-## 👥 팀 소개
-| [강경훈](https://github.com/rkdrudgns0412) | [박재훈](https://github.com/bjh0499) | [박하은](https://github.com/apricity2u) | [임유진](https://github.com/cocobabb) | [정여원](https://github.com/koho512) |
-| :---: | :---: | :---: | :---: | :---: |
-| ![강경훈](https://github.com/rkdrudgns0412.png) | ![박재훈](https://github.com/bjh0499.png) | ![박하은](https://github.com/apricity2u.png) | ![임유진](https://github.com/cocobabb.png) | ![정여원](https://github.com/koho512.png) | 
-</br>
