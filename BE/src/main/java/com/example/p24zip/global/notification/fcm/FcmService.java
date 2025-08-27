@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import okhttp3.Call;
+import okhttp3.Callback;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -94,9 +96,20 @@ public class FcmService {
             .addHeader(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken) // header에 포함
             .addHeader(HttpHeaders.CONTENT_TYPE, "application/json; UTF-8")
             .build();
-        Response response = okHttpClient.newCall(request).execute(); // 요청 보냄
 
-        log.info(response.body().string());
+        // okHttpClient의 비동기 방식
+        okHttpClient.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                log.error("FCM 전송 실패", e);
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                log.info("FCM 전송 성공: {}", response.body().string());
+            }
+        });
+
     }
 
 

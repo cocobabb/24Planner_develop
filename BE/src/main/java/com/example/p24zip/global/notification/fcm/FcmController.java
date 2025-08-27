@@ -29,4 +29,14 @@ public class FcmController {
         return ApiResponse.ok(CustomCode.FCM_TOKEN_CREATE);
     }
 
+    // fcm 서버로 메세지 요청(부하테스트용)
+    @PostMapping("/sendMessage")
+    public void sendMessage(@RequestBody FcmMessage fcmMessage) throws IOException {
+        fcmService.sendMessageTo(
+            fcmMessage.getMessage().getToken(),
+            fcmMessage.getMessage().getNotification().getTitle(),
+            fcmMessage.getMessage().getNotification().getBody()
+        );
+    }
+
 }
