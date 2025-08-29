@@ -80,18 +80,16 @@ public class FcmService {
 //            log.error("FCM 전송 실패: {}", e.getMessage());
 //        }
 
+        // fcm 기기 토큰 batch 방식(동기)
 //        try {
-//            BatchResponse response = (BatchResponse) FirebaseMessaging.getInstance()
-//                .sendEachForMulticastAsync(messages);
-//            String responseJson = objectMapper.writeValueAsString(response.getResponses().getLast()
-//                .getMessageId());
-//            log.info("FCM 전송 성공: {}", responseJson);
+//            BatchResponse responses = FirebaseMessaging.getInstance()
+//                .sendEachForMulticast(messages);
 //            log.info("FCM 전송 성공");
-//
 //        } catch (Exception e) {
-//            log.error("FCM 전송 실패: {}", e.getMessage());
+//            log.error("FCM 전송 실패: {}", e.getMessage(), e);
 //        }
 
+        // fcm 기기 토큰 batch 방식(비동기)
         ApiFuture<BatchResponse> future = FirebaseMessaging.getInstance()
             .sendEachForMulticastAsync(messages);
 
