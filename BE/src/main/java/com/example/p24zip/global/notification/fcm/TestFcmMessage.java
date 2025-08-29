@@ -9,7 +9,7 @@ import lombok.Getter;
 public class TestFcmMessage {
 
     private Set<String> tokens;
-    private FcmMessage.Notification notification;
+    private Notification notification;
 
 
     @Builder
