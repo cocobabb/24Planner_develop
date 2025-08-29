@@ -11,7 +11,7 @@ import com.example.p24zip.global.exception.StompTokenException;
 import com.example.p24zip.global.response.ApiResponse;
 import com.example.p24zip.global.security.jwt.JwtTokenProvider;
 import com.example.p24zip.global.validator.MovingPlanValidator;
-import com.nimbusds.oauth2.sdk.GeneralException;
+import com.google.firebase.messaging.FirebaseMessagingException;
 import java.io.IOException;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -48,7 +48,8 @@ public class ChatController {
     public MessageResponseDto chatting(
         StompHeaderAccessor headerAccessor,
         @DestinationVariable Long movingPlanId,
-        MessageRequestDto requestDto) throws IOException, GeneralException {
+        MessageRequestDto requestDto)
+        throws IOException, FirebaseMessagingException {
 
         String token = headerAccessor.getFirstNativeHeader("Authorization");
         if (token == null || !jwtTokenProvider.validateToken(token)) {

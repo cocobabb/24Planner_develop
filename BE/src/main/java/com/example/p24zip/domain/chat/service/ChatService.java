@@ -19,7 +19,6 @@ import com.example.p24zip.global.redis.RedisChatDto;
 import com.example.p24zip.global.validator.MovingPlanValidator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import java.io.IOException;
 import java.time.Duration;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -75,7 +74,7 @@ public class ChatService {
         Long movingPlanId,
         MessageRequestDto requestDto,
         String tokenUsername
-    ) throws IOException {
+    ) {
 
         MovingPlan movingPlan = movingPlanRepository.findById(movingPlanId)
             .orElseThrow(() -> new ResourceNotFoundException());
@@ -106,19 +105,18 @@ public class ChatService {
             String key = String.format(FCM_TOKEN_REDIS_SET_KEY,
                 participant.getUser().getUsername());
 
-            Set<String> deviceTokens = stringRedisTemplate.opsForSet()
-                .members(key);
+            Set<String> deviceTokens = stringRedisTemplate.opsForSet().members(key);
 
             System.out.println("chatting deviceToken: " + deviceTokens);
 
             String title = String.format(FCM_NOTIFICATION_TITLE, movingPlan.getTitle());
-            String body = String.format(FCM_NOTIFICATION_BODY, user.getNickname(),
-                requestDto.getText());
-            if (deviceTokens != null) {
-                for (String token : deviceTokens) {
-                    fcmService.sendMessageTo(token, title, body);
-                }
-            }
+            String body = String.format(
+                FCM_NOTIFICATION_BODY,
+                user.getNickname(),
+                requestDto.getText()
+            );
+
+            fcmService.sendMessageTo(deviceTokens, title, body);
         }
 
         // Redis에 저장할 채팅 정보 가진 DTO 생성

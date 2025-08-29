@@ -2,20 +2,16 @@ package com.example.p24zip.global.notification.fcm;
 
 import com.example.p24zip.domain.user.entity.User;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.auth.oauth2.GoogleCredentials;
-import com.google.common.net.HttpHeaders;
-import java.io.IOException;
+import com.google.api.core.ApiFuture;
+import com.google.firebase.messaging.BatchResponse;
+import com.google.firebase.messaging.FirebaseMessaging;
+import com.google.firebase.messaging.MulticastMessage;
+import com.google.firebase.messaging.Notification;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -28,18 +24,6 @@ public class FcmService {
 
     private final ObjectMapper objectMapper;
     private final StringRedisTemplate stringRedisTemplate;
-
-    private final OkHttpClient okHttpClient = new OkHttpClient();
-    private final GoogleCredentials googleCredentials;
-
-
-    @Value("${FCM_PROJECT_ID}")
-    private String fcmProjectId;
-
-    // 알림 내용 전송할 FCM 서버 주소
-    private String getApiUrl() {
-        return "https://fcm.googleapis.com/v1/projects/" + fcmProjectId + "/messages:send";
-    }
 
 
     /**
@@ -65,75 +49,63 @@ public class FcmService {
     /**
      * FCM deviceToken, 알림 내용을 전달받아 FCM 서버로 알림 전송
      *
-     * @param deviceToken : 어떤 클라이언트에서 온 건지 구분하는 토큰
-     * @param title:      알림에 표시될 제목
-     * @param body:       알림에 표시될 내용
+     * @param deviceTokens : 어떤 클라이언트에서 온 건지 구분하는 토큰
+     * @param title:       알림에 표시될 제목
+     * @param body:        알림에 표시될 내용
      * @return void
      **/
-    public void sendMessageTo(String deviceToken, String title, String body)
-        throws IOException {
+    public void sendMessageTo(Set<String> deviceTokens, String title, String body) {
 
-        // 자격 증명이 만료되면 자동 갱신
-        googleCredentials.refreshIfExpired();
+        // fcm 429 에러로 fcm 전송 방식 수정 => 한개의 요청(메세지)에 여러 개의 토큰을 담아서 보냄
+        if (deviceTokens == null || deviceTokens.isEmpty()) {
+            log.warn("전송할 디바이스 토큰이 없음");
+            return;
+        }
 
-        // 인증•인가된 googleCredentials 객체로 토큰 가져와 firebase 서버에 데이터 전송
-        String accessToken = googleCredentials.getAccessToken().getTokenValue();
-        // 직렬화된 message 객체 생성
-        String message = makeMessage(deviceToken, title, body);
-        log.info("sendMessageTo의 메세지: {}", message);
-
-        RequestBody requestBody = RequestBody.create(
-            message, // 직렬화 된 message를 body에 넣기
-            MediaType.get("application/json; charset=utf-8")
-        );
-
-        // FCM 서버로 알림 넘겨줌 -> 토큰으로 구분하여 FCM 서버에서 알림 전송
-        Request request = null;
-        log.info("FCM-sendMessageTo의 accessToken: {}", accessToken);
-        request = new Request.Builder()
-            .url(getApiUrl())
-            .post(requestBody)
-            .addHeader(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken) // header에 포함
-            .addHeader(HttpHeaders.CONTENT_TYPE, "application/json; UTF-8")
+        MulticastMessage messages = MulticastMessage.builder()
+            .addAllTokens(deviceTokens) // 최대 500개
+            .setNotification(Notification.builder()
+                .setTitle(title)
+                .setBody(body)
+                .build())
             .build();
 
-        // okHttpClient의 비동기 방식
-        okHttpClient.newCall(request).enqueue(new Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {
-                log.error("FCM 전송 실패", e);
-            }
+        // 해당 방식 Deprecated  됨
+//        try {
+//            BatchResponse response = FirebaseMessaging.getInstance().sendMulticast(message);
+//            String responseJson = objectMapper.writeValueAsString(response.getResponses());
+//            log.info("FCM 전송 성공: {}", responseJson);
+//
+//        } catch (Exception e) {
+//            log.error("FCM 전송 실패: {}", e.getMessage());
+//        }
 
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                log.info("FCM 전송 성공: {}", response.body().string());
+        // fcm 기기 토큰 batch 방식(동기)
+//        try {
+//            BatchResponse responses = FirebaseMessaging.getInstance()
+//                .sendEachForMulticast(messages);
+//            log.info("FCM 전송 성공");
+//        } catch (Exception e) {
+//            log.error("FCM 전송 실패: {}", e.getMessage(), e);
+//        }
+
+        // fcm 기기 토큰 batch 방식(비동기)
+        ApiFuture<BatchResponse> future = FirebaseMessaging.getInstance()
+            .sendEachForMulticastAsync(messages);
+
+        CompletableFuture.supplyAsync(() -> {
+            try {
+                return future.get();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
             }
+        }).thenAccept(response -> {
+            log.info("FCM 전송 성공");
+        }).exceptionally(e -> {
+            log.error("FCM 전송 실패: {}", e.getMessage(), e);
+            return null;
         });
 
-    }
-
-
-    /**
-     * FCM 전송 정보를 기반으로 메시지를 구성 (Object -> String)
-     *
-     * @param targetToken : 어떤 클라이언트에서 온 건지 구분하는 토큰
-     * @param title:      알림에 표시될 제목
-     * @param body:       알림에 표시될 내용
-     * @return String : FCM 전송 정보를 가진 String
-     **/
-    private String makeMessage(String targetToken, String title, String body)
-        throws com.fasterxml.jackson.core.JsonProcessingException { // JsonParseException, JsonProcessingException
-        FcmMessage fcmMessage = FcmMessage.builder()
-            .message(FcmMessage.Message.builder()
-                .token(targetToken)
-                .notification(FcmMessage.Notification.builder()
-                    .title(title) // FCM에 보내질 객체 필드 이름 정해져 있음 (반드시, title과 body를 포함해야함)
-                    .body(body)
-                    .image(null)
-                    .build()
-                ).build()
-            ).build();
-        return objectMapper.writeValueAsString(fcmMessage);
     }
 
 
